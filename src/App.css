@@ -1,127 +1,20 @@
+/* Purged legacy Bootstrap styles. Everything is now Tailwind. */
 :root {
-    --color-primary: hsl(148, 98%, 18%);
-    --color-secondary: hsl(148, 98%, 18%);
-    --color-cta: #F97316;
-    --color-background: #F8FAFC;
-    --color-text: #1E293B;
+  --color-primary: hsl(148, 98%, 18%);
 }
 
 body {
-    font-family: 'Times New Roman', Times, serif;
-    color: var(--color-text);
-    background-color: var(--color-background);
     overflow-x: hidden;
 }
 
-h1, h2, h3, h4, h5, h6, .heading-font {
-    font-family: 'Times New Roman', Times, serif;
+/* Custom Scrollbar for sidebar and specific content */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
 }
-
-#wrapper {
-    display: flex;
-    width: 100vw;
-    height: 100vh;
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
 }
-
-#sidebar-wrapper {
-    min-height: 100vh;
-    width: 260px;
-    flex-shrink: 0;
-    transition: margin 0.25s ease-out;
-    z-index: 1000;
-}
-
-#page-content-wrapper {
-    min-width: 0;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    overflow-y: auto;
-}
-.logo-box {
-    width: 36px;
-    height: 36px;
-    border-radius: 8px;
-    background-color: var(--color-primary);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
-}
-.nav-link-custom {
-    color: #475569;
-    font-weight: 500;
-    transition: all 150ms ease;
-    padding: 0.75rem 1rem;
-}
-
-.nav-link-custom:hover {
-    background-color: #f1f5f9 !important;
-    color: #0f172a;
-}
-
-.nav-link-custom.active {
-    background-color: var(--color-primary) !important;
-    color: white !important;
-    box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
-}
-
-.nav-link-custom.active i, .nav-link-custom.active svg {
-    color: white !important;
-}
-.hover-primary:hover {
-    color: var(--color-primary) !important;
-}
-
-.main-content-container {
-    flex: 1 0 auto;
-}
-.content-view {
-    display: block;
-    animation: fadeIn 0.3s ease-in-out;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(5px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-.stat-card {
-    transition: transform 200ms ease;
-}
-.stat-card:hover {
-    transform: translateY(-4px);
-}
-
-.course-card img {
-    transition: transform 300ms ease;
-}
-.course-card:hover img {
-    transform: scale(1.05);
-}
-
-.cursor-pointer {
-    cursor: pointer;
-}
-
-@media (max-width: 768px) {
-    #sidebar-wrapper {
-        margin-left: -260px;
-        position: fixed;
-        height: 100%;
-    }
-    #wrapper.toggled #sidebar-wrapper {
-        margin-left: 0;
-    }
-    .sidebar-overlay {
-        display: none;
-        position: fixed;
-        inset: 0;
-        background: rgba(15, 23, 42, 0.5);
-        z-index: 999;
-        backdrop-filter: blur(2px);
-    }
-    #wrapper.toggled .sidebar-overlay {
-        display: block;
-    }
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 20px;
 }
