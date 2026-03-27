@@ -4,7 +4,9 @@ from app.core.config import settings
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
-    openapi_url="/api/v1/openapi.json"
+    openapi_url="/api/v1/openapi.json",
+    docs_url="/docs",
+    redoc_url="/redoc"
 )
 
 # Set all CORS enabled origins
@@ -19,6 +21,9 @@ if settings.BACKEND_CORS_ORIGINS:
 
 from app.api.endpoints import topic
 app.include_router(topic.router, prefix="/api/v1/topic", tags=["topic"])
+
+from app.api.endpoints import auth
+app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
 
 @app.get("/health")
 def health_check():
