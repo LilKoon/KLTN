@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> Tạo bộ Flashcard mới </title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        teal: {
+                            50: '#f0fdfa',
+                            100: '#ccfbf1',
+                            200: '#99f6e4',
+                            300: '#5eead4',
+                            400: '#2dd4bf',
+                            500: '#14b8a6',
+                            600: '#0d9488',
+                            700: '#0f766e',
+                            800: '#115e59',
+                            900: '#134e4a',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        
+        .fade-in { animation: fadeIn 0.4s ease forwards; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ContentEditable placeholder styling */
+        [contenteditable]:empty:before {
+            content: attr(data-placeholder);
+            color: rgba(255, 255, 255, 0.6);
+            pointer-events: none;
+            display: block;
+        }
+    </style>
+</head>
+
+<body class="bg-slate-100 font-sans text-slate-800 h-screen w-screen overflow-hidden flex flex-col relative selection:bg-teal-500/30">
+
+    <!-- Top Navigation Bar -->
+    <header class="w-full h-[60px] bg-white border-b border-slate-200 flex items-center justify-between px-4 sm:px-6 z-40 shrink-0 shadow-sm relative">
+        <div class="flex items-center gap-4">
+            <a href="flashcard.html" class="w-8 h-8 rounded hover:bg-slate-100 flex items-center justify-center text-slate-500 transition-colors">
+                <i data-lucide="chevron-left" class="w-5 h-5"></i>
+            </a>
+            <div class="flex items-center gap-2">
+                <i data-lucide="layers" class="w-5 h-5 text-teal-600"></i>
+                <span class="font-bold text-slate-800 text-[15px]">Tạo Flashcard Mới</span>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <button id="btnSave" class="hidden sm:flex items-center gap-2 bg-teal-500 hover:bg-teal-600 text-white px-4 py-2 rounded-lg font-bold text-[13px] transition-colors shadow-sm" onclick="finishCreation()">
+                <i data-lucide="save" class="w-4 h-4"></i> Lưu Flashcard
+            </button>
+        </div>
+    </header>
+
+    <!-- VIEWS CONTAINER -->
+    <main class="flex-1 w-full relative overflow-y-auto overflow-x-hidden p-6 sm:p-8 flex flex-col items-center id='mainContainer'">
+        
+        <!-- View 1: Selection Method -->
+        <div id="view-select" class="w-full max-w-4xl m-auto flex flex-col items-center justify-center gap-10 fade-in">
+            <div class="text-center">
+                <h1 class="text-3xl font-extrabold text-slate-800 mb-3 tracking-tight">Bạn muốn tạo Flashcard như thế nào?</h1>
+                <p class="text-slate-500 font-medium max-w-lg mx-auto">Chọn phương thức phù hợp với bạn. Hệ thống AI của chúng tôi có thể tự động bóc tách từ khóa từ tài liệu để tiết kiệm thời gian.</p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full px-4">
+                
+                <!-- Option 1: Manual -->
+                <div class="bg-white rounded-2xl p-8 border-2 border-slate-100 hover:border-teal-400 hover:shadow-[0_20px_40px_rgba(20,184,166,0.1)] transition-all cursor-pointer group flex flex-col items-center text-center gap-5" onclick="switchView('view-manual')">
+                    <div class="w-20 h-20 rounded-2xl bg-teal-50 text-teal-500 flex items-center justify-center group-hover:scale-110 group-hover:bg-teal-500 group-hover:text-white transition-all duration-300 shadow-sm">
+                        <i data-lucide="pen-tool" class="w-10 h-10"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-800 mb-2">Tạo thủ công</h2>
+                        <p class="text-[14px] text-slate-500">Tự nhập nội dung mặt trước, mặt sau và tùy chỉnh hình ảnh thẻ theo ý muốn.</p>
+                    </div>
+                    <span class="mt-auto text-teal-600 font-bold text-[13px] flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                        Bắt đầu <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                    </span>
+                </div>
+
+                <!-- Option 2: AI Upload -->
+                <div class="bg-white rounded-2xl p-8 border-2 border-slate-100 hover:border-indigo-400 hover:shadow-[0_20px_40px_rgba(79,70,229,0.1)] transition-all cursor-pointer group flex flex-col items-center text-center gap-5 relative overflow-hidden" onclick="switchView('view-upload')">
+                    <div class="absolute -right-6 -top-6 w-24 h-24 bg-indigo-50 rounded-full blur-2xl group-hover:bg-indigo-100 transition-colors z-0"></div>
+                    <div class="w-20 h-20 rounded-2xl bg-indigo-50 text-indigo-500 flex items-center justify-center group-hover:scale-110 group-hover:bg-indigo-500 group-hover:text-white transition-all duration-300 shadow-sm relative z-10">
+                        <i data-lucide="sparkles" class="w-10 h-10"></i>
+                    </div>
+                    <div class="relative z-10">
+                        <h2 class="text-xl font-bold text-slate-800 mb-2 flex items-center justify-center gap-2">Tạo bằng AI <span class="bg-indigo-100 text-indigo-600 text-[9px] px-1.5 py-0.5 rounded font-black uppercase tracking-wider">Mới</span></h2>
+                        <p class="text-[14px] text-slate-500">Tải lên tệp PDF hoặc Word. AI sẽ tự động quét và bóc tách các từ khóa quan trọng.</p>
+                    </div>
+                    <span class="mt-auto text-indigo-600 font-bold text-[13px] flex items-center gap-1 group-hover:translate-x-1 transition-transform relative z-10">
+                        Thử nghiệm ngay <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- View 2: Manual Editor (Quizizz style) -->
+        <div id="view-manual" class="w-full flex-col hidden fade-in">
+            <!-- Formatting Toolbar -->
+            <div class="w-full bg-white rounded-xl shadow-sm border border-slate-200 p-2 mb-8 flex items-center gap-1 sm:gap-4 overflow-x-auto no-scrollbar">
+                <div class="flex items-center gap-1 border-r border-slate-100 pr-4 shrink-0">
+                    <button class="w-8 h-8 rounded flex items-center justify-center text-slate-700 hover:bg-slate-100 font-serif font-bold text-lg">B</button>
+                    <button class="w-8 h-8 rounded flex items-center justify-center text-slate-700 hover:bg-slate-100 font-serif italic text-lg">I</button>
+                    <button class="w-8 h-8 rounded flex items-center justify-center text-slate-700 hover:bg-slate-100 underline text-lg">U</button>
+                </div>
+                <div class="flex items-center gap-1 border-r border-slate-100 pr-4 shrink-0">
+                    <button class="w-8 h-8 rounded flex items-center justify-center text-slate-600 hover:bg-slate-100"><i data-lucide="strikethrough" class="w-4 h-4"></i></button>
+                    <button class="w-8 h-8 rounded flex items-center justify-center text-slate-600 hover:bg-slate-100"><i data-lucide="subscript" class="w-4 h-4"></i></button>
+                    <button class="w-8 h-8 rounded flex items-center justify-center text-slate-600 hover:bg-slate-100"><i data-lucide="superscript" class="w-4 h-4"></i></button>
+                </div>
+                <div class="flex items-center gap-2 pl-2 shrink-0">
+                    <button class="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-slate-100 text-[13px] font-semibold text-slate-600 transition-colors">
+                        <i data-lucide="function-square" class="w-4 h-4 text-slate-400"></i> Chèn công thức Toán
+                    </button>
+                    <button class="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-slate-100 text-[13px] font-semibold text-slate-600 transition-colors">
+                        <i data-lucide="image" class="w-4 h-4 text-slate-400"></i> Viền
+                    </button>
+                </div>
+            </div>
+
+            <!-- Editor Cards Wrapper -->
+            <div class="w-full flex flex-col lg:flex-row items-center justify-center gap-8 lg:gap-12 relative px-4">
+                
+                <!-- Front Card -->
+                <div class="w-full lg:w-[45%] max-w-xl flex flex-col gap-3 relative">
+                    <div class="text-center font-bold text-slate-400 uppercase tracking-widest text-[12px]">Mặt trước</div>
+                    <div class="bg-teal-800 rounded-2xl aspect-[4/3] w-full shadow-lg border border-teal-700 flex flex-col relative group transition-all">
+                        <!-- Top left tools on card -->
+                        <div class="absolute top-4 left-4 flex flex-col gap-2 opacity-100">
+                            <button class="w-8 h-8 rounded-lg bg-black/20 hover:bg-black/40 text-white flex items-center justify-center backdrop-blur-sm transition-colors border border-white/10" title="Ghi âm">
+                                <i data-lucide="mic" class="w-4 h-4"></i>
+                            </button>
+                            <button class="w-8 h-8 rounded-lg bg-black/20 hover:bg-black/40 text-white flex items-center justify-center backdrop-blur-sm transition-colors border border-white/10" title="Thêm ảnh">
+                                <i data-lucide="image" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                        
+                        <!-- Content Editable Area -->
+                        <div class="flex-1 w-full flex items-center justify-center p-12">
+                            <div class="w-full text-center text-white text-2xl font-medium outline-none leading-relaxed px-4" contenteditable="true" data-placeholder="Nhập thuật ngữ..."></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Transform Icon -->
+                <div class="hidden lg:flex w-10 h-10 rounded-xl bg-white shadow-sm border border-slate-200 items-center justify-center text-slate-400 shrink-0">
+                    <i data-lucide="arrow-right-left" class="w-5 h-5"></i>
+                </div>
+
+                <!-- Back Card -->
+                <div class="w-full lg:w-[45%] max-w-xl flex flex-col gap-3 relative">
+                    <div class="text-center font-bold text-slate-400 uppercase tracking-widest text-[12px]">Mặt sau</div>
+                    <div class="bg-teal-800 rounded-2xl aspect-[4/3] w-full shadow-lg border border-teal-700 flex flex-col relative group transition-all">
+                        <!-- Content Editable Area -->
+                        <div class="flex-1 w-full flex items-center justify-center p-12">
+                            <div class="w-full text-center text-white text-2xl font-medium outline-none leading-relaxed px-4" contenteditable="true" data-placeholder="Nhập định nghĩa..."></div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            
+            <div class="w-full flex justify-center mt-12 gap-4">
+               <button class="px-6 py-3 rounded-xl border-2 border-slate-200 text-slate-600 font-bold hover:bg-slate-50 transition-colors" onclick="switchView('view-select')">Hủy</button>
+               <button class="px-8 py-3 rounded-xl bg-teal-500 hover:bg-teal-600 shadow-md text-white font-bold transition-colors shadow-teal-500/20" onclick="finishCreation()">Lưu & Hoàn tất</button>
+            </div>
+        </div>
+
+        <!-- View 3: Upload PDF/Doc -->
+        <div id="view-upload" class="w-full max-w-3xl m-auto flex-col items-center justify-center gap-8 hidden fade-in text-center">
+            <h1 class="text-2xl font-bold text-slate-800">Tải lên tài liệu học tập</h1>
+            <p class="text-slate-500 mb-6">AI sẽ phân tích tài liệu của bạn (PDF, Word) và bóc tách các khái niệm, từ khóa trọng tâm để học.</p>
+            
+            <!-- Drag & Drop Zone -->
+            <div class="w-full rounded-2xl border-2 border-dashed border-slate-300 bg-white hover:bg-indigo-50/50 hover:border-indigo-400 transition-colors p-12 flex flex-col items-center cursor-pointer group" onclick="simulateAIProcessing()">
+                <div class="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-500 group-hover:scale-110 transition-transform mb-4">
+                    <i data-lucide="cloud-upload" class="w-10 h-10"></i>
+                </div>
+                <h3 class="text-lg font-bold text-slate-700 mb-1">Kéo thả tệp hoặc Bấm để tải lên</h3>
+                <p class="text-slate-400 text-sm">Hỗ trợ .PDF, .DOCX, .TXT (Tối đa 10MB)</p>
+            </div>
+            
+            <button class="mt-6 px-6 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-50 transition-colors mx-auto inline-flex" onclick="switchView('view-select')">Quay lại</button>
+        </div>
+
+        <!-- View 4: AI Extraction Loading & Results -->
+        <div id="view-scan-results" class="w-full max-w-4xl mx-auto flex-col hidden fade-in py-8">
+            
+            <!-- Loading State -->
+            <div id="ai-loading" class="flex flex-col items-center justify-center py-20 gap-6">
+                <div class="relative w-20 h-20 flex items-center justify-center">
+                    <div class="absolute inset-0 border-4 border-slate-100 rounded-full"></div>
+                    <div class="absolute inset-0 border-4 border-indigo-500 rounded-full border-t-transparent animate-spin"></div>
+                    <i data-lucide="sparkles" class="w-8 h-8 text-indigo-500 animate-pulse"></i>
+                </div>
+                <h2 class="text-xl font-bold text-slate-800">AI đang phân tích tài liệu...</h2>
+                <p class="text-slate-500">Đang nhận diện các khái niệm, từ khóa quan trọng và định nghĩa tương ứng.</p>
+            </div>
+
+            <!-- Results State -->
+            <div id="ai-results" class="hidden flex-col gap-6">
+                <div class="flex items-center justify-between mb-2">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                            <i data-lucide="check-circle-2" class="w-6 h-6 text-emerald-500"></i> Đã tìm thấy 15 từ khóa
+                        </h2>
+                        <p class="text-slate-500 mt-1">Chọn những từ vựng bạn muốn tạo thành bộ Flashcard.</p>
+                    </div>
+                    <button class="text-indigo-600 font-semibold bg-indigo-50 hover:bg-indigo-100 px-4 py-2 rounded-lg transition-colors border border-indigo-100">
+                        Chọn tất cả
+                    </button>
+                </div>
+
+                <!-- Grid of Keywords -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    
+                    <!-- Item -->
+                    <label class="bg-white border-2 border-slate-200 rounded-xl p-4 flex gap-4 cursor-pointer hover:border-indigo-300 has-[:checked]:border-indigo-500 has-[:checked]:bg-indigo-50/30 transition-all shadow-sm">
+                        <input type="checkbox" class="w-5 h-5 mt-0.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" checked>
+                        <div class="flex flex-col flex-1">
+                            <span class="font-bold text-slate-800 text-[15px] mb-1">Architecture</span>
+                            <span class="text-slate-500 text-[13px] line-clamp-3 leading-relaxed">The art or practice of designing and constructing buildings.</span>
+                        </div>
+                    </label>
+
+                    <label class="bg-white border-2 border-slate-200 rounded-xl p-4 flex gap-4 cursor-pointer hover:border-indigo-300 has-[:checked]:border-indigo-500 has-[:checked]:bg-indigo-50/30 transition-all shadow-sm">
+                        <input type="checkbox" class="w-5 h-5 mt-0.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" checked>
+                        <div class="flex flex-col flex-1">
+                            <span class="font-bold text-slate-800 text-[15px] mb-1">Renaissance</span>
+                            <span class="text-slate-500 text-[13px] line-clamp-3 leading-relaxed">The revival of art and literature under the influence of classical models in the 14th-16th centuries.</span>
+                        </div>
+                    </label>
+
+                    <label class="bg-white border-2 border-slate-200 rounded-xl p-4 flex gap-4 cursor-pointer hover:border-indigo-300 has-[:checked]:border-indigo-500 has-[:checked]:bg-indigo-50/30 transition-all shadow-sm">
+                        <input type="checkbox" class="w-5 h-5 mt-0.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" checked>
+                        <div class="flex flex-col flex-1">
+                            <span class="font-bold text-slate-800 text-[15px] mb-1">Symmetrical</span>
+                            <span class="text-slate-500 text-[13px] line-clamp-3 leading-relaxed">Made up of exactly similar parts facing each other or around an axis.</span>
+                        </div>
+                    </label>
+
+                    <label class="bg-white border-2 border-slate-200 rounded-xl p-4 flex gap-4 cursor-pointer hover:border-indigo-300 has-[:checked]:border-indigo-500 has-[:checked]:bg-indigo-50/30 transition-all shadow-sm">
+                        <input type="checkbox" class="w-5 h-5 mt-0.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                        <div class="flex flex-col flex-1">
+                            <span class="font-bold text-slate-800 text-[15px] mb-1">Aesthetics</span>
+                            <span class="text-slate-500 text-[13px] line-clamp-3 leading-relaxed">A set of principles concerned with the nature and appreciation of beauty.</span>
+                        </div>
+                    </label>
+                    
+                    <label class="bg-white border-2 border-slate-200 rounded-xl p-4 flex gap-4 cursor-pointer hover:border-indigo-300 has-[:checked]:border-indigo-500 has-[:checked]:bg-indigo-50/30 transition-all shadow-sm">
+                        <input type="checkbox" class="w-5 h-5 mt-0.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" checked>
+                        <div class="flex flex-col flex-1">
+                            <span class="font-bold text-slate-800 text-[15px] mb-1">Facade</span>
+                            <span class="text-slate-500 text-[13px] line-clamp-3 leading-relaxed">The face of a building, especially the principal front that looks onto a street or open space.</span>
+                        </div>
+                    </label>
+
+                </div>
+
+                <!-- Footer Actions -->
+                <div class="mt-8 flex items-center justify-between pt-6 border-t border-slate-200">
+                    <button class="px-6 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-50 transition-colors" onclick="switchView('view-select')">Trở lại</button>
+                    <button class="px-8 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 shadow-md text-white font-bold transition-colors shadow-indigo-500/20 flex items-center gap-2" onclick="finishCreation()">
+                        <i data-lucide="check" class="w-5 h-5"></i>
+                        Tạo Flashcard (4 từ)
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+    <!-- JavaScript Navigation Logic -->
+    <script>
+        lucide.createIcons();
+
+        const views = ['view-select', 'view-manual', 'view-upload', 'view-scan-results'];
+        
+        function switchView(viewId) {
+            // Hide all views
+            views.forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+                document.getElementById(id).classList.remove('flex');
+            });
+            
+            // Show target view
+            const target = document.getElementById(viewId);
+            target.classList.remove('hidden');
+            target.classList.add('flex');
+
+            // Manage top bar Save button visibility
+            const btnSave = document.getElementById('btnSave');
+            if (viewId === 'view-manual') {
+                btnSave.classList.remove('hidden');
+                btnSave.classList.add('flex');
+            } else {
+                btnSave.classList.add('hidden');
+                btnSave.classList.remove('flex');
+            }
+        }
+
+        function simulateAIProcessing() {
+            switchView('view-scan-results');
+            document.getElementById('ai-loading').classList.remove('hidden');
+            document.getElementById('ai-loading').classList.add('flex');
+            document.getElementById('ai-results').classList.add('hidden');
+            document.getElementById('ai-results').classList.remove('flex');
+
+            // Simulate 2s extraction
+            setTimeout(() => {
+                document.getElementById('ai-loading').classList.add('hidden');
+                document.getElementById('ai-loading').classList.remove('flex');
+                document.getElementById('ai-results').classList.remove('hidden');
+                document.getElementById('ai-results').classList.add('flex');
+            }, 2500);
+        }
+
+        function finishCreation() {
+            alert("Tạo bộ flashcard thành công! Hệ thống đang chuyển hướng...");
+            window.location.href = 'flashcard-detail.html';
+        }
+
+        // Init
+        // Already shown view-select
+    </script>
+</body>
+
+</html>

@@ -71,7 +71,6 @@
         <!-- Desktop Links -->
         <div class="hidden md:flex items-center gap-8">
             <a href="#" class="text-slate-600 hover:text-teal-600 font-medium transition-colors">Trang chủ</a>
-            <a href="#" class="text-slate-600 hover:text-teal-600 font-medium transition-colors">Trò chơi</a>
             <a href="#" class="text-slate-600 hover:text-teal-600 font-medium transition-colors">Flash Cards</a>
             <a href="#" class="text-slate-600 hover:text-teal-600 font-medium transition-colors">Mẹo học tập</a>
             <a href="#" class="text-slate-600 hover:text-teal-600 font-medium transition-colors">Về chúng tôi</a>
@@ -416,6 +415,39 @@
                 }, 300);
             }
         }
+
+        // Login Logic
+        document.getElementById('login').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const user = localStorage.getItem('user_' + email);
+            if (user) {
+                localStorage.setItem('currentUser', email);
+                window.location.href = 'main.html';
+            } else {
+                alert('Tài khoản không tồn tại. Vui lòng đăng ký!');
+            }
+        });
+
+        // Register Logic
+        document.getElementById('register').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const name = document.getElementById('regName').value;
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+            const confirm = document.getElementById('regConfirm').value;
+
+            if (password !== confirm) {
+                alert('Mật khẩu nhập lại không khớp!');
+                return;
+            }
+
+            const user = { name: name, email: email, password: password };
+            localStorage.setItem('user_' + email, JSON.stringify(user));
+            alert('Đăng ký thành công! Vui lòng tiến hành đăng nhập.');
+            toggleForm('login');
+            document.getElementById('loginEmail').value = email;
+        });
     </script>
 </body>
 

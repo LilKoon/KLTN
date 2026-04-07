@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> Kho Flashcard </title>
+    <!-- Tailwind CSS (CDN) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        teal: {
+                            50: '#f0fdfa',
+                            100: '#ccfbf1',
+                            200: '#99f6e4',
+                            300: '#5eead4',
+                            400: '#2dd4bf',
+                            500: '#14b8a6',
+                            600: '#0d9488',
+                            700: '#0f766e',
+                            800: '#115e59',
+                            900: '#134e4a',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    animation: {
+                        'float-soft': 'float 6s ease-in-out infinite',
+                        'bounce-soft': 'bounceSoft 2s infinite ease-in-out',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-8px)' },
+                        },
+                        bounceSoft: {
+                            '0%, 100%': { transform: 'scale(1)' },
+                            '50%': { transform: 'scale(1.08)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        .main-bg {
+            background-color: #fcfcfc;
+            /* Lighter to allow gradient to pop */
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* Quizizz style card hover effect */
+        .q-card-hover {
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        .q-card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+            border-color: #e2e8f0;
+        }
+    </style>
+</head>
+
+<body class="font-sans text-slate-900 h-screen w-screen overflow-hidden flex bg-white main-bg">
+
+    <!-- Left Sidebar -->
+    <aside class="w-64 h-full bg-white border-r border-slate-200 flex flex-col flex-shrink-0 z-40 relative shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
+        <!-- User Profile & Streak -->
+        <div class="px-6 py-5 border-b border-slate-100 flex flex-col gap-4 relative overflow-hidden bg-white hover:bg-slate-50 transition-colors">
+            <div class="absolute -right-4 -top-4 w-24 h-24 bg-teal-50 rounded-full blur-xl z-0 pointer-events-none"></div>
+            <div class="relative z-10 flex items-center justify-between">
+                <div class="flex items-center gap-3 cursor-pointer group">
+                    <div class="relative">
+                        <img src="https://i.pravatar.cc/150?u=a042581f4e29026024d" alt="User Avatar"
+                            class="w-10 h-10 rounded-full shadow-sm object-cover border border-slate-200 group-hover:border-teal-300 transition-all">
+                        <div class="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full"></div>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-slate-900 text-[14px] leading-tight group-hover:text-teal-600 transition-colors">
+                            Ngô Anh Thư </h3>
+                    </div>
+                </div>
+                <i data-lucide="settings" class="w-4 h-4 text-slate-400 hover:text-slate-600 cursor-pointer transition-colors hidden group-hover:block"></i>
+            </div>
+
+            <div class="relative z-10 flex items-center justify-between bg-orange-50/80 px-3 py-2 rounded-lg border border-orange-100/50 mt-1 cursor-pointer hover:border-orange-200 transition-all">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="flame" class="w-4 h-4 text-orange-500 fill-orange-500/20"></i>
+                    <span class="text-xs font-semibold text-orange-600">Streak: <span class="font-bold text-orange-700">3 Ngày</span></span>
+                </div>
+                <i data-lucide="chevron-right" class="w-3 h-3 text-orange-400"></i>
+            </div>
+        </div>
+
+        <!-- Navigation Menu -->
+        <nav class="flex flex-col gap-1 p-3 overflow-y-auto no-scrollbar">
+            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 ml-3 mt-2">Menu chính</div>
+            <a href="main.html"
+                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-slate-900 font-medium transition-all cursor-pointer">
+                <i data-lucide="home" class="w-[18px] h-[18px]"></i> Trang chủ
+            </a>
+            <a href="studyplan.html"
+                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-slate-900 font-medium transition-all cursor-pointer">
+                <i data-lucide="map" class="w-[18px] h-[18px]"></i> Lộ trình học tập
+            </a>
+            <a href="learningprogress.html"
+                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-slate-900 font-medium transition-all cursor-pointer">
+                <i data-lucide="bar-chart-2" class="w-[18px] h-[18px]"></i> Tiến độ học
+            </a>
+
+            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 ml-3 mt-6">Học tập</div>
+            <a href="courses.html"
+                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-slate-900 font-medium transition-all cursor-pointer">
+                <i data-lucide="book-open" class="w-[18px] h-[18px]"></i> Khóa học của tôi
+            </a>
+            <a href="flashcard.html"
+                class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-teal-50 text-teal-600 font-semibold transition-all cursor-pointer">
+                <i data-lucide="layers" class="w-[18px] h-[18px]"></i> Kho flashcard
+            </a>
+            <a href="#"
+                class="flex items-center justify-between px-3 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-slate-900 font-medium transition-all cursor-pointer">
+                <div class="flex items-center gap-3">
+                    <i data-lucide="bot" class="w-[18px] h-[18px]"></i> Bài tập & Test
+                </div>
+            </a>
+        </nav>
+
+        <!-- Upgrade / Settings -->
+        <div class="mt-auto p-4 border-t border-slate-100">
+            <div class="bg-gradient-to-br from-teal-50 to-white rounded-xl p-4 border border-teal-100 shadow-sm relative overflow-hidden group hover:border-teal-200 transition-colors mb-4">
+                <div class="absolute -right-4 -top-4 w-16 h-16 bg-teal-100 rounded-full blur-2xl group-hover:bg-teal-200 transition-colors"></div>
+                <h4 class="font-bold text-slate-900 text-[13px] mb-1 relative z-10 flex items-center gap-1.5"><i data-lucide="zap" class="w-3.5 h-3.5 text-teal-500"></i> Pro Plan</h4>
+                <p class="text-[11px] text-slate-500 mb-3 relative z-10 leading-tight">Mở khóa tính năng AI không giới hạn</p>
+                <button class="w-full bg-teal-600 hover:bg-teal-700 text-white text-[12px] font-semibold py-2 rounded-lg transition-colors relative z-10 cursor-pointer">
+                    Nâng cấp ngay
+                </button>
+            </div>
+            <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-500 hover:text-red-600 hover:bg-red-50 font-medium transition-all cursor-pointer">
+                <i data-lucide="log-out" class="w-[18px] h-[18px]"></i> Đăng xuất
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 h-full flex flex-col relative z-20 overflow-x-hidden overflow-y-auto no-scrollbar scroll-smooth">
+
+        <!-- Unified Header and Hero Gradient Section -->
+        <div class="w-full relative bg-gradient-to-b from-teal-100/80 via-teal-50/30 to-[#fcfcfc] flex flex-col">
+            <!-- Deco circles behind -->
+            <div class="absolute top-0 right-[20%] w-64 h-64 bg-emerald-300 rounded-full blur-[80px] opacity-20 pointer-events-none z-0"></div>
+            <div class="absolute top-10 left-[20%] w-48 h-48 bg-teal-400 rounded-full blur-[70px] opacity-10 pointer-events-none z-0"></div>
+
+            <!-- Top Navigation Header -->
+            <header class="w-full px-6 lg:px-8 py-4 flex items-center justify-between z-40 relative">
+                <div class="flex items-center gap-4">
+                    <span class="font-bold text-xl text-teal-600 flex items-center gap-2 mr-4 lg:hidden">
+                        <i data-lucide="graduation-cap" class="w-6 h-6"></i>
+                    </span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-2 bg-[#fff6e6] hover:bg-orange-50 px-4 py-1.5 rounded-[20px] cursor-pointer transition-colors border border-transparent hover:border-orange-100/50">
+                        <div class="relative flex items-center justify-center">
+                            <i data-lucide="flame" class="w-[20px] h-[20px] text-orange-500 fill-amber-400"></i>
+                            <div class="absolute inset-0 m-auto mt-[10px] w-[5px] h-[5px] bg-white rounded flex items-center justify-center z-10 shadow-sm border border-orange-100/50"></div>
+                        </div>
+                        <span class="text-[17px] font-extrabold tracking-tight bg-gradient-to-b from-orange-400 to-[#ff6b00] bg-clip-text text-transparent">3</span>
+                    </div>
+                    <div class="h-6 w-px bg-slate-200 hidden sm:block"></div>
+                    <button class="relative w-9 h-9 rounded-full hover:bg-slate-100/80 flex items-center justify-center transition-colors cursor-pointer text-slate-400 bg-white/60 shadow-sm backdrop-blur-sm border border-white/50">
+                        <i data-lucide="bell" class="w-[18px] h-[18px]"></i>
+                        <span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Hero Section Inner -->
+            <section class="w-full relative pt-8 pb-20 px-6 lg:px-8 flex flex-col items-center z-10">
+
+                <!-- Function floating cards (Chỉ 2 cái) -->
+                <div class="flex items-center gap-6 relative z-20 mx-auto">
+                    <!-- Tạo Flashcard -->
+                    <div class="bg-white rounded-[24px] w-[220px] h-[140px] px-6 py-5 flex flex-col items-center justify-center gap-3 cursor-pointer transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(20,184,166,0.15)] shadow-[0_8px_30px_rgba(0,0,0,0.04)] group border border-slate-100/80">
+                        <div class="w-12 h-12 rounded-[14px] bg-teal-50 flex items-center justify-center text-teal-600 group-hover:bg-teal-500 group-hover:text-white transition-colors group-hover:shadow-md group-hover:rotate-6">
+                            <i data-lucide="plus" class="w-6 h-6 stroke-[2.5]"></i>
+                        </div>
+                        <div class="flex flex-col items-center mt-1">
+                            <span class="font-bold text-slate-800 text-[15px] group-hover:text-teal-700 transition">Tạo mới</span>
+                            <span class="text-[12px] text-slate-400 font-medium">bộ flashcard</span>
+                        </div>
+                    </div>
+
+                    <!-- Tìm kiếm chủ đề -->
+                    <div class="bg-white rounded-[24px] w-[220px] h-[140px] px-6 py-5 flex flex-col items-center justify-center gap-3 cursor-pointer transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(244,63,94,0.15)] shadow-[0_8px_30px_rgba(0,0,0,0.04)] group border border-slate-100/80">
+                        <div class="w-12 h-12 rounded-[14px] bg-rose-50 flex items-center justify-center text-rose-500 group-hover:bg-rose-500 group-hover:text-white transition-colors group-hover:shadow-md group-hover:scale-110">
+                            <i data-lucide="search" class="w-[22px] h-[22px] stroke-[2.5]"></i>
+                        </div>
+                        <div class="flex flex-col items-center mt-1">
+                            <span class="font-bold text-rose-500 text-[15px]">Tìm kiếm</span>
+                            <span class="text-[12px] text-slate-400 font-medium">trong thư viện</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Global Search bar below the floating actions -->
+                <div class="mt-14 w-full max-w-[700px] relative z-20 px-4">
+                    <div class="bg-white rounded-[24px] p-2 pl-6 pr-3 shadow-[0_8px_30px_rgba(0,0,0,0.06)] border border-slate-200/60 flex items-center gap-3 focus-within:shadow-[0_12px_40px_rgba(20,184,166,0.15)] focus-within:border-teal-300 transition-all group">
+                        <i data-lucide="search" class="w-5 h-5 text-slate-400 group-focus-within:text-teal-500 transition-colors"></i>
+                        <input type="text" placeholder="Tìm bộ flashcard, quiz, tài liệu học..."
+                            class="flex-1 bg-transparent py-3 border-none focus:outline-none text-slate-700 font-medium text-[15px] placeholder:text-slate-400">
+                        <button class="bg-teal-500 hover:bg-teal-600 text-white w-12 h-12 rounded-[16px] flex items-center justify-center transition-all shadow-sm active:scale-95">
+                            <i data-lucide="arrow-right" class="w-6 h-6"></i>
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Main Content (2 Columns: Grid + Right Side vertical list) -->
+        <div class="flex flex-col lg:flex-row w-full max-w-[1440px] mx-auto px-6 lg:px-8 mt-2 pb-16 gap-10">
+            
+            <!-- Left Side: Flashcard Collections -->
+            <div class="flex-1 flex flex-col gap-12 min-w-0">
+                
+                <!-- Bộ sưu tập Flashcard -->
+                <section>
+                    <div class="flex items-center justify-between mb-5 px-1">
+                        <h2 class="text-[18px] sm:text-xl font-bold text-slate-800 flex items-center gap-2 tracking-tight">
+                            <i data-lucide="star" class="w-6 h-6 text-amber-500 fill-amber-500"></i> Bộ sưu tập flashcard
+                        </h2>
+                        <a href="#" class="text-[13px] font-semibold bg-indigo-50 text-indigo-600 hover:bg-indigo-100 px-3.5 py-1.5 rounded-full transition-colors whitespace-nowrap">Xem thêm</a>
+                    </div>
+                    
+                    <!-- Grid of quizizz style cards -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                        
+                        <!-- Col 1 -->
+                        <div class="bg-white rounded-[20px] shadow-sm border border-slate-100/80 overflow-hidden cursor-pointer hover:-translate-y-1 hover:shadow-[0_12px_24px_rgba(0,0,0,0.06)] transition-all group flex flex-col">
+                            <!-- Img block -->
+                            <div class="h-[145px] bg-[url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=400')] bg-cover bg-center relative p-3">
+                                <div class="absolute inset-0 bg-gradient-to-t from-purple-900/90 to-purple-900/40 group-hover:from-purple-900/80 transition"></div>
+                                <div class="w-10 h-10 bg-white/20 backdrop-blur rounded-full flex items-center justify-center absolute top-3 left-3 z-10 border border-white/20 shadow-sm">
+                                    <span class="text-[20px]">🌍</span>
+                                </div>
+                                <h3 class="text-white font-extrabold text-[18px] absolute bottom-3 left-4 z-10 w-3/4 leading-tight drop-shadow-md">Vòng quanh<br>thế giới</h3>
+                                <div class="absolute bottom-3 right-3 text-[10px] text-white bg-black/40 backdrop-blur-sm px-2 py-1 rounded font-extrabold flex items-center gap-1 z-10"><i data-lucide="copy" class="w-3 h-3"></i> 8 Qs</div>
+                            </div>
+                            <!-- Detail block -->
+                            <div class="p-4 flex flex-col justify-between items-start gap-3 flex-1 relative">
+                                <p class="text-[14px] font-bold text-slate-700 leading-snug">Khám phá văn hóa & Địa lý các nước</p>
+                                <div class="w-full flex items-center justify-between mt-auto pt-2">
+                                    <span class="text-[11px] font-semibold text-slate-400 bg-slate-50 px-2 py-1 rounded flex items-center gap-1"><i data-lucide="play" class="w-3 h-3"></i> 277k plays</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Col 2 -->
+                        <div class="bg-white rounded-[20px] shadow-sm border border-slate-100/80 overflow-hidden cursor-pointer hover:-translate-y-1 hover:shadow-[0_12px_24px_rgba(0,0,0,0.06)] transition-all group flex flex-col">
+                            <div class="h-[145px] bg-[url('https://images.unsplash.com/photo-1516979187457-637abb4f9353?q=80&w=400')] bg-cover bg-center relative p-3">
+                                <div class="absolute inset-0 bg-gradient-to-t from-rose-900/90 to-rose-900/40 group-hover:from-rose-900/80 transition"></div>
+                                <div class="w-10 h-10 bg-white/20 backdrop-blur rounded-full flex items-center justify-center absolute top-3 left-3 z-10 border border-white/20 shadow-sm">
+                                    <span class="text-[20px]">📢</span>
+                                </div>
+                                <h3 class="text-white font-extrabold text-[18px] absolute bottom-3 left-4 z-10 w-3/4 leading-tight drop-shadow-md">Đúng hay sai</h3>
+                                <div class="absolute bottom-3 right-3 text-[10px] text-white bg-black/40 backdrop-blur-sm px-2 py-1 rounded font-extrabold flex items-center gap-1 z-10"><i data-lucide="copy" class="w-3 h-3"></i> 12 Qs</div>
+                            </div>
+                            <div class="p-4 flex flex-col justify-between items-start gap-3 flex-1">
+                                <p class="text-[14px] font-bold text-slate-700 leading-snug">Facts thú vị dùng cho Ice Breaker</p>
+                                <div class="w-full flex items-center justify-between mt-auto pt-2">
+                                    <span class="text-[11px] font-semibold text-slate-400 bg-slate-50 px-2 py-1 rounded flex items-center gap-1"><i data-lucide="play" class="w-3 h-3"></i> 464k plays</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Col 3 -->
+                        <div class="bg-white rounded-[20px] shadow-sm border border-slate-100/80 overflow-hidden cursor-pointer hover:-translate-y-1 hover:shadow-[0_12px_24px_rgba(0,0,0,0.06)] transition-all group flex flex-col">
+                            <div class="h-[145px] bg-gradient-to-tr from-purple-800 to-fuchsia-600 relative p-3">
+                                <div class="w-10 h-10 bg-white/20 backdrop-blur rounded-full flex items-center justify-center absolute top-3 left-3 z-10 border border-white/20 shadow-sm">
+                                    <span class="text-[20px]">🧕</span>
+                                </div>
+                                <h3 class="text-white font-extrabold text-[18px] absolute bottom-3 left-4 z-10 w-3/4 leading-tight drop-shadow-md">Giao tiếp<br>Cơ bản</h3>
+                                <div class="absolute bottom-3 right-3 text-[10px] text-white bg-black/20 backdrop-blur-sm px-2 py-1 rounded font-extrabold flex items-center gap-1 z-10"><i data-lucide="copy" class="w-3 h-3"></i> 14 Qs</div>
+                            </div>
+                            <div class="p-4 flex flex-col justify-between items-start gap-3 flex-1">
+                                <p class="text-[14px] font-bold text-slate-700 leading-snug line-clamp-2">Làm quen với sinh viên mới vào trường đại học</p>
+                                <div class="w-full flex items-center justify-between mt-auto pt-2">
+                                    <span class="text-[11px] font-semibold text-slate-400 bg-slate-50 px-2 py-1 rounded flex items-center gap-1"><i data-lucide="play" class="w-3 h-3"></i> 61k plays</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Col 4 -->
+                        <div class="bg-white rounded-[20px] shadow-sm border border-slate-100/80 overflow-hidden cursor-pointer hover:-translate-y-1 hover:shadow-[0_12px_24px_rgba(0,0,0,0.06)] transition-all group flex flex-col">
+                            <div class="h-[145px] bg-gradient-to-tr from-indigo-800 to-blue-600 relative p-3">
+                                <div class="w-10 h-10 bg-white/20 backdrop-blur rounded-full flex items-center justify-center absolute top-3 left-3 z-10 border border-white/20 shadow-sm">
+                                    <span class="text-[20px]">🤔</span>
+                                </div>
+                                <h3 class="text-white font-extrabold text-[18px] absolute bottom-3 left-4 z-10 w-[80%] leading-tight drop-shadow-md">Khám phá<br>Tiềm năng</h3>
+                                <div class="absolute bottom-3 right-3 text-[10px] text-white bg-black/20 backdrop-blur-sm px-2 py-1 rounded font-extrabold flex items-center gap-1 z-10"><i data-lucide="copy" class="w-3 h-3"></i> 40 Qs</div>
+                            </div>
+                            <div class="p-4 flex flex-col justify-between items-start gap-3 flex-1">
+                                <p class="text-[14px] font-bold text-slate-700 leading-snug">Câu đố vui khởi động trí não học sinh</p>
+                                <div class="w-full flex items-center justify-between mt-auto pt-2">
+                                    <span class="text-[11px] font-semibold text-slate-400 bg-slate-50 px-2 py-1 rounded flex items-center gap-1"><i data-lucide="play" class="w-3 h-3"></i> 93k plays</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Flashcard của tôi -->
+                <section>
+                    <div class="flex items-center justify-between mb-5 px-1">
+                        <h2 class="text-[18px] sm:text-xl font-bold text-slate-800 flex items-center gap-2 tracking-tight">
+                            <i data-lucide="bookmark" class="w-6 h-6 text-indigo-500 fill-indigo-500/20"></i> Flashcard của tôi
+                        </h2>
+                        <a href="#" class="text-[13px] font-semibold bg-indigo-50 text-indigo-600 hover:bg-indigo-100 px-3.5 py-1.5 rounded-full transition-colors whitespace-nowrap">Xem thiết lập</a>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                        
+                        <!-- Col 1 -->
+                        <div class="bg-white rounded-[20px] shadow-sm border border-slate-100/80 overflow-hidden cursor-pointer hover:-translate-y-1 hover:shadow-[0_12px_24px_rgba(0,0,0,0.06)] transition-all group flex flex-col">
+                            <div class="h-[145px] bg-[url('https://images.unsplash.com/photo-1596496050827-8299e0220de1?q=80&w=400')] bg-cover bg-center relative p-3">
+                                <div class="absolute inset-0 bg-gradient-to-t from-teal-900/90 to-teal-900/40 group-hover:from-teal-900/80 transition"></div>
+                                <h3 class="text-white font-extrabold text-[18px] absolute bottom-3 left-4 z-10 w-3/4 leading-tight drop-shadow-md">Toán học<br>Ứng dụng</h3>
+                                <div class="absolute bottom-3 right-3 text-[10px] text-teal-900 bg-white/90 backdrop-blur-sm px-2 py-1 rounded font-extrabold flex items-center gap-1 z-10"><i data-lucide="copy" class="w-3 h-3"></i> 13 Qs</div>
+                            </div>
+                            <div class="p-4 flex flex-col justify-between items-start gap-4 flex-1">
+                                <p class="text-[14px] font-bold text-slate-700">Hình học: Công thức chu vi tam giác</p>
+                                <div class="w-full flex items-center justify-between mt-auto pt-2">
+                                    <span class="text-[11px] font-semibold text-slate-400 bg-slate-50 px-2 py-1 rounded flex items-center gap-1"><i data-lucide="play" class="w-3 h-3"></i> 69k plays</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Col 2 -->
+                        <div class="bg-white rounded-[20px] shadow-sm border border-slate-100/80 overflow-hidden cursor-pointer hover:-translate-y-1 hover:shadow-[0_12px_24px_rgba(0,0,0,0.06)] transition-all group flex flex-col">
+                            <div class="h-[145px] bg-[url('https://images.unsplash.com/photo-1632516643720-e7f5d7d6eca4?q=80&w=400')] bg-cover bg-center relative p-3">
+                                <div class="absolute inset-0 bg-gradient-to-t from-stone-800/80 to-stone-800/30 group-hover:from-stone-800/70 transition"></div>
+                                <h3 class="text-white font-extrabold text-[18px] absolute bottom-3 left-4 z-10 w-3/4 leading-tight drop-shadow-md">Hình học 8</h3>
+                                <div class="absolute bottom-3 right-3 text-[10px] text-slate-800 bg-white/90 backdrop-blur-sm px-2 py-1 rounded font-extrabold flex items-center gap-1 z-10"><i data-lucide="layers" class="w-3 h-3"></i> 15 Slides</div>
+                            </div>
+                            <div class="p-4 flex flex-col justify-between items-start gap-4 flex-1">
+                                <p class="text-[14px] font-bold text-slate-700">Thể tích hình cầu & hình chóp</p>
+                                <div class="w-full flex items-center justify-between mt-auto pt-2">
+                                    <span class="text-[11px] font-semibold text-slate-400 bg-slate-50 px-2 py-1 rounded flex items-center gap-1"><i data-lucide="play" class="w-3 h-3"></i> 1k plays</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Col 3 -->
+                        <div class="bg-white rounded-[20px] shadow-sm border border-slate-100/80 overflow-hidden cursor-pointer hover:-translate-y-1 hover:shadow-[0_12px_24px_rgba(0,0,0,0.06)] transition-all group flex flex-col">
+                            <div class="h-[145px] bg-slate-900 border-b-[6px] border-indigo-500 flex items-center justify-center relative p-3">
+                                <span class="text-[36px] font-black text-white italic drop-shadow-lg opacity-90 tracking-tight">Math Test</span>
+                                <div class="absolute bottom-3 right-3 text-[10px] text-slate-900 bg-white/90 backdrop-blur-sm px-2 py-1 rounded font-extrabold flex items-center gap-1 z-10"><i data-lucide="copy" class="w-3 h-3"></i> 10 Qs</div>
+                            </div>
+                            <div class="p-4 flex flex-col justify-between items-start gap-4 flex-1">
+                                <p class="text-[14px] font-bold text-slate-700">Đề khảo sát lớp 10 chất lượng cao</p>
+                                <div class="w-full flex items-center justify-between mt-auto pt-2">
+                                    <span class="text-[11px] font-semibold text-slate-400 bg-slate-50 px-2 py-1 rounded flex items-center gap-1"><i data-lucide="play" class="w-3 h-3"></i> 12k plays</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+            </div> <!-- Flashcards Left section end -->
+
+            <!-- Right Column Widget - Hoạt động gần đây (Non-sticky popup style box) -->
+            <div class="w-full lg:w-[320px] xl:w-[350px] flex-shrink-0 flex flex-col relative">
+                
+                <!-- This Div looks like the study plan island box, but acts as a vertical list for recent activities -->
+                <div class="bg-white rounded-[24px] p-6 shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-slate-100 flex flex-col gap-4 relative">
+                    
+                    <!-- Title Area with Icon pop -->
+                    <div class="flex flex-col items-center border-b border-slate-100/80 pb-5 mb-2 mt-2">
+                        <div class="w-16 h-16 rounded-[1.25rem] bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-500 mb-4 rotate-3 shadow-[inset_0_-2px_6px_rgba(0,0,0,0.05)] transition-transform hover:rotate-6">
+                            <i data-lucide="history" class="w-8 h-8 stroke-[2px]"></i>
+                        </div>
+                        <h2 class="text-[19px] font-bold text-slate-900 tracking-tight text-center leading-tight">Hoạt động gần đây</h2>
+                        <p class="text-[12px] text-slate-400 mt-1">Các phiên học đang dang dở</p>
+                    </div>
+
+                    <!-- Vertical Activities List -->
+                    <div class="flex flex-col gap-3">
+                        
+                        <!-- Item 1 -->
+                        <div class="flex items-center gap-4 p-3 rounded-2xl hover:bg-slate-50/80 hover:shadow-sm transition-all border border-transparent hover:border-slate-100 cursor-pointer group">
+                            <!-- Color box icon like Quizizz top halves -->
+                            <div class="w-[46px] h-[46px] rounded-[14px] bg-blue-500 flex items-center justify-center text-white shadow-[0_4px_10px_rgba(59,130,246,0.3)] shrink-0 overflow-hidden relative">
+                                <i data-lucide="layers" class="w-6 h-6 relative z-10 group-hover:scale-110 transition-transform"></i>
+                                <div class="absolute -bottom-2 -right-2 w-6 h-6 bg-white/20 rounded-full"></div>
+                            </div>
+                            <div class="flex-1 min-w-0 flex flex-col justify-center">
+                                <div class="flex items-center justify-between gap-1">
+                                    <h4 class="font-bold text-[14px] text-slate-800 truncate group-hover:text-blue-600 transition-colors">GDCD - Bài 7</h4>
+                                </div>
+                                <p class="text-[11px] text-slate-500 mt-0.5 line-clamp-1">Giáo dục công dân 6</p>
+                            </div>
+                            <div class="shrink-0 text-right">
+                                <span class="bg-blue-50 text-blue-600 text-[10px] font-bold px-2 py-1 rounded uppercase">25 Qs</span>
+                            </div>
+                        </div>
+
+                        <!-- Item 2 -->
+                        <div class="flex items-center gap-4 p-3 rounded-2xl hover:bg-slate-50/80 hover:shadow-sm transition-all border border-transparent hover:border-slate-100 cursor-pointer group">
+                            <div class="w-[46px] h-[46px] rounded-[14px] bg-teal-500 flex items-center justify-center text-white shadow-[0_4px_10px_rgba(20,184,166,0.3)] shrink-0 overflow-hidden relative">
+                                <i data-lucide="boxes" class="w-6 h-6 relative z-10 group-hover:scale-110 transition-transform"></i>
+                                <div class="absolute -bottom-2 -right-2 w-6 h-6 bg-white/20 rounded-full"></div>
+                            </div>
+                            <div class="flex-1 min-w-0 flex flex-col justify-center">
+                                <div class="flex items-center justify-between gap-1">
+                                    <h4 class="font-bold text-[14px] text-slate-800 truncate group-hover:text-teal-600 transition-colors">Bài 30 Sinh học</h4>
+                                </div>
+                                <p class="text-[11px] text-slate-500 mt-0.5 line-clamp-1">Sinh học cơ bản</p>
+                            </div>
+                            <div class="shrink-0 text-right">
+                                <span class="bg-teal-50 text-teal-600 text-[10px] font-bold px-2 py-1 rounded uppercase">12 Qs</span>
+                            </div>
+                        </div>
+
+                        <!-- Item 3 -->
+                        <div class="flex items-center gap-4 p-3 rounded-2xl hover:bg-slate-50/80 hover:shadow-sm transition-all border border-transparent hover:border-slate-100 cursor-pointer group">
+                            <div class="w-[46px] h-[46px] rounded-[14px] bg-amber-500 flex items-center justify-center text-white shadow-[0_4px_10px_rgba(245,158,11,0.3)] shrink-0 overflow-hidden relative">
+                                <i data-lucide="sun" class="w-6 h-6 relative z-10 group-hover:scale-110 transition-transform"></i>
+                                <div class="absolute -bottom-2 -right-2 w-6 h-6 bg-white/20 rounded-full"></div>
+                            </div>
+                            <div class="flex-1 min-w-0 flex flex-col justify-center">
+                                <div class="flex items-center justify-between gap-1">
+                                    <h4 class="font-bold text-[14px] text-slate-800 truncate group-hover:text-amber-600 transition-colors">Ôn tập Môn Lý</h4>
+                                </div>
+                                <p class="text-[11px] text-slate-500 mt-0.5 line-clamp-1">Vật lý 10 - Chương 1</p>
+                            </div>
+                            <div class="shrink-0 text-right">
+                                <span class="bg-amber-50 text-amber-600 text-[10px] font-bold px-2 py-1 rounded uppercase">50 CRDS</span>
+                            </div>
+                        </div>
+
+                        <!-- Item 4 -->
+                        <div class="flex items-center gap-4 p-3 rounded-2xl hover:bg-slate-50/80 hover:shadow-sm transition-all border border-transparent hover:border-slate-100 cursor-pointer group">
+                            <div class="w-[46px] h-[46px] rounded-[14px] bg-purple-500 flex items-center justify-center text-white shadow-[0_4px_10px_rgba(168,85,247,0.3)] shrink-0 overflow-hidden relative">
+                                <i data-lucide="album" class="w-6 h-6 relative z-10 group-hover:scale-110 transition-transform"></i>
+                                <div class="absolute -bottom-2 -right-2 w-6 h-6 bg-white/20 rounded-full"></div>
+                            </div>
+                            <div class="flex-1 min-w-0 flex flex-col justify-center">
+                                <div class="flex items-center justify-between gap-1">
+                                    <h4 class="font-bold text-[14px] text-slate-800 truncate group-hover:text-purple-600 transition-colors">Lịch sử Việt Nam</h4>
+                                </div>
+                                <p class="text-[11px] text-slate-500 mt-0.5 line-clamp-1">Giai đoạn lớp 12</p>
+                            </div>
+                            <div class="shrink-0 text-right">
+                                <span class="bg-purple-50 text-purple-600 text-[10px] font-bold px-2 py-1 rounded uppercase">10 Qs</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="w-full mt-3 bg-slate-50 hover:bg-slate-100 text-slate-600 font-bold py-3.5 rounded-xl transition-colors text-[13px] border border-slate-200/50 active:scale-[0.98]">
+                        Mở thư viện cá nhân
+                    </button>
+                    
+                </div>
+            </div> <!-- End Right Column -->
+
+        </div>
+    </main>
+
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>

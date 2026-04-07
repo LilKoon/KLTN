@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> Học Flashcard </title>
+    <!-- Tailwind CSS (CDN) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        teal: {
+                            50: '#f0fdfa',
+                            100: '#ccfbf1',
+                            200: '#99f6e4',
+                            300: '#5eead4',
+                            400: '#2dd4bf',
+                            500: '#14b8a6',
+                            600: '#0d9488',
+                            700: '#0f766e',
+                            800: '#115e59',
+                            900: '#134e4a',
+                            950: '#042f2e',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* 3D Flip Effects */
+        .perspective {
+            perspective: 1200px;
+        }
+
+        .transform-style-3d {
+            transform-style: preserve-3d;
+        }
+
+        .backface-hidden {
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
+
+        .rotate-y-180 {
+            transform: rotateY(180deg);
+        }
+
+        .flip-card-inner {
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Subtle animated background */
+        .bg-pattern {
+            background-image: radial-gradient(rgba(255, 255, 255, 0.05) 2px, transparent 2px);
+            background-size: 30px 30px;
+        }
+    </style>
+</head>
+
+<body class="bg-teal-500 font-sans text-white h-screen w-screen overflow-hidden flex flex-col relative selection:bg-white/30">
+
+    <!-- Decorative Game Background (Vibrant Light) -->
+    <div class="absolute inset-0 bg-gradient-to-br from-teal-400 via-teal-500 to-emerald-600 z-0 pointer-events-none"></div>
+    <div class="absolute inset-0 bg-white/5 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-white/20 to-transparent z-0 pointer-events-none"></div>
+    <div class="absolute inset-0 bg-pattern z-0 pointer-events-none opacity-20 mix-blend-overlay"></div>
+
+    <!-- Top Navigation Bar -->
+    <header class="w-full px-6 py-4 flex items-center justify-between z-40 relative">
+        <!-- Left: Logo/Back -->
+        <a href="flashcard-detail.html" class="flex items-center gap-2 group cursor-pointer transition-colors text-white/70 hover:text-white">
+            <div class="w-9 h-9 rounded-xl bg-white/10 backdrop-blur-sm border border-white/10 flex items-center justify-center group-hover:bg-white/20 transition-all">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </div>
+            <span class="font-bold hidden sm:inline-block">Thoát</span>
+        </a>
+
+        <!-- Center: Progress -->
+        <div class="flex-1 flex justify-center max-w-xl px-4">
+            <div class="w-full flex items-center gap-4 bg-white/20 backdrop-blur-md px-4 py-2 rounded-full border border-white/30 shadow-sm">
+                <span class="text-xs font-bold text-white w-8 text-right">0%</span>
+                <div class="flex-1 h-2.5 bg-black/20 rounded-full overflow-hidden relative shadow-inner">
+                    <!-- Progress Bar -->
+                    <div id="progressFill" class="h-full bg-white w-[25%] rounded-full transition-all duration-500 relative shadow-[0_0_10px_rgba(255,255,255,0.8)]">
+                        <!-- Glow effect -->
+                        <div class="absolute inset-0 bg-white blur-[2px]"></div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-1.5 bg-amber-400 text-amber-900 px-2 py-0.5 rounded-full shadow-sm font-bold">
+                    <span class="text-[12px]">0</span>
+                    <i data-lucide="zap" class="w-3.5 h-3.5 fill-amber-900 text-amber-900"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Actions -->
+        <div class="flex items-center gap-2">
+            <button class="w-9 h-9 rounded-xl bg-white/10 backdrop-blur-sm border border-white/10 flex items-center justify-center text-white/70 hover:text-white hover:bg-white/20 transition-all">
+                <i data-lucide="settings" class="w-4 h-4"></i>
+            </button>
+            <button class="w-9 h-9 rounded-xl bg-white/10 backdrop-blur-sm border border-white/10 flex items-center justify-center text-white/70 hover:text-white hover:bg-white/20 transition-all" onclick="document.documentElement.requestFullscreen()">
+                <i data-lucide="maximize" class="w-4 h-4"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Play Area -->
+    <main class="flex-1 w-full flex flex-col items-center justify-center relative z-10 px-4 sm:px-8 pb-10">
+        
+        <!-- Max width container for card -->
+        <div class="w-full max-w-[800px] flex flex-col items-center">
+            
+            <!-- Stats Header -->
+            <div class="w-full flex items-center justify-between mb-6 px-2">
+                <div class="flex items-center gap-2 bg-white/20 border border-white/30 text-white px-3 py-1.5 rounded-lg backdrop-blur-md shadow-sm">
+                    <span id="learningBadge" class="w-5 h-5 rounded-full bg-orange-500 text-white text-[11px] font-bold flex items-center justify-center shadow-sm">0</span>
+                    <span class="text-[13px] font-bold text-white drop-shadow-sm">Đang học</span>
+                </div>
+                
+                <div class="text-[14px] font-bold text-white uppercase tracking-widest drop-shadow-md" id="cardCounter">
+                    1 / 4 Flashcards
+                </div>
+
+                <div class="flex items-center gap-2 bg-white/20 border border-white/30 text-white px-3 py-1.5 rounded-lg backdrop-blur-md shadow-sm">
+                    <span class="text-[13px] font-bold text-white drop-shadow-sm">Đã thuộc</span>
+                    <span id="knownBadge" class="w-5 h-5 rounded-full bg-emerald-500 text-white text-[11px] font-bold flex items-center justify-center shadow-sm">0</span>
+                </div>
+            </div>
+
+            <!-- Flashcard Container (3D Context) -->
+            <div class="perspective w-full aspect-[4/3] sm:aspect-[16/10] max-h-[60vh] cursor-pointer group" id="flashcardArea" onclick="flipCard()">
+                <!-- Inner Animated Container -->
+                <div class="relative w-full h-full transform-style-3d flip-card-inner shadow-[0_20px_50px_rgba(0,0,0,0.5)] rounded-[24px]" id="flashcardInner">
+                    
+                    <!-- Front Face -->
+                    <div class="absolute inset-0 w-full h-full backface-hidden bg-white border border-teal-100 rounded-[24px] flex flex-col items-center justify-center p-8 sm:p-16 text-center shadow-xl">
+                        <div class="flex-1 flex items-center justify-center w-full relative">
+                            <h2 class="text-3xl sm:text-4xl md:text-[42px] font-extrabold text-slate-800 leading-tight tracking-tight transition-all" id="frontText">
+                                What is a noun?
+                            </h2>
+                        </div>
+                        <div class="mt-auto pt-6 flex items-center gap-2 text-slate-400 text-[13px] font-medium">
+                            <span>Bấm chuột hoặc ấn</span>
+                            <kbd class="bg-slate-100 border border-slate-200 px-2 py-0.5 rounded text-slate-500 font-sans shadow-sm font-bold">Space</kbd>
+                            <span>để lật</span>
+                        </div>
+                    </div>
+
+                    <!-- Back Face -->
+                    <div class="absolute inset-0 w-full h-full backface-hidden rotate-y-180 bg-white border border-teal-100 rounded-[24px] flex flex-col items-center justify-center p-8 sm:p-16 text-center shadow-[0_0_40px_rgba(20,184,166,0.3)]">
+                        <div class="flex-1 flex flex-col items-center justify-center w-full gap-6">
+                            
+                            <!-- The Answer -->
+                            <h2 class="text-2xl sm:text-3xl md:text-[34px] font-extrabold text-teal-900 leading-relaxed text-balance max-w-2xl" id="backText">
+                                A noun is a word that represents a person, place, thing, or idea.
+                            </h2>
+                            
+                            <!-- Example block -->
+                            <div class="bg-teal-50 px-6 py-4 rounded-xl border border-teal-100 w-full max-w-xl">
+                                <p class="text-teal-800 text-[16px] font-medium italic">
+                                    <span class="font-bold text-teal-600">Examples:</span> cat, city, love.
+                                </p>
+                            </div>
+
+                        </div>
+                        
+                        <!-- Action choices when revealed -->
+                        <div class="w-full mt-auto pt-8 flex items-center gap-4 hidden" id="revealActions">
+                            <button class="flex-1 bg-orange-100 hover:bg-orange-200 text-orange-600 font-bold py-4 rounded-xl transition-colors flex items-center justify-center gap-2 border border-orange-200" onclick="event.stopPropagation(); nextCard('learning')">
+                                <span class="w-6 h-6 rounded bg-orange-500 text-white flex items-center justify-center text-[12px]">1</span>
+                                Vẫn đang học
+                            </button>
+                            <button class="flex-1 bg-teal-500 hover:bg-teal-600 text-white font-bold py-4 rounded-xl transition-colors shadow-[0_8px_20px_rgba(20,184,166,0.25)] flex items-center justify-center gap-2 border border-teal-400" onclick="event.stopPropagation(); nextCard('know')">
+                                <span class="w-6 h-6 rounded bg-teal-700 text-white flex items-center justify-center text-[12px]">2</span>
+                                Đã thuộc
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Floating Back / Undo Button (Quizizz style) -->
+            <div class="absolute left-4 sm:left-10 top-1/2 -translate-y-1/2">
+                <button class="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.2)] flex items-center justify-center text-white transition-all cursor-pointer hidden md:flex">
+                    <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
+                </button>
+            </div>
+            
+        </div>
+    </main>
+
+    <!-- Bottom Corner: User Avatar -->
+    <div class="absolute bottom-6 left-6 z-40 hidden sm:flex items-center gap-3">
+        <div class="relative">
+            <img src="https://i.pravatar.cc/150?u=a042581f4e29026024d" alt="Avatar" class="w-12 h-12 rounded-full border-2 border-white/20 object-cover shadow-lg">
+            <div class="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-teal-950 rounded-full"></div>
+        </div>
+        <div class="flex flex-col">
+            <span class="text-white font-bold text-sm leading-tight shadow-sm">Ngô</span>
+            <span class="text-white font-bold text-sm leading-tight shadow-sm">Thư</span>
+        </div>
+    </div>
+
+    <!-- Initialization & Logic -->
+    <script>
+        lucide.createIcons();
+
+        // State
+        let isFlipped = false;
+        let currentCardIndex = 0;
+        let learningCount = 0;
+        let knownCount = 0;
+        
+        const flashcards = [
+            {
+                front: "What is a noun?",
+                back: "A noun is a word that represents a person, place, thing, or idea.",
+                example: "Examples: cat, city, love."
+            },
+            {
+                front: "What is a verb?",
+                back: "A verb is a word that describes an action, occurrence, or state of being.",
+                example: "Examples: run, is, think."
+            },
+            {
+                front: "What is an adjective?",
+                back: "A word that describes or modifies a noun or pronoun.",
+                example: "Examples: beautiful, tall, red."
+            },
+            {
+                front: "What is an adverb?",
+                back: "A word that modifies a verb, an adjective, or another adverb.",
+                example: "Examples: extremely, quickly, today."
+            }
+        ];
+
+        const innerCard = document.getElementById('flashcardInner');
+        const revealActions = document.getElementById('revealActions');
+
+        function flipCard() {
+            if (!isFlipped) {
+                // Flip to back
+                innerCard.classList.add('rotate-y-180');
+                isFlipped = true;
+                
+                // Show actions after animation
+                setTimeout(() => {
+                    revealActions.classList.remove('hidden');
+                }, 400);
+            } else {
+                // Flip to front
+                innerCard.classList.remove('rotate-y-180');
+                isFlipped = false;
+                
+                setTimeout(() => {
+                    revealActions.classList.add('hidden');
+                }, 200);
+            }
+        }
+
+        // Keyboard support Space to flip
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                flipCard();
+            } else if (isFlipped && e.key === '1') {
+                nextCard('learning');
+            } else if (isFlipped && e.key === '2') {
+                nextCard('know');
+            }
+        });
+
+        // Advance to next card logic
+        function nextCard(status) {
+            // Update stats
+            if (status === 'learning') {
+                learningCount++;
+                document.getElementById('learningBadge').textContent = learningCount;
+            } else if (status === 'know') {
+                knownCount++;
+                document.getElementById('knownBadge').textContent = knownCount;
+            }
+            
+            if (currentCardIndex < flashcards.length - 1) {
+                // Quick hide back contents
+                revealActions.classList.add('hidden');
+                
+                // Flip back to front quickly
+                innerCard.classList.remove('rotate-y-180');
+                isFlipped = false;
+
+                // Change data after half flip
+                setTimeout(() => {
+                    currentCardIndex++;
+                    updateCardUI();
+                }, 300);
+            } else {
+                // Done with stack
+                alert("Chúc mừng! Bạn đã hoàn thành bộ Flashcard.");
+                window.location.href = 'flashcard-detail.html';
+            }
+        }
+
+        function updateCardUI() {
+            const cardData = flashcards[currentCardIndex];
+            // Get DOM elements (Need IDs or Query selectors)
+            document.querySelector('#flashcardInner .absolute.inset-0:not(.rotate-y-180) h2').textContent = cardData.front;
+            document.querySelector('#backText').textContent = cardData.back;
+            document.querySelector('.bg-teal-50 p').innerHTML = `<span class="font-bold text-teal-600">Examples:</span> ${cardData.example.replace('Examples: ', '')}`;
+            
+            // Update counter
+            document.getElementById('cardCounter').textContent = `${currentCardIndex + 1} / ${flashcards.length} Flashcards`;
+            
+            // Update progress bar
+            const percent = ((currentCardIndex) / flashcards.length) * 100;
+            document.getElementById('progressFill').style.width = Math.max(percent, 5) + '%';
+            document.querySelector('.text-xs.font-bold.text-white').textContent = Math.round(percent) + '%';
+        }
+        
+        // Init first card explicitly just in case HTML mismatches Array
+        updateCardUI();
+
+    </script>
+</body>
+
+</html>
