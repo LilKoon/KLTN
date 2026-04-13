@@ -20,6 +20,7 @@ export default function ClientSidebar({ isSidebarOpen, toggleSidebar }) {
         { id: 'flashcard-storage', label: 'Kho Flashcards', icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg> },
         { id: 'create-flashcard', label: 'AI Tạo Flashcard', icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg> },
         { id: 'profile', label: 'Hồ sơ cá nhân', icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg> },
+        { id: 'premium', label: 'Nâng cấp Premium', premium: true, icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg> },
     ];
 
     return (
@@ -60,16 +61,16 @@ export default function ClientSidebar({ isSidebarOpen, toggleSidebar }) {
                                 }}
                                 className={`w-full flex items-center gap-3.5 px-4 py-3.5 rounded-2xl font-semibold text-sm transition-all duration-200 group relative ${
                                     isActive 
-                                    ? 'bg-teal-50 text-teal-700' 
-                                    : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
+                                    ? (item.premium ? 'bg-amber-50 text-amber-700' : 'bg-teal-50 text-teal-700') 
+                                    : (item.premium ? 'text-amber-600 hover:bg-amber-50 hover:text-amber-700 font-bold bg-gradient-to-r from-amber-50/50 to-transparent border border-amber-100/50' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800')
                                 }`}
                             >
                                 {/* Active indicator line */}
                                 {isActive && (
-                                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-teal-600 rounded-r-full"></div>
+                                    <div className={`absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 ${item.premium ? 'bg-amber-500' : 'bg-teal-600'} rounded-r-full`}></div>
                                 )}
                                 
-                                <span className={isActive ? 'text-teal-600' : 'text-slate-400 group-hover:text-slate-500 transition-colors'}>
+                                <span className={isActive ? (item.premium ? 'text-amber-500' : 'text-teal-600') : (item.premium ? 'text-amber-500' : 'text-slate-400 group-hover:text-slate-500 transition-colors')}>
                                     {item.icon}
                                 </span>
                                 {item.label}

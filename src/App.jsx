@@ -20,6 +20,8 @@ import FinalTest from './components/views/client/FinalTest';
 import PassFailCheck from './components/views/client/PassFailCheck';
 import CreateFlashcard from './components/views/client/CreateFlashcard';
 import FlashcardStorage from './components/views/client/FlashcardStorage';
+import Premium from './components/views/client/Premium';
+import Payment from './components/views/client/Payment';
 
 // Admin Auth & Layout & Views
 import AdminLogin from './components/views/admin/AdminLogin';
@@ -76,6 +78,8 @@ const ClientLayout = () => {
                         <Route path="create-flashcard" element={<CreateFlashcard />} />
                         <Route path="flashcard-storage" element={<FlashcardStorage />} />
                         <Route path="profile" element={<ClientProfile />} />
+                        <Route path="premium" element={<Premium />} />
+                        <Route path="payment" element={<Payment />} />
                         <Route path="*" element={<Navigate to="dashboard" replace />} />
                     </Routes>
                 </main>
