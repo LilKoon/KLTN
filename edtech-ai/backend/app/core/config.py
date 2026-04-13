@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "Edtech AI Smart Companion API"
 
     # Database
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql+asyncpg://postgres:bun123@localhost:5432/DB_KLTN")
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql+asyncpg://postgres:bun123@localhost:5432/DB_KLTN_final")
 
     # JWT
     SECRET_KEY: str = os.getenv("SECRET_KEY", "edtech-ai-super-secret-key-2024")
