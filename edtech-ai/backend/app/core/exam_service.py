@@ -20,8 +20,8 @@ EXAM_CONFIG = {
     "distribution": [
         # Mỗi entry: kỹ năng + số câu theo từng level
         # Thêm kỹ năng mới? Chỉ cần thêm 1 dòng ở đây!
-        {"skill": "GRAMMAR", "levels": {1: 10, 2: 10, 3: 10}},
-        # {"skill": "LISTENING", "levels": {1: 5, 2: 5, 3: 5}},
+        {"skill": "GRAMMAR", "levels": {1: 5, 2: 5, 3: 5}},
+        {"skill": "VOCABULARY", "levels": {1: 5, 2: 5, 3: 5}},
         # {"skill": "READING",   "levels": {1: 5, 2: 5, 3: 5}},
     ]
 }
