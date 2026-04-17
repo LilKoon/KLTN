@@ -1,13 +1,16 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
-
+from fastapi.staticfiles import StaticFiles
 app = FastAPI(
     title=settings.PROJECT_NAME,
     openapi_url="/api/v1/openapi.json",
     docs_url="/docs",
     redoc_url="/redoc"
 )
+
+# Mount static files to serve audios
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Set all CORS enabled origins
 if settings.BACKEND_CORS_ORIGINS:

@@ -225,9 +225,15 @@ export default function PlacementTest() {
                         </span>
                     </div>
 
-                    <h2 className="text-2xl font-bold text-slate-800 mb-8 leading-relaxed">
+                    <h2 className="text-2xl font-bold text-slate-800 mb-6 leading-relaxed">
                         {currentQ.question}
                     </h2>
+
+                    {currentQ.audio && (
+                        <div className="mb-6 bg-slate-50 p-4 rounded-xl border border-slate-100 flex items-center justify-center">
+                            <audio controls src={`http://127.0.0.1:8000/static/audios/${currentQ.audio}`} className="w-full max-w-md" />
+                        </div>
+                    )}
 
                     {/* Options */}
                     <div className="space-y-4">

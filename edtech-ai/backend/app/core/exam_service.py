@@ -18,9 +18,9 @@ EXAM_CONFIG = {
     "distribution": [
         # Mỗi entry: kỹ năng + số câu theo từng level
         # Thêm kỹ năng mới? Chỉ cần thêm 1 dòng ở đây!
-        {"skill": "GRAMMAR", "levels": {1: 5, 2: 5, 3: 5}},
-        {"skill": "VOCABULARY", "levels": {1: 5, 2: 5, 3: 5}},
-        # {"skill": "READING",   "levels": {1: 5, 2: 5, 3: 5}},
+        {"skill": "GRAMMAR", "levels": {1: 4, 2: 3, 3: 3}},
+        {"skill": "VOCABULARY", "levels": {1: 4, 2: 3, 3: 3}},
+        {"skill": "LISTENING", "levels": {1: 10, 2: 0, 3: 0}},
     ]
 }
 
@@ -45,7 +45,7 @@ async def fetch_random_questions(db: AsyncSession) -> list:
                 .where(
                     NganHangCauHoi.KyNang == skill,
                     NganHangCauHoi.MucDo == level,
-                    NganHangCauHoi.MucDichSuDung == "EXAM",
+                    NganHangCauHoi.MucDichSuDung.in_(["EXAM", "DAU_VAO"]),
                 )
                 .order_by(sql_func.random())
                 .limit(count)
@@ -90,6 +90,7 @@ async def create_exam(db: AsyncSession, user_id: str) -> dict:
             "options": q.DSDapAn,  # {"A": "...", "B": "...", "C": "...", "D": "..."}
             "skill": q.KyNang,
             "level": q.MucDo,
+            "audio": q.FileAudioDinhKem,
         })
 
     return {
@@ -224,6 +225,7 @@ async def get_exam_result(db: AsyncSession, exam_id: str, user_id: str) -> dict:
             "skill": q.KyNang,
             "level": q.MucDo,
             "time_spent": d.ThoiGianLamCauHoi,
+            "audio": q.FileAudioDinhKem,
         })
 
     total = len(detail_list)

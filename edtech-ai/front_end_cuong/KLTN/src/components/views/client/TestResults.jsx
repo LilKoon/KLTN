@@ -159,6 +159,12 @@ export default function TestResults() {
                                             {item.question}
                                         </p>
                                         
+                                        {item.audio && (
+                                            <div className="mt-2 mb-3">
+                                                <audio controls src={`http://127.0.0.1:8000/static/audios/${item.audio}`} className="h-10 w-full max-w-sm" />
+                                            </div>
+                                        )}
+                                        
                                         {/* Skill & Level tags */}
                                         <div className="flex gap-2 mt-2 mb-3">
                                             <span className="px-2 py-0.5 bg-sky-50 text-sky-700 text-xs font-semibold rounded-full">{item.skill}</span>
