@@ -1,7 +1,104 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useAuth } from '../../../context/AuthContext';
+import { apiGetProfile, apiUpdateProfile, apiUploadAvatar } from '../../../api';
 
 export default function Profile() {
+    const { token } = useAuth();
     const [activeTab, setActiveTab] = useState('personal');
+
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+    const [message, setMessage] = useState('');
+    const [error, setError] = useState('');
+
+    const fileInputRef = useRef(null);
+
+    const [profile, setProfile] = useState({
+        name: '',
+        email: '',
+        phone: '',
+        bio: '',
+        avatar: ''
+    });
+
+    useEffect(() => {
+        if (token) {
+            fetchProfile();
+        }
+    }, [token]);
+
+    const fetchProfile = async () => {
+        try {
+            setLoading(true);
+            const data = await apiGetProfile(token);
+            setProfile({
+                name: data.name || '',
+                email: data.email || '',
+                phone: data.phone || '',
+                bio: data.bio || '',
+                avatar: data.avatar ? (data.avatar.startsWith('http') ? data.avatar : `http://localhost:8000${data.avatar}`) : ''
+            });
+        } catch (err) {
+            setError('Không thể tải thông tin cá nhân.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleChange = (e) => {
+        setProfile({ ...profile, [e.target.name]: e.target.value });
+    };
+
+    const handleSave = async (e) => {
+        e.preventDefault();
+        setMessage('');
+        setError('');
+
+        if (profile.phone) {
+            const phoneRegex = /^0\d{9}$/;
+            if (!phoneRegex.test(profile.phone)) {
+                setError('Số điện thoại không hợp lệ.');
+                return;
+            }
+        }
+
+        setSaving(true);
+        try {
+            await apiUpdateProfile(token, profile);
+            setMessage('Lưu thay đổi thành công!');
+            setTimeout(() => setMessage(''), 3000);
+        } catch (err) {
+            setError(err.message || 'Lưu thay đổi thất bại.');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleFileChange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        try {
+            setSaving(true);
+            const data = await apiUploadAvatar(token, file);
+            setProfile(prev => ({ ...prev, avatar: 'http://localhost:8000' + data.avatarUrl }));
+            setMessage("Cập nhật ảnh đại diện thành công!");
+            setTimeout(() => setMessage(''), 3000);
+        } catch (err) {
+            setError(err.message || 'Cập nhật ảnh đại diện thất bại.');
+        } finally {
+            setSaving(false);
+            if (fileInputRef.current) {
+                fileInputRef.current.value = "";
+            }
+        }
+    };
+
+    const triggerFileSelect = () => {
+        if (fileInputRef.current) {
+            fileInputRef.current.click();
+        }
+    };
 
     const menuItems = [
         { id: 'personal', label: 'Thông tin cá nhân', icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg> },
@@ -10,13 +107,21 @@ export default function Profile() {
         { id: 'billing', label: 'Gói thành viên', icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg> },
     ];
 
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-slate-50 flex items-center justify-center font-inter">
+                <p className="text-slate-500 font-medium">Đang tải...</p>
+            </div>
+        );
+    }
+
     return (
         <div className="min-h-screen bg-slate-50 font-inter p-4 sm:p-6 lg:p-12">
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
                 .font-inter { font-family: 'Inter', sans-serif; }
             `}</style>
-            
+
             <div className="max-w-6xl mx-auto space-y-8">
                 {/* Header */}
                 <div>
@@ -32,11 +137,10 @@ export default function Profile() {
                                 <button
                                     key={item.id}
                                     onClick={() => setActiveTab(item.id)}
-                                    className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl font-semibold text-sm transition-all duration-200 ${
-                                        activeTab === item.id
-                                        ? 'bg-teal-50 text-teal-700'
-                                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-800'
-                                    }`}
+                                    className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl font-semibold text-sm transition-all duration-200 ${activeTab === item.id
+                                            ? 'bg-teal-50 text-teal-700'
+                                            : 'text-slate-600 hover:bg-slate-50 hover:text-slate-800'
+                                        }`}
                                 >
                                     <span className={activeTab === item.id ? 'text-teal-600' : 'text-slate-400'}>
                                         {item.icon}
@@ -49,65 +153,76 @@ export default function Profile() {
 
                     {/* Main Content Area */}
                     <div className="flex-1 bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden">
-                        
+
                         {/* Tab Content: Personal Info */}
                         {activeTab === 'personal' && (
                             <div className="p-8 sm:p-10 animate-fade-in">
                                 <h2 className="text-xl font-bold text-slate-800 mb-6 pb-4 border-b border-slate-100">Thông tin cá nhân</h2>
-                                
+
+                                {message && (
+                                    <div className="mb-6 p-4 bg-teal-50 border border-teal-200 text-teal-700 rounded-xl text-sm font-medium">
+                                        {message}
+                                    </div>
+                                )}
+                                {error && (
+                                    <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-600 rounded-xl text-sm font-medium">
+                                        {error}
+                                    </div>
+                                )}
+
                                 {/* Avatar Upload Section */}
                                 <div className="flex flex-col sm:flex-row items-center gap-6 mb-10">
                                     <div className="relative">
                                         <div className="w-24 h-24 rounded-full bg-slate-200 overflow-hidden shadow-inner border-4 border-white">
-                                            <img src="https://i.pravatar.cc/150?img=11" alt="Avatar" className="w-full h-full object-cover" />
+                                            <img src={profile.avatar || "https://i.pravatar.cc/150?img=11"} alt="Avatar" className="w-full h-full object-cover" />
                                         </div>
-                                        <button className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-teal-600 text-white flex items-center justify-center shadow-sm hover:bg-teal-700 transition-colors border-2 border-white">
-                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                                            </svg>
-                                        </button>
                                     </div>
                                     <div className="text-center sm:text-left">
-                                        <button className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm rounded-xl transition-colors mb-2">
-                                            Thay đổi ảnh đại diện
+                                        <input
+                                            type="file"
+                                            ref={fileInputRef}
+                                            className="hidden"
+                                            accept=".jpg,.jpeg,.png,.gif"
+                                            onChange={handleFileChange}
+                                        />
+                                        <button
+                                            onClick={triggerFileSelect}
+                                            disabled={saving}
+                                            className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm rounded-xl transition-colors mb-2 disabled:opacity-50">
+                                            {saving ? "Đang tải ảnh..." : "Thay đổi ảnh đại diện"}
                                         </button>
                                         <p className="text-xs text-slate-400 font-medium">Định dạng JPG, GIF hoặc PNG. Tối đa 5MB.</p>
                                     </div>
                                 </div>
 
                                 {/* Form Fields */}
-                                <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
+                                <form className="space-y-6" onSubmit={handleSave}>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                        <div>
+                                        <div className="sm:col-span-2 text-left">
                                             <label className="block text-sm font-semibold text-slate-700 mb-2 ml-1">Họ và tên</label>
-                                            <input type="text" defaultValue="Nguyễn Văn A" className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-all text-slate-800" />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-semibold text-slate-700 mb-2 ml-1">Nickname</label>
-                                            <input type="text" defaultValue="nguyen_a123" className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-all text-slate-800" />
+                                            <input type="text" name="name" value={profile.name} onChange={handleChange} className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-all text-slate-800" />
                                         </div>
                                     </div>
-                                    
+
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                         <div>
                                             <label className="block text-sm font-semibold text-slate-700 mb-2 ml-1">Email</label>
-                                            <input type="email" defaultValue="nguyenvana@example.com" disabled className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-100 text-slate-500 cursor-not-allowed outline-none" />
+                                            <input type="email" value={profile.email} disabled className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-100 text-slate-500 cursor-not-allowed outline-none" />
                                         </div>
                                         <div>
                                             <label className="block text-sm font-semibold text-slate-700 mb-2 ml-1">Số điện thoại</label>
-                                            <input type="tel" defaultValue="0912 345 678" className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-all text-slate-800" />
+                                            <input type="tel" name="phone" value={profile.phone} onChange={handleChange} className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-all text-slate-800" />
                                         </div>
                                     </div>
 
                                     <div>
                                         <label className="block text-sm font-semibold text-slate-700 mb-2 ml-1">Giới thiệu ngắn (Tiểu sử)</label>
-                                        <textarea rows="4" className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-all text-slate-800 resize-none" placeholder="Viết vài dòng giới thiệu về bạn..."></textarea>
+                                        <textarea rows="4" name="bio" value={profile.bio} onChange={handleChange} className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-all text-slate-800 resize-none" placeholder="Viết vài dòng giới thiệu về bạn..."></textarea>
                                     </div>
 
                                     <div className="pt-6 flex justify-end">
-                                        <button type="submit" className="px-8 py-3.5 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-xl shadow-lg shadow-teal-600/30 hover:shadow-teal-700/40 transition-all focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
-                                            Lưu thay đổi
+                                        <button type="submit" disabled={saving} className="px-8 py-3.5 bg-teal-600 hover:bg-teal-700 disabled:bg-teal-400 disabled:cursor-not-allowed text-white font-semibold rounded-xl shadow-lg shadow-teal-600/30 hover:shadow-teal-700/40 transition-all focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
+                                            {saving ? 'Đang lưu...' : 'Lưu thay đổi'}
                                         </button>
                                     </div>
                                 </form>
@@ -130,7 +245,7 @@ export default function Profile() {
                     </div>
                 </div>
             </div>
-            
+
             <style>{`
                 @keyframes fadeIn {
                     from { opacity: 0; transform: translateY(5px); }

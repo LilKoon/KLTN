@@ -18,6 +18,7 @@ const Login = () => {
     const [regEmail, setRegEmail] = useState('');
     const [regPassword, setRegPassword] = useState('');
     const [regConfirm, setRegConfirm] = useState('');
+    const [regPhone, setRegPhone] = useState('');
     const [regError, setRegError] = useState('');
     const [regSuccess, setRegSuccess] = useState('');
     const [regLoading, setRegLoading] = useState(false);
@@ -74,6 +75,18 @@ const Login = () => {
         setRegError('');
         setRegSuccess('');
 
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(regEmail)) {
+            setRegError('Email không hợp lệ!!!');
+            return;
+        }
+
+        const phoneRegex = /^0\d{9}$/;
+        if (!phoneRegex.test(regPhone)) {
+            setRegError('Số điện thoại không hợp lệ!!!');
+            return;
+        }
+
         if (regPassword !== regConfirm) {
             setRegError('Mật khẩu nhập lại không khớp');
             return;
@@ -81,7 +94,7 @@ const Login = () => {
 
         setRegLoading(true);
         try {
-            const data = await registerWithAPI(regName, regEmail, regPassword);
+            const data = await registerWithAPI(regName, regEmail, regPassword, regPhone);
             setRegSuccess(data.message || 'Đăng ký thành công! Vui lòng đăng nhập.');
             // Auto switch to login after 1.5s
             setTimeout(() => {
@@ -319,7 +332,7 @@ const Login = () => {
                                         Facebook
                                     </button>
                                 </div>
-                                
+
                                 <p className="text-center text-sm text-slate-600 mt-auto">
                                     Chưa có tài khoản?
                                     <button onClick={() => toggleForm('register')}
@@ -354,8 +367,8 @@ const Login = () => {
                                 )}
 
                                 <form id="register" onSubmit={handleRegister} className="space-y-4">
-                                    
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+                                    <div className="grid grid-cols-1 gap-4">
                                         <div>
                                             <label htmlFor="regName" className="block text-xs font-semibold text-slate-700 mb-1.5 ml-1">Họ và tên</label>
                                             <input type="text" id="regName"
@@ -363,12 +376,6 @@ const Login = () => {
                                                 onChange={(e) => setRegName(e.target.value)}
                                                 className="block w-full px-4 py-2.5 border border-slate-200 rounded-xl text-slate-900 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all outline-none text-sm"
                                                 placeholder="Nguyễn Văn A" required />
-                                        </div>
-                                        <div>
-                                            <label htmlFor="regNikename" className="block text-xs font-semibold text-slate-700 mb-1.5 ml-1">Nickname</label>
-                                            <input type="text" id="regNikename"
-                                                className="block w-full px-4 py-2.5 border border-slate-200 rounded-xl text-slate-900 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all outline-none text-sm"
-                                                placeholder="vidu123" />
                                         </div>
                                     </div>
 
@@ -384,8 +391,10 @@ const Login = () => {
                                         <div>
                                             <label htmlFor="regPhone" className="block text-xs font-semibold text-slate-700 mb-1.5 ml-1">Số điện thoại</label>
                                             <input type="tel" id="regPhone"
+                                                value={regPhone}
+                                                onChange={(e) => setRegPhone(e.target.value)}
                                                 className="block w-full px-4 py-2.5 border border-slate-200 rounded-xl text-slate-900 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all outline-none text-sm"
-                                                placeholder="0912 345 678" />
+                                                placeholder="0912 345 678" required />
                                         </div>
                                     </div>
 

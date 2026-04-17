@@ -19,19 +19,105 @@ export async function apiLogin(email, password) {
 }
 
 /**
+ * Đăng xuất — POST /api/v1/auth/logout
+ * @param {string} token 
+ */
+export async function apiLogout(token) {
+  const res = await fetch(`${API_BASE_URL}/auth/logout`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`
+    },
+  });
+
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.detail || "Đăng xuất thất bại");
+  }
+  return data;
+}
+
+/**
  * Đăng ký — POST /api/v1/auth/register
  * @returns {{ message, user_id }}
  */
-export async function apiRegister(name, email, password) {
+export async function apiRegister(name, email, password, phone) {
   const res = await fetch(`${API_BASE_URL}/auth/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name, email, password }),
+    body: JSON.stringify({ name, email, password, phone }),
   });
 
   const data = await res.json();
   if (!res.ok) {
     throw new Error(data.detail || "Đăng ký thất bại");
+  }
+  return data;
+}
+
+/**
+ * Lấy thông tin người dùng — GET /api/v1/auth/me
+ * @param {string} token 
+ */
+export async function apiGetProfile(token) {
+  const res = await fetch(`${API_BASE_URL}/auth/me`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`
+    },
+  });
+
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.detail || "Không thể lấy thông tin người dùng");
+  }
+  return data;
+}
+
+/**
+ * Cập nhật thông tin người dùng — PUT /api/v1/auth/me
+ * @param {string} token 
+ * @param {Object} profileData 
+ */
+export async function apiUpdateProfile(token, profileData) {
+  const res = await fetch(`${API_BASE_URL}/auth/me`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`
+    },
+    body: JSON.stringify(profileData),
+  });
+
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.detail || "Cập nhật thất bại");
+  }
+  return data;
+}
+
+/**
+ * Cập nhật ảnh đại diện — POST /api/v1/auth/upload-avatar
+ * @param {string} token 
+ * @param {File} file 
+ */
+export async function apiUploadAvatar(token, file) {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const res = await fetch(`${API_BASE_URL}/auth/upload-avatar`, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${token}`
+    },
+    body: formData,
+  });
+
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.detail || "Tải lên ảnh thất bại");
   }
   return data;
 }

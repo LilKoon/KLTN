@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { apiLogin, apiRegister } from '../api';
+import { apiLogin, apiRegister, apiLogout } from '../api';
 
 const AuthContext = createContext();
 
@@ -42,8 +42,8 @@ export const AuthProvider = ({ children }) => {
     };
 
     // Đăng ký qua API
-    const registerWithAPI = async (name, email, password) => {
-        const data = await apiRegister(name, email, password);
+    const registerWithAPI = async (name, email, password, phone) => {
+        const data = await apiRegister(name, email, password, phone);
         // data = { message, user_id }
         return data;
     };
@@ -59,7 +59,14 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    const logout = () => {
+    const logout = async () => {
+        if (token) {
+            try {
+                await apiLogout(token);
+            } catch (err) {
+                console.error("Lỗi khi gọi API đăng xuất:", err);
+            }
+        }
         setUserRole(null);
         setToken(null);
         setUser(null);
