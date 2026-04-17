@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import database, models
-from api import auth, cms, test_engine, path_engine, user_stats
+from api import auth, cms, test_engine, path_engine, user_stats, flashcard
 
 # Khởi tạo DB tables (Trong dự án thực tế nên quản lý bằng Alembic)
 models.Base.metadata.create_all(bind=database.engine)
@@ -24,6 +24,7 @@ app.include_router(cms.router)
 app.include_router(test_engine.router)
 app.include_router(path_engine.router)
 app.include_router(user_stats.router)
+app.include_router(flashcard.router)
 
 @app.get("/")
 def read_root():

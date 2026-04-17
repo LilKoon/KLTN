@@ -113,3 +113,26 @@ class LoTrinhCaNhanResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+# --- Flashcard AI Schemas ---
+
+class FlashcardItemDetail(BaseModel):
+    TuVung: str
+    LoaiTu: Optional[str] = None
+    PhienAm: Optional[str] = None
+    Nghia: str
+    ViDuNguCanh: Optional[str] = None
+
+class FlashcardGenerateResponse(BaseModel):
+    MaChuDe: UUID
+    TenChuDe: str
+    is_from_cache: bool = False
+    flashcards: List[FlashcardItemDetail]
+
+class FlashcardGenerateRequest(BaseModel):
+    topic: str
+
+class FlashcardSaveRequest(BaseModel):
+    MaChuDe: UUID
+    TenBoThe: Optional[str] = None
+

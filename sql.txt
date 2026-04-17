@@ -155,8 +155,19 @@ CREATE TABLE TrangThaiNode (
 );
 
 -- ==========================================
--- PHÂN HỆ 5: FLASHCARD & ÔN TẬP NGẮT QUÃNG
+-- PHÂN HỆ 5: FLASHCARD & ÔN TẬP NGẮT QUÃNG (AI DRIVEN)
 -- ==========================================
+
+-- Bảng lưu trữ khóa chủ đề giúp cache kết quả LLM
+CREATE TABLE ChuDeFlashcard (
+    MaChuDe UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    TenChuDe VARCHAR(255) UNIQUE NOT NULL, -- LOWERCASE (VD: "airport") để match Caching
+    NgonNgu VARCHAR(50) DEFAULT 'en',
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Thư mục chứa nhóm thẻ riêng của từng User (VD: "Từ vựng IELTS của tôi")
 CREATE TABLE BoTheGhiNho (
     MaBoThe UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     MaNguoiDung UUID REFERENCES NguoiDung(MaNguoiDung) ON DELETE CASCADE,
@@ -165,13 +176,26 @@ CREATE TABLE BoTheGhiNho (
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Bảng lưu Thẻ Toàn Cục (Data do AI sinh ra - Không trùng lặp)
 CREATE TABLE TheGhiNho (
     MaThe UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    MaBoThe UUID REFERENCES BoTheGhiNho(MaBoThe) ON DELETE CASCADE,
-    MatTruoc TEXT NOT NULL, 
-    MatSau TEXT NOT NULL, 
-    PhienAm TEXT, 
+    MaChuDe UUID REFERENCES ChuDeFlashcard(MaChuDe) ON DELETE SET NULL,
+    TuVung VARCHAR(255) NOT NULL,  -- Mặt trước
+    LoaiTu VARCHAR(50),            -- N/V/Adj/Adv
+    PhienAm VARCHAR(255), 
+    Nghia TEXT NOT NULL,           -- Mặt sau
     ViDuNguCanh TEXT, 
+    
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Bảng nối N-N giữa User và TheGhiNho, chứa thuật toán Spaced Repetition
+CREATE TABLE TheGhiNho_NguoiDung (
+    MaTrangThaiThe UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    MaNguoiDung UUID REFERENCES NguoiDung(MaNguoiDung) ON DELETE CASCADE,
+    MaThe UUID REFERENCES TheGhiNho(MaThe) ON DELETE CASCADE,
+    MaBoThe UUID REFERENCES BoTheGhiNho(MaBoThe) ON DELETE CASCADE, -- Đã sửa lại ON DELETE CASCADE theo yêu cầu để xoá bộ là xoá hết thẻ
     
     -- Thuật toán Spaced Repetition (SuperMemo)
     KhoangCachNgay INT DEFAULT 1, 
@@ -180,7 +204,9 @@ CREATE TABLE TheGhiNho (
     NgayOnTapTiepTheo TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    
+    UNIQUE (MaNguoiDung, MaThe) -- User không bị lưu trùng lịch ôn tập cho 1 từ
 );
 
 -- ==========================================
@@ -204,6 +230,34 @@ CREATE TABLE BaoCaoLoi (
     LyDo TEXT, 
     GhiChuAdmin TEXT, -- Cho phép Admin Note
     TrangThai VARCHAR(50) DEFAULT 'PENDING', 
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ==========================================
+-- PHÂN HỆ 7: BẢO MẬT & QUẢN LÝ TIẾN TRÌNH AI
+-- ==========================================
+CREATE TABLE PhienDangNhap (
+    MaPhien UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    MaNguoiDung UUID REFERENCES NguoiDung(MaNguoiDung) ON DELETE CASCADE,
+    RefreshToken VARCHAR(500) UNIQUE NOT NULL,
+    ThietBi VARCHAR(100),
+    DiaChiIP VARCHAR(50),
+    HanSuDung TIMESTAMPTZ NOT NULL,
+    IsRevoked BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE TienTrinhAI (
+    MaTienTrinh UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    MaNguoiDung UUID REFERENCES NguoiDung(MaNguoiDung) ON DELETE CASCADE,
+    LoaiTacVu VARCHAR(50) NOT NULL,
+    DoiTuongID UUID,
+    TrangThai VARCHAR(50) DEFAULT 'PENDING',
+    PhanTram INT DEFAULT 0,
+    KetQuaJSON JSONB,
+    Loi TEXT,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
