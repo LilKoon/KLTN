@@ -16,7 +16,7 @@ export default function Profile() {
                 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
                 .font-inter { font-family: 'Inter', sans-serif; }
             `}</style>
-            
+
             <div className="max-w-6xl mx-auto space-y-8">
                 {/* Header */}
                 <div>
@@ -32,11 +32,10 @@ export default function Profile() {
                                 <button
                                     key={item.id}
                                     onClick={() => setActiveTab(item.id)}
-                                    className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl font-semibold text-sm transition-all duration-200 ${
-                                        activeTab === item.id
-                                        ? 'bg-teal-50 text-teal-700'
-                                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-800'
-                                    }`}
+                                    className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl font-semibold text-sm transition-all duration-200 ${activeTab === item.id
+                                            ? 'bg-teal-50 text-teal-700'
+                                            : 'text-slate-600 hover:bg-slate-50 hover:text-slate-800'
+                                        }`}
                                 >
                                     <span className={activeTab === item.id ? 'text-teal-600' : 'text-slate-400'}>
                                         {item.icon}
@@ -49,12 +48,12 @@ export default function Profile() {
 
                     {/* Main Content Area */}
                     <div className="flex-1 bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden">
-                        
+
                         {/* Tab Content: Personal Info */}
                         {activeTab === 'personal' && (
                             <div className="p-8 sm:p-10 animate-fade-in">
                                 <h2 className="text-xl font-bold text-slate-800 mb-6 pb-4 border-b border-slate-100">Thông tin cá nhân</h2>
-                                
+
                                 {/* Avatar Upload Section */}
                                 <div className="flex flex-col sm:flex-row items-center gap-6 mb-10">
                                     <div className="relative">
@@ -88,7 +87,7 @@ export default function Profile() {
                                             <input type="text" defaultValue="nguyen_a123" className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-all text-slate-800" />
                                         </div>
                                     </div>
-                                    
+
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                         <div>
                                             <label className="block text-sm font-semibold text-slate-700 mb-2 ml-1">Email</label>
@@ -114,23 +113,149 @@ export default function Profile() {
                             </div>
                         )}
 
-                        {/* Tab Content: Placeholder for others */}
-                        {activeTab !== 'personal' && (
-                            <div className="p-8 sm:p-10 h-64 flex flex-col items-center justify-center text-center animate-fade-in">
-                                <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center text-slate-300 mb-4">
-                                    <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-                                    </svg>
-                                </div>
-                                <h3 className="text-lg font-bold text-slate-800 mb-1">Tính năng đang phát triển</h3>
-                                <p className="text-sm font-medium text-slate-500">Mục cài đặt này đang được cập nhật và sẽ sớm ra mắt.</p>
+                        {/* Tab Content: Security */}
+                        {activeTab === 'security' && (
+                            <div className="p-8 sm:p-10 animate-fade-in">
+                                <h2 className="text-xl font-bold text-slate-800 mb-6 pb-4 border-b border-slate-100">Bảo mật & Mật khẩu</h2>
+
+                                <form className="space-y-8" onSubmit={(e) => e.preventDefault()}>
+                                    {/* Change Password Section */}
+                                    <div className="grid grid-cols-1 gap-6 max-w-xl">
+                                        <div>
+                                            <label className="block text-sm font-semibold text-slate-700 mb-2 ml-1">Mật khẩu hiện tại</label>
+                                            <input type="password" placeholder="••••••••" className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-teal-500 outline-none transition-all" />
+                                        </div>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                            <div>
+                                                <label className="block text-sm font-semibold text-slate-700 mb-2 ml-1">Mật khẩu mới</label>
+                                                <input type="password" placeholder="••••••••" className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-teal-500 outline-none transition-all" />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-semibold text-slate-700 mb-2 ml-1">Xác nhận mật khẩu</label>
+                                                <input type="password" placeholder="••••••••" className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-teal-500 outline-none transition-all" />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <button className="px-6 py-2.5 bg-slate-800 text-white font-semibold text-sm rounded-xl hover:bg-slate-900 transition-all">
+                                                Cập nhật mật khẩu
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div className="pt-6 border-t border-slate-100">
+                                        <h3 className="text-lg font-bold text-slate-800 mb-4">Bảo mật hai lớp (2FA)</h3>
+                                        <div className="flex items-center justify-between p-4 bg-teal-50 rounded-2xl border border-teal-100">
+                                            <div className="flex gap-4">
+                                                <div className="w-10 h-10 rounded-full bg-teal-600 text-white flex items-center justify-center flex-shrink-0">
+                                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A10.003 10.003 0 0012 3v1m0 0a10.003 10.003 0 014.188 8.423l-.054.09" /></svg>
+                                                </div>
+                                                <div>
+                                                    <p className="font-bold text-teal-900 text-sm">Xác thực qua Email</p>
+                                                    <p className="text-xs text-teal-700 font-medium">Nhận mã xác minh qua email mỗi khi đăng nhập từ thiết bị lạ.</p>
+                                                </div>
+                                            </div>
+                                            <label className="relative inline-flex items-center cursor-pointer">
+                                                <input type="checkbox" className="sr-only peer" defaultChecked />
+                                                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-600"></div>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </form>
                             </div>
                         )}
 
+                        {/* Tab Content: Notifications */}
+                        {activeTab === 'notifications' && (
+                            <div className="p-8 sm:p-10 animate-fade-in">
+                                <h2 className="text-xl font-bold text-slate-800 mb-6 pb-4 border-b border-slate-100">Cài đặt thông báo</h2>
+
+                                <div className="space-y-6">
+                                    {[
+                                        { title: 'Nhắc nhở học tập', desc: 'Thông báo khi đến giờ học hàng ngày của bạn.', active: true },
+                                        { title: 'Cập nhật nội dung mới', desc: 'Thông báo khi có khóa học hoặc bộ từ vựng mới.', active: true },
+                                        { title: 'Bản tin hàng tuần', desc: 'Tóm tắt tiến độ và kết quả học tập trong tuần qua.', active: false },
+                                        { title: 'Ưu đãi & Khuyến mãi', desc: 'Thông tin về các gói Premium và sự kiện đặc biệt.', active: false },
+                                    ].map((item, index) => (
+                                        <div key={index} className="flex items-center justify-between py-2">
+                                            <div>
+                                                <p className="font-bold text-slate-800">{item.title}</p>
+                                                <p className="text-sm text-slate-500 font-medium">{item.desc}</p>
+                                            </div>
+                                            <label className="relative inline-flex items-center cursor-pointer">
+                                                <input type="checkbox" className="sr-only peer" defaultChecked={item.active} />
+                                                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-600"></div>
+                                            </label>
+                                        </div>
+                                    ))}
+
+                                    <div className="pt-6">
+                                        <button className="px-8 py-3 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-xl shadow-lg shadow-teal-600/30 transition-all">
+                                            Lưu cấu hình thông báo
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Tab Content: Billing/Premium */}
+                        {activeTab === 'billing' && (
+                            <div className="p-8 sm:p-10 animate-fade-in">
+                                <h2 className="text-xl font-bold text-slate-800 mb-6 pb-4 border-b border-slate-100">Gói thành viên</h2>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    {/* Current Plan Card */}
+                                    <div className="p-6 rounded-[2rem] border-2 border-teal-600 bg-teal-50/50 relative overflow-hidden">
+                                        <div className="absolute top-0 right-0 p-3">
+                                            <span className="px-3 py-1 bg-teal-600 text-white text-[10px] font-bold uppercase rounded-full tracking-wider">Đang sử dụng</span>
+                                        </div>
+                                        <p className="text-sm font-bold text-teal-700 mb-1">Gói hiện tại</p>
+                                        <h3 className="text-2xl font-extrabold text-slate-800 mb-4">Premium Pro</h3>
+                                        <ul className="space-y-3 mb-8">
+                                            {['Học không giới hạn từ vựng', 'AI hỗ trợ phát âm 24/7', 'Mở khóa tất cả mini-games', 'Không quảng cáo'].map((feature, i) => (
+                                                <li key={i} className="flex items-center gap-2 text-sm font-semibold text-slate-600">
+                                                    <svg className="w-5 h-5 text-teal-600" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+                                                    {feature}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                        <div className="flex items-center justify-between border-t border-teal-100 pt-4">
+                                            <div>
+                                                <p className="text-[10px] font-bold text-slate-400 uppercase">Ngày hết hạn</p>
+                                                <p className="text-sm font-bold text-slate-700">20/12/2026</p>
+                                            </div>
+                                            <button className="text-sm font-bold text-teal-600 hover:text-teal-700 underline">Gia hạn ngay</button>
+                                        </div>
+                                    </div>
+
+                                    {/* Invoices/History */}
+                                    <div className="p-6 rounded-[2rem] border border-slate-100 bg-white">
+                                        <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
+                                            <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                                            Lịch sử thanh toán
+                                        </h3>
+                                        <div className="space-y-4">
+                                            {[
+                                                { date: '20/11/2025', amount: '499.000đ', status: 'Thành công' },
+                                                { date: '20/10/2025', amount: '499.000đ', status: 'Thành công' },
+                                            ].map((bill, i) => (
+                                                <div key={i} className="flex justify-between items-center p-3 hover:bg-slate-50 rounded-xl transition-colors border border-transparent hover:border-slate-100">
+                                                    <div>
+                                                        <p className="text-sm font-bold text-slate-800">{bill.date}</p>
+                                                        <p className="text-[10px] font-medium text-slate-500 uppercase">{bill.status}</p>
+                                                    </div>
+                                                    <p className="font-bold text-slate-700 text-sm">{bill.amount}</p>
+                                                </div>
+                                            ))}
+                                            <button className="w-full py-2 text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors uppercase tracking-wider">Xem tất cả hóa đơn</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
-            
+
             <style>{`
                 @keyframes fadeIn {
                     from { opacity: 0; transform: translateY(5px); }

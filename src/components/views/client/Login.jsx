@@ -6,31 +6,36 @@ const Login = () => {
     const [activeTab, setActiveTab] = useState('login');
     const [loginStyles, setLoginStyles] = useState('relative flex scale-100 opacity-100');
     const [registerStyles, setRegisterStyles] = useState('absolute hidden scale-95 opacity-0');
+    const [forgotStyles, setForgotStyles] = useState('absolute hidden scale-95 opacity-0');
+    const [forgotStep, setForgotStep] = useState(1);
 
     const toggleForm = (type) => {
-        if (type === 'register' && activeTab === 'login') {
-            setActiveTab('switching');
-            setLoginStyles('relative flex scale-95 opacity-0');
+        if (type === activeTab || activeTab === 'switching') return;
+
+        setActiveTab('switching');
+
+        if (activeTab === 'login') setLoginStyles('relative flex scale-95 opacity-0');
+        else if (activeTab === 'register') setRegisterStyles('relative flex scale-95 opacity-0');
+        else if (activeTab === 'forgot') setForgotStyles('relative flex scale-95 opacity-0');
+
+        setTimeout(() => {
+            setLoginStyles('absolute hidden scale-95 opacity-0');
+            setRegisterStyles('absolute hidden scale-95 opacity-0');
+            setForgotStyles('absolute hidden scale-95 opacity-0');
+
+            if (type === 'login') setLoginStyles('relative flex scale-95 opacity-0');
+            else if (type === 'register') setRegisterStyles('relative flex scale-95 opacity-0');
+            else if (type === 'forgot') setForgotStyles('relative flex scale-95 opacity-0');
+
             setTimeout(() => {
-                setLoginStyles('absolute hidden scale-95 opacity-0');
-                setRegisterStyles('relative flex scale-95 opacity-0');
-                setTimeout(() => {
-                    setRegisterStyles('relative flex scale-100 opacity-100');
-                    setActiveTab('register');
-                }, 50);
-            }, 300);
-        } else if (type === 'login' && activeTab === 'register') {
-            setActiveTab('switching');
-            setRegisterStyles('relative flex scale-95 opacity-0');
-            setTimeout(() => {
-                setRegisterStyles('absolute hidden scale-95 opacity-0');
-                setLoginStyles('relative flex scale-95 opacity-0');
-                setTimeout(() => {
-                    setLoginStyles('relative flex scale-100 opacity-100');
-                    setActiveTab('login');
-                }, 50);
-            }, 300);
-        }
+
+                if (type === 'login') setLoginStyles('relative flex scale-100 opacity-100');
+                else if (type === 'register') setRegisterStyles('relative flex scale-100 opacity-100');
+                else if (type === 'forgot') setForgotStyles('relative flex scale-100 opacity-100');
+
+                setActiveTab(type);
+            }, 50);
+        }, 300);
     };
 
     return (
@@ -175,9 +180,12 @@ const Login = () => {
                                         <div className="flex items-center justify-between mb-1.5 ml-1 mr-1">
                                             <label htmlFor="loginPassword" className="block text-sm font-medium text-slate-700">Mật
                                                 khẩu</label>
-                                            <a href="#"
-                                                className="text-xs font-semibold text-teal-600 hover:text-teal-700 transition-colors">Quên
-                                                mật khẩu?</a>
+                                            <button
+                                                type="button"
+                                                onClick={() => toggleForm('forgot')}
+                                                className="text-xs font-semibold text-teal-600 hover:text-teal-700 transition-colors">
+                                                Quên mật khẩu?
+                                            </button>
                                         </div>
                                         <div className="relative">
                                             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -238,7 +246,7 @@ const Login = () => {
                                         Facebook
                                     </button>
                                 </div>
-                                
+
                                 <p className="text-center text-sm text-slate-600 mt-auto">
                                     Chưa có tài khoản?
                                     <button onClick={() => toggleForm('register')}
@@ -259,7 +267,7 @@ const Login = () => {
                                 </div>
 
                                 <form id="register" onSubmit={(e) => { e.preventDefault(); login('client'); }} className="space-y-4">
-                                    
+
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div>
                                             <label htmlFor="regName" className="block text-xs font-semibold text-slate-700 mb-1.5 ml-1">Họ và tên</label>
@@ -337,6 +345,73 @@ const Login = () => {
                                         Đăng nhập ngay
                                     </button>
                                 </p>
+                            </div>
+                            {/* =========================== */}
+                            {/* 3. FORGOT PASSWORD FORM     */}
+                            {/* =========================== */}
+                            <div id="forgotForm"
+                                className={`p-8 sm:p-10 w-full flex-col transition-all duration-300 transform bg-white z-10 ${forgotStyles}`}>
+
+                                <div className="text-center mb-6">
+                                    <h2 className="text-2xl font-bold text-slate-800 mb-2">
+                                        {forgotStep === 1 && "Quên mật khẩu?"}
+                                        {forgotStep === 2 && "Xác thực OTP"}
+                                        {forgotStep === 3 && "Mật khẩu mới"}
+                                    </h2>
+                                    <p className="text-sm text-slate-500">
+                                        {forgotStep === 1 && "Nhập email để nhận mã khôi phục."}
+                                        {forgotStep === 2 && "Nhập mã 6 số đã được gửi đến email."}
+                                        {forgotStep === 3 && "Thiết lập mật khẩu mới cho tài khoản."}
+                                    </p>
+                                </div>
+
+                                <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+                                    {/* Bước 1: Nhập Email */}
+                                    {forgotStep === 1 && (
+                                        <div>
+                                            <label className="block text-xs font-semibold text-slate-700 mb-1.5 ml-1">Email khôi phục</label>
+                                            <input type="email" className="block w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-50 focus:ring-2 focus:ring-teal-500 outline-none transition-all" placeholder="name@example.com" />
+                                            <button type="button" onClick={() => setForgotStep(2)} className="w-full bg-teal-600 text-white font-semibold py-3.5 rounded-xl shadow-lg mt-6 hover:bg-teal-700 transition-all">
+                                                Gửi mã xác nhận
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    {/* Bước 2: Nhập OTP */}
+                                    {forgotStep === 2 && (
+                                        <div>
+                                            <label className="block text-xs font-semibold text-slate-700 mb-1.5 ml-1">Mã xác nhận (OTP)</label>
+                                            <input type="text" maxLength="6" className="block w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-50 focus:ring-2 focus:ring-teal-500 outline-none text-center tracking-[1em] font-bold" placeholder="000000" />
+                                            <button type="button" onClick={() => setForgotStep(3)} className="w-full bg-teal-600 text-white font-semibold py-3.5 rounded-xl shadow-lg mt-6 hover:bg-teal-700 transition-all">
+                                                Xác nhận mã
+                                            </button>
+                                            <button type="button" onClick={() => setForgotStep(1)} className="w-full text-xs text-slate-400 mt-4 hover:text-teal-600">Gửi lại mã khác</button>
+                                        </div>
+                                    )}
+
+                                    {/* Bước 3: Nhập mật khẩu mới */}
+                                    {forgotStep === 3 && (
+                                        <div className="space-y-4">
+                                            <div>
+                                                <label className="block text-xs font-semibold text-slate-700 mb-1.5 ml-1">Mật khẩu mới</label>
+                                                <input type="password" className="block w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-50 focus:ring-2 focus:ring-teal-500 outline-none" placeholder="••••••••" />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-semibold text-slate-700 mb-1.5 ml-1">Xác nhận mật khẩu</label>
+                                                <input type="password" className="block w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-50 focus:ring-2 focus:ring-teal-500 outline-none" placeholder="••••••••" />
+                                            </div>
+                                            <button type="button" onClick={() => { alert('Đổi mật khẩu thành công!'); toggleForm('login'); setForgotStep(1); }} className="w-full bg-teal-600 text-white font-semibold py-3.5 rounded-xl shadow-lg mt-2 hover:bg-teal-700 transition-all">
+                                                Cập nhật mật khẩu
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    {/* Nút quay lại luôn hiển thị ở cuối */}
+                                    <button type="button" onClick={() => { toggleForm('login'); setTimeout(() => setForgotStep(1), 500); }}
+                                        className="w-full text-center text-sm font-medium text-slate-500 hover:text-teal-600 pt-2 transition-colors">
+                                        ← Quay lại đăng nhập
+                                    </button>
+                                </form>
                             </div>
                         </div>
                     </div>
