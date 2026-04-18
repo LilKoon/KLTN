@@ -13,7 +13,12 @@ class NguoiDung(Base):
     TenNguoiDung = Column("tennguoidung", String(255), nullable=False)
     Email = Column("email", String(255), unique=True, nullable=False)
     MatKhau = Column("matkhau", String(255), nullable=False)
+    VaiTro = Column("vaitro", String(50), default="USER")
+    TrangThai = Column("trangthai", String(50), default="OFFLINE")
     DiemNangLuc = Column("diemnangluc", Numeric(5, 2), default=0.0)
+    SoDienThoai = Column("sodienthoai", String(20), nullable=True)
+    TieuSu = Column("tieusu", Text, nullable=True)
+    AnhDaiDien = Column("anhdaidien", Text, nullable=True)
     NgayTao = Column("created_at", TIMESTAMP(timezone=True), server_default=func.now())
 
 

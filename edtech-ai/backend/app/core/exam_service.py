@@ -17,7 +17,7 @@ EXAM_CONFIG = {
     "time_limit_minutes": 30,
     "distribution": [
         # Mỗi entry: kỹ năng + số câu theo từng level
-        # Thêm kỹ năng mới? Chỉ cần thêm 1 dòng ở đây!
+        # Thêm kỹ năng mới Chỉ cần thêm 1 dòng ở đây
         {"skill": "GRAMMAR", "levels": {1: 4, 2: 3, 3: 3}},
         {"skill": "VOCABULARY", "levels": {1: 4, 2: 3, 3: 3}},
         {"skill": "LISTENING", "levels": {1: 10, 2: 0, 3: 0}},
@@ -64,6 +64,21 @@ async def create_exam(db: AsyncSession, user_id: str) -> dict:
     Tạo bài kiểm tra mới + lấy câu hỏi ngẫu nhiên.
     Trả về exam_id, danh sách câu hỏi (ẩn đáp án), và time_limit.
     """
+    # 0. Kiểm tra xem người dùng đã làm bài test đầu vào chưa
+    result = await db.execute(
+        select(BaiKiemTra).where(
+            BaiKiemTra.MaNguoiDung == uuid.UUID(user_id),
+            BaiKiemTra.LoaiBaiKiemTra == "DAU_VAO",
+            BaiKiemTra.TrangThai == "COMPLETED"
+        ).order_by(BaiKiemTra.CreatedAt.desc())
+    )
+    existing_exam = result.scalars().first()
+    if existing_exam:
+        return {
+            "already_completed": True,
+            "exam_id": str(existing_exam.MaBaiKiemTra)
+        }
+
     # 1. Lấy câu hỏi ngẫu nhiên
     questions = await fetch_random_questions(db)
 

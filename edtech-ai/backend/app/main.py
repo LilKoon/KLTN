@@ -22,8 +22,8 @@ if settings.BACKEND_CORS_ORIGINS:
         allow_headers=["*"],
     )
 
-from app.api.endpoints import topic
-app.include_router(topic.router, prefix="/api/v1/topic", tags=["topic"])
+# from app.api.endpoints import topic
+# app.include_router(topic.router, prefix="/api/v1/topic", tags=["topic"])
 
 from app.api.endpoints import auth
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
