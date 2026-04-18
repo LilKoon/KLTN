@@ -25,6 +25,13 @@ export default function PlacementTest() {
             try {
                 setLoading(true);
                 const data = await apiStartExam(token);
+                
+                // Nếu user đã làm test đầu vào rồi, chuyển thẳng sang trang kết quả
+                if (data.already_completed) {
+                    navigate(`/client/test-results?examId=${data.exam_id}`);
+                    return;
+                }
+
                 setExamId(data.exam_id);
                 setQuestions(data.questions);
                 setTimeLeft(data.time_limit_minutes * 60);
@@ -36,7 +43,7 @@ export default function PlacementTest() {
             }
         };
         if (token) startExam();
-    }, [token]);
+    }, [token, navigate]);
 
     // ─── Timer countdown ────────────────────────────────────────────────
     useEffect(() => {

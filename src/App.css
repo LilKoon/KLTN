@@ -1,0 +1,20 @@
+/* Purged legacy Bootstrap styles. Everything is now Tailwind. */
+:root {
+  --color-primary: hsl(148, 98%, 18%);
+}
+
+body {
+    overflow-x: hidden;
+}
+
+/* Custom Scrollbar for sidebar and specific content */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 20px;
+}

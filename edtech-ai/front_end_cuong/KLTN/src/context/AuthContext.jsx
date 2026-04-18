@@ -5,24 +5,19 @@ import { apiLogin, apiRegister, apiLogout } from '../api';
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-    const [userRole, setUserRole] = useState(null); // 'client' or 'admin'
-    const [token, setToken] = useState(null);
-    const [user, setUser] = useState(null); // { user_name, email, ... }
-    const navigate = useNavigate();
-
-    // Khôi phục session từ localStorage khi load trang
-    useEffect(() => {
-        const savedToken = localStorage.getItem('access_token');
-        const savedRole = localStorage.getItem('user_role');
+    // Khởi tạo state đồng bộ từ localStorage để tránh bị văng ra ngoài khi F5
+    const initialToken = localStorage.getItem('access_token') || null;
+    const initialRole = localStorage.getItem('user_role') || null;
+    let initialUser = null;
+    try {
         const savedUser = localStorage.getItem('user_data');
-        if (savedToken && savedRole) {
-            setToken(savedToken);
-            setUserRole(savedRole);
-            if (savedUser) {
-                try { setUser(JSON.parse(savedUser)); } catch {}
-            }
-        }
-    }, []);
+        if (savedUser) initialUser = JSON.parse(savedUser);
+    } catch {}
+
+    const [userRole, setUserRole] = useState(initialRole); // 'client' or 'admin'
+    const [token, setToken] = useState(initialToken);
+    const [user, setUser] = useState(initialUser); // { user_name, email, ... }
+    const navigate = useNavigate();
 
     // Đăng nhập qua API
     const loginWithAPI = async (email, password) => {
