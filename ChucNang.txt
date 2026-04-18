@@ -1,0 +1,77 @@
+PHÂN HỆ 1: ỨNG DỤNG CHO HỌC VIÊN (USER APP)
+1. Khởi động & Phân loại đầu vào (Onboarding)
+
+Đăng ký / Đăng nhập:
+
+Tác dụng: Bảo mật thông tin, lưu trữ định danh để cá nhân hóa dữ liệu học tập cho từng người.
+
+Màn hình Welcome (2 Lựa chọn rẽ nhánh):
+
+Tác dụng: Giải quyết bài toán "mù phương hướng" của người dùng mới. Cho phép người mất gốc chọn ngay Khóa học có sẵn để học từ số 0, hoặc cho phép người đã có nền tảng làm Micro-Test (Đánh giá năng lực) để biết chính xác mình đang ở trình độ nào.
+
+2. Lộ trình học tập "Lai" (Hybrid Learning Roadmap) - 💡 Điểm nhấn của đồ án
+
+Học theo Khung chuẩn (Core Syllabus):
+
+Tác dụng: Đảm bảo tính sư phạm chuẩn mực. Người dùng được học các bài lý thuyết, từ vựng nền tảng do Admin biên soạn, không sợ AI "bịa" ra kiến thức sai lệch.
+
+AI Cá nhân hóa (AI Personalization):
+
+Cơ chế SKIP (Bỏ qua): AI tự động đánh dấu hoàn thành các bài học mà người dùng đã giỏi (dựa trên bài test). Tác dụng: Tiết kiệm thời gian, tạo cảm giác thành tựu (nhảy cóc).
+
+Cơ chế BOOST (Tăng cường): AI tự động sinh thêm bài tập cho phần kỹ năng yếu nhất. Tác dụng: Lấp đúng "lỗ hổng" kiến thức của từng cá nhân.
+
+Kiểm tra qua môn (Pass/Fail) & Final Test:
+
+Tác dụng: Yêu cầu đạt ngưỡng (VD: 80%) mới được mở khóa bài mới. Đảm bảo chất lượng đầu ra thực sự chứ không chỉ "học vẹt". Báo cáo Before - After cuối khóa giúp người học thấy rõ sự tiến bộ.
+
+3. Công cụ AI Flashcards (Tự học mở rộng)
+
+Tạo Flashcard từ File/Chủ đề:
+
+Tác dụng: Thay vì gò bó trong giáo trình, người dùng có thể nhập "Du lịch" hoặc tải lên file sách/bài báo PDF. AI sẽ tự đọc, trích xuất từ vựng, phiên âm, định nghĩa và sinh ra câu ví dụ ngữ cảnh. Giúp mở rộng vốn từ theo đúng sở thích và chuyên ngành của học viên.
+
+Tự động lưu thẻ từ lỗi sai:
+
+Tác dụng: Hệ thống tự nhặt các câu trả lời sai trong bài Test để biến thành Flashcards. Giúp học viên học từ chính sai lầm của mình ngay lập tức.
+
+4. Ôn tập & Gamification (Động lực học tập)
+
+Ôn tập ngắt quãng (Daily Review / Spaced Repetition):
+
+Tác dụng: Chặn ở màn hình đăng nhập ngày mới, ép người dùng ôn lại các từ vựng đến hạn quên. Khắc phục triệt để đường cong lãng quên của não bộ.
+
+Bảng điều khiển (Dashboard) & Streak:
+
+Tác dụng: Hiển thị chuỗi ngày học liên tiếp, biểu đồ nhiệt (Heatmap) và biểu đồ năng lực Radar. Tạo hiệu ứng tâm lý (Gamification) khiến học viên "nghiện" học và không muốn làm đứt chuỗi.
+
+⚙️ PHÂN HỆ 2: TRANG QUẢN TRỊ (ADMIN DASHBOARD)
+1. Quản lý Nội dung Sư phạm (Core Content)
+
+Quản lý Khóa học & Bài học:
+
+Tác dụng: Admin là người xây dựng "Khung xương" (các khóa học TOEIC, Giao tiếp...). Thêm, sửa, xóa các bài lý thuyết để hệ thống có dữ liệu chuẩn cho người dùng theo học.
+
+Quản lý Ngân hàng Câu hỏi:
+
+Tác dụng: Tạo ra kho dữ liệu câu hỏi trắc nghiệm tĩnh đa dạng (Từ vựng, Ngữ pháp, Nghe/Đọc) để hệ thống có "vốn" bốc ngẫu nhiên ra làm bài đánh giá năng lực ban đầu cho học viên.
+
+2. Quản lý Người dùng & Tiến độ
+
+Danh sách & Trạng thái Học viên:
+
+Tác dụng: Quản lý thông tin tài khoản, có quyền khóa (Ban) các tài khoản vi phạm hoặc có dấu hiệu phá hoại hệ thống.
+
+Giám sát Lộ trình cá nhân:
+
+Tác dụng: Admin có thể xem chi tiết một học viên đang học đến bài nào, điểm số ra sao. Giúp hỗ trợ kỹ thuật hoặc tư vấn học tập khi người dùng có khiếu nại.
+
+3. Kiểm soát Chất lượng AI & Thống kê
+
+Xử lý Báo cáo lỗi nội dung (AI Feedback):
+
+Tác dụng: Chức năng "Human-in-the-loop" (Con người kiểm duyệt AI). Khi AI lỡ sinh ra câu hỏi/thẻ từ sai kiến thức và bị học viên báo cáo, Admin sẽ xem xét, chỉnh sửa thủ công hoặc xóa bỏ để đảm bảo dữ liệu hệ thống luôn sạch và chính xác.
+
+Báo cáo Thống kê:
+
+Tác dụng: Hiển thị tổng lượng người đăng ký mới, độ phổ biến của các khóa học. Giúp Admin (hoặc chủ trung tâm) đưa ra quyết định kinh doanh hoặc điều chỉnh độ khó của bài học.
