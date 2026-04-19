@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { apiLogin, apiRegister, apiLogout } from '../api';
+import { apiLogin, apiLoginGoogle, apiRegister, apiLogout } from '../api';
 
 const AuthContext = createContext();
 
@@ -25,6 +25,22 @@ export const AuthProvider = ({ children }) => {
         // data = { access_token, token_type, user_name }
 
         const userData = { user_name: data.user_name, email };
+        setToken(data.access_token);
+        setUser(userData);
+        setUserRole('client');
+
+        localStorage.setItem('access_token', data.access_token);
+        localStorage.setItem('user_role', 'client');
+        localStorage.setItem('user_data', JSON.stringify(userData));
+
+        navigate('/client');
+    };
+
+    // Đăng nhập qua Google API
+    const loginWithGoogleAPI = async (googleToken) => {
+        const data = await apiLoginGoogle(googleToken);
+        const userData = { user_name: data.user_name, email: data.email };
+        
         setToken(data.access_token);
         setUser(userData);
         setUserRole('client');
@@ -72,7 +88,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ userRole, token, user, login, loginWithAPI, registerWithAPI, logout }}>
+        <AuthContext.Provider value={{ userRole, token, user, login, loginWithAPI, loginWithGoogleAPI, registerWithAPI, logout }}>
             {children}
         </AuthContext.Provider>
     );

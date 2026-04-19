@@ -1,11 +1,29 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../../context/AuthContext';
+import { useGoogleLogin } from '@react-oauth/google';
 
 const Login = () => {
-    const { loginWithAPI, registerWithAPI } = useAuth();
+    const { loginWithAPI, loginWithGoogleAPI, registerWithAPI } = useAuth();
     const [activeTab, setActiveTab] = useState('login');
     const [loginStyles, setLoginStyles] = useState('relative flex scale-100 opacity-100');
     const [registerStyles, setRegisterStyles] = useState('absolute hidden scale-95 opacity-0');
+
+    const handleGoogleLogin = useGoogleLogin({
+        onSuccess: async (tokenResponse) => {
+            try {
+                setLoginLoading(true);
+                setLoginError('');
+                await loginWithGoogleAPI(tokenResponse.access_token);
+            } catch (err) {
+                setLoginError(err.message || 'Đăng nhập Google thất bại');
+            } finally {
+                setLoginLoading(false);
+            }
+        },
+        onError: () => {
+            setLoginError('Đăng nhập Google thất bại');
+        }
+    });
 
     // ─── Login form state ───
     const [loginEmail, setLoginEmail] = useState('');
@@ -161,13 +179,13 @@ const Login = () => {
                 </div>
 
                 {/* Desktop Links */}
-                <div className="hidden md:flex items-center gap-8">
+                {/* <div className="hidden md:flex items-center gap-8">
                     <a href="#" className="text-slate-600 hover:text-teal-600 font-medium transition-colors">Trang chủ</a>
                     <a href="#" className="text-slate-600 hover:text-teal-600 font-medium transition-colors">Trò chơi</a>
                     <a href="#" className="text-slate-600 hover:text-teal-600 font-medium transition-colors">Flash Cards</a>
                     <a href="#" className="text-slate-600 hover:text-teal-600 font-medium transition-colors">Mẹo học tập</a>
                     <a href="#" className="text-slate-600 hover:text-teal-600 font-medium transition-colors">Về chúng tôi</a>
-                </div>
+                </div> */}
 
                 {/* Mobile Menu Button */}
                 <button className="md:hidden text-slate-600 hover:text-teal-600">
@@ -303,9 +321,11 @@ const Login = () => {
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-3 mb-8">
+                                <div className="flex w-full gap-3 mb-8">
                                     <button
-                                        className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-full border border-slate-200 bg-white hover:bg-slate-50 focus:ring-2 focus:ring-slate-200 transition-colors text-sm font-medium text-slate-700">
+                                        onClick={handleGoogleLogin}
+                                        type="button"
+                                        className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-full border border-slate-200 bg-white hover:bg-slate-50 focus:ring-2 focus:ring-slate-200 transition-colors text-sm font-medium text-slate-700">
                                         <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                             <path
                                                 d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -320,16 +340,7 @@ const Login = () => {
                                                 d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                                                 fill="#EA4335" />
                                         </svg>
-                                        Google
-                                    </button>
-                                    <button
-                                        className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-full border border-slate-200 bg-white hover:bg-slate-50 focus:ring-2 focus:ring-slate-200 transition-colors text-sm font-medium text-slate-700">
-                                        <svg className="w-5 h-5" fill="#1877F2" viewBox="0 0 24 24"
-                                            xmlns="http://www.w3.org/2000/svg">
-                                            <path
-                                                d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-                                        </svg>
-                                        Facebook
+                                        Đăng nhập với Google
                                     </button>
                                 </div>
 

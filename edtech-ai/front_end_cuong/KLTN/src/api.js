@@ -19,6 +19,24 @@ export async function apiLogin(email, password) {
 }
 
 /**
+ * Đăng nhập bằng Google — POST /api/v1/auth/google
+ * @param {string} googleAccessToken
+ */
+export async function apiLoginGoogle(googleAccessToken) {
+  const res = await fetch(`${API_BASE_URL}/auth/google`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token: googleAccessToken }),
+  });
+
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.detail || "Đăng nhập Google thất bại");
+  }
+  return data;
+}
+
+/**
  * Đăng xuất — POST /api/v1/auth/logout
  * @param {string} token 
  */
