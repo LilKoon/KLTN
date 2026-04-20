@@ -64,7 +64,7 @@ async def create_exam(db: AsyncSession, user_id: str) -> dict:
     Tạo bài kiểm tra mới + lấy câu hỏi ngẫu nhiên.
     Trả về exam_id, danh sách câu hỏi (ẩn đáp án), và time_limit.
     """
-    # 0. Kiểm tra xem người dùng đã làm bài test đầu vào chưa
+    # 0a. Kiểm tra đã COMPLETED chưa
     result = await db.execute(
         select(BaiKiemTra).where(
             BaiKiemTra.MaNguoiDung == uuid.UUID(user_id),
@@ -78,6 +78,52 @@ async def create_exam(db: AsyncSession, user_id: str) -> dict:
             "already_completed": True,
             "exam_id": str(existing_exam.MaBaiKiemTra)
         }
+
+    # 0b. Nếu có bài IN_PROGRESS → reuse, không tạo mới
+    result = await db.execute(
+        select(BaiKiemTra).where(
+            BaiKiemTra.MaNguoiDung == uuid.UUID(user_id),
+            BaiKiemTra.LoaiBaiKiemTra == "DAU_VAO",
+            BaiKiemTra.TrangThai == "IN_PROGRESS"
+        ).order_by(BaiKiemTra.CreatedAt.desc())
+    )
+    in_progress_exam = result.scalars().first()
+    if in_progress_exam:
+        # Lấy lại câu hỏi từ ChiTietLamBai (nếu có) hoặc generate mới
+        result2 = await db.execute(
+            select(ChiTietLamBai).where(
+                ChiTietLamBai.MaBaiKiemTra == in_progress_exam.MaBaiKiemTra
+            )
+        )
+        existing_details = result2.scalars().all()
+        if existing_details:
+            # Reuse: lấy câu hỏi gốc từ chi tiết đã có
+            qids = [d.MaCauHoi for d in existing_details]
+            result3 = await db.execute(
+                select(NganHangCauHoi).where(NganHangCauHoi.MaCauHoi.in_(qids))
+            )
+            qs_map = {q.MaCauHoi: q for q in result3.scalars().all()}
+            questions_for_client = []
+            for i, d in enumerate(existing_details):
+                q = qs_map.get(d.MaCauHoi)
+                if not q:
+                    continue
+                questions_for_client.append({
+                    "question_id": str(q.MaCauHoi),
+                    "index": i + 1,
+                    "question": q.NoiDung,
+                    "options": q.DSDapAn,
+                    "skill": q.KyNang,
+                    "level": q.MucDo,
+                    "audio": q.FileAudioDinhKem,
+                })
+            return {
+                "already_completed": False,
+                "exam_id": str(in_progress_exam.MaBaiKiemTra),
+                "questions": questions_for_client,
+                "total_questions": len(questions_for_client),
+                "time_limit_minutes": EXAM_CONFIG["time_limit_minutes"],
+            }
 
     # 1. Lấy câu hỏi ngẫu nhiên
     questions = await fetch_random_questions(db)

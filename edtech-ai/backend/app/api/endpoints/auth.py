@@ -10,7 +10,7 @@ from typing import Optional
 import os
 import shutil
 from app.core.database import get_db
-from app.core.models import NguoiDung
+from app.core.models import NguoiDung, BaiKiemTra
 from app.core.config import settings
 
 router = APIRouter()
@@ -196,6 +196,40 @@ async def get_me(current_user: NguoiDung = Depends(get_current_user)):
         "bio": current_user.TieuSu,
         "avatar": current_user.AnhDaiDien
     }
+
+
+@router.get("/me/onboarding-status")
+async def get_onboarding_status(
+    current_user: NguoiDung = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Kiểm tra xem user đã hoàn thành bài kiểm tra đầu vào chưa.
+    - is_new_user = True: chưa có bài DAU_VAO COMPLETED → hiện modal chào mừng
+    - is_new_user = False: đã có → hiện banner ôn tập hằng ngày
+    """
+    import uuid as uuid_module
+    result = await db.execute(
+        select(BaiKiemTra).where(
+            BaiKiemTra.MaNguoiDung == current_user.MaNguoiDung,
+            BaiKiemTra.LoaiBaiKiemTra == "DAU_VAO",
+            BaiKiemTra.TrangThai == "COMPLETED"
+        ).order_by(BaiKiemTra.CreatedAt.desc())
+    )
+    completed_exam = result.scalars().first()
+
+    if completed_exam:
+        return {
+            "is_new_user": False,
+            "completed_exam_id": str(completed_exam.MaBaiKiemTra),
+            "score": float(completed_exam.TongDiem) if completed_exam.TongDiem else None,
+        }
+    else:
+        return {
+            "is_new_user": True,
+            "completed_exam_id": None,
+            "score": None,
+        }
 
 @router.put("/me")
 async def update_me(body: ProfileUpdate, db: AsyncSession = Depends(get_db), current_user: NguoiDung = Depends(get_current_user)):
