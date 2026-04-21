@@ -45,6 +45,6 @@ function simulateAIProcessing() {
 }
 
 function finishCreation() {
-  alert('Tạo bộ flashcard thành công! Hệ thống đang chuyển hướng...');
+  // Navigate to detail page to view the newly created flashcard set
   window.location.href = 'flashcard-detail.html';
 }
