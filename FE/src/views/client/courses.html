@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> Khóa học của tôi </title>
+    <!-- Compiled CSS -->
+    <link rel="stylesheet" href="../../../dist/output.css">
+    <!-- Font Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body class="font-sans text-slate-900 h-screen w-screen overflow-hidden flex bg-white">
+
+    <!-- 1. Full Height Left Sidebar -->
+    <aside class="w-64 h-full bg-white border-r border-slate-200 flex flex-col flex-shrink-0 z-20">
+        <!-- User Profile & Streak -->
+        <div
+            class="px-6 py-5 border-b border-slate-100 flex flex-col gap-4 relative overflow-hidden bg-white hover:bg-slate-50 transition-colors">
+            <div class="absolute -right-4 -top-4 w-24 h-24 bg-teal-50 rounded-full blur-xl z-0 pointer-events-none">
+            </div>
+            <div class="relative z-10 flex items-center justify-between">
+                <div class="flex items-center gap-3 cursor-pointer group">
+                    <div class="relative">
+                        <img src="https://i.pravatar.cc/150?u=a042581f4e29026024d" alt="User Avatar"
+                            class="w-10 h-10 rounded-full shadow-sm object-cover border border-slate-200 group-hover:border-teal-300 transition-all">
+                        <div
+                            class="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full">
+                        </div>
+                    </div>
+                    <div>
+                        <h3
+                            class="font-bold text-slate-900 text-[14px] leading-tight group-hover:text-teal-600 transition-colors">
+                            Ngô Anh Thư</h3>
+                    </div>
+                </div>
+                <i data-lucide="settings"
+                    class="w-4 h-4 text-slate-400 hover:text-slate-600 cursor-pointer transition-colors hidden group-hover:block"></i>
+            </div>
+
+            <div
+                class="relative z-10 flex items-center justify-between bg-orange-50/80 px-3 py-2 rounded-lg border border-orange-100/50 mt-1 cursor-pointer hover:border-orange-200 transition-all">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="flame" class="w-4 h-4 text-orange-500 fill-orange-500/20"></i>
+                    <span class="text-xs font-semibold text-orange-600">Streak: <span
+                            class="font-bold text-orange-700">3 Ngày</span></span>
+                </div>
+                <i data-lucide="chevron-right" class="w-3 h-3 text-orange-400"></i>
+            </div>
+        </div>
+
+        <!-- Navigation Menu -->
+        <nav class="flex flex-col gap-1 p-3 overflow-y-auto no-scrollbar">
+            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 ml-3 mt-2">Menu chính</div>
+            <a href="main.html"
+                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-slate-900 font-medium transition-all cursor-pointer">
+                <i data-lucide="home" class="w-[18px] h-[18px]"></i> Trang chủ
+            </a>
+            <a href="studyplan.html"
+                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-slate-900 font-medium transition-all cursor-pointer">
+                <i data-lucide="map" class="w-[18px] h-[18px]"></i> Lộ trình học tập
+            </a>
+            <a href="learningprogress.html"
+                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-slate-900 font-medium transition-all cursor-pointer">
+                <i data-lucide="bar-chart-2" class="w-[18px] h-[18px]"></i> Tiến độ học
+            </a>
+
+            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 ml-3 mt-6">Học tập</div>
+            <a href="courses.html"
+                class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-teal-50 text-teal-600 font-semibold transition-all cursor-pointer">
+                <i data-lucide="book-open" class="w-[18px] h-[18px]"></i> Khóa học của tôi
+            </a>
+            <a href="#"
+                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-slate-900 font-medium transition-all cursor-pointer">
+                <i data-lucide="layers" class="w-[18px] h-[18px]"></i> Kho flashcard
+            </a>
+            <a href="#"
+                class="flex items-center justify-between px-3 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-slate-900 font-medium transition-all cursor-pointer">
+                <div class="flex items-center gap-3">
+                    <i data-lucide="bot" class="w-[18px] h-[18px]"></i> Bài tập & Test
+                </div>
+                <span
+                    class="bg-blue-50 text-blue-600 text-[9px] font-bold px-1.5 py-0.5 rounded border border-blue-100">MỚI</span>
+            </a>
+        </nav>
+
+        <div class="mt-auto p-4 border-t border-slate-100">
+            <div
+                class="bg-gradient-to-br from-teal-50 to-white rounded-xl p-4 border border-teal-100 shadow-sm relative overflow-hidden group hover:border-teal-200 transition-colors mb-4">
+                <div
+                    class="absolute -right-4 -top-4 w-16 h-16 bg-teal-100 rounded-full blur-2xl group-hover:bg-teal-200 transition-colors">
+                </div>
+                <h4 class="font-bold text-slate-900 text-[13px] mb-1 relative z-10 flex items-center gap-1.5"><i
+                        data-lucide="zap" class="w-3.5 h-3.5 text-teal-500"></i> Pro Plan</h4>
+                <p class="text-[11px] text-slate-500 mb-3 relative z-10 leading-tight">Mở khóa tính năng AI không giới
+                    hạn</p>
+                <button
+                    class="w-full bg-teal-600 hover:bg-teal-700 text-white text-[12px] font-semibold py-2 rounded-lg transition-colors relative z-10 cursor-pointer">
+                    Nâng cấp ngay
+                </button>
+            </div>
+            <a href="#"
+                class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-500 hover:text-red-600 hover:bg-red-50 font-medium transition-all cursor-pointer">
+                <i data-lucide="log-out" class="w-[18px] h-[18px]"></i> Đăng xuất
+            </a>
+        </div>
+    </aside>
+
+    <!-- 2. Main Content -->
+    <main class="flex-1 h-full flex flex-col relative z-10 overflow-x-hidden overflow-y-auto no-scrollbar main-bg">
+
+        <!-- Top Header Panel -->
+        <header
+            class="bg-white/80 backdrop-blur-xl border-b border-slate-200/60 px-6 lg:px-8 py-3 flex items-center justify-between sticky top-0 z-30">
+            <div class="flex items-center gap-4">
+                <span class="font-bold text-xl text-teal-600 flex items-center gap-2 mr-4 lg:hidden">
+                    <i data-lucide="graduation-cap" class="w-6 h-6"></i>
+                </span>
+                <div class="relative w-[280px] lg:w-[360px] hidden sm:block">
+                    <i data-lucide="search"
+                        class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
+                    <input type="text" placeholder="Tìm kiếm tài liệu, flashcards..."
+                        class="w-full bg-slate-50 hover:bg-white focus:bg-white border border-slate-200/60 rounded-full py-2 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 text-[13px] placeholder:text-slate-400 transition-all font-medium text-slate-700">
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <div
+                    class="flex items-center gap-2 bg-[#fff6e6] hover:bg-orange-50 px-4 py-1.5 rounded-[20px] cursor-pointer transition-colors border border-transparent hover:border-orange-100/50">
+                    <div class="relative flex items-center justify-center">
+                        <i data-lucide="flame" class="w-[20px] h-[20px] text-orange-500 fill-amber-400"></i>
+                        <div
+                            class="absolute inset-0 m-auto mt-[10px] w-[5px] h-[5px] bg-white rounded flex items-center justify-center z-10 shadow-sm border border-orange-100/50">
+                        </div>
+                    </div>
+                    <span
+                        class="text-[17px] font-extrabold tracking-tight bg-gradient-to-b from-orange-400 to-[#ff6b00] bg-clip-text text-transparent">3</span>
+                </div>
+                <div class="h-6 w-px bg-slate-200 hidden sm:block"></div>
+                <button
+                    class="relative w-9 h-9 rounded-full hover:bg-slate-100 flex items-center justify-center transition-colors text-slate-400 cursor-pointer">
+                    <i data-lucide="bell" class="w-[18px] h-[18px]"></i>
+                    <span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Courses Content Area -->
+        <div class="w-full mx-auto p-6 lg:p-10 pb-16 max-w-7xl">
+
+            <!-- Page Header -->
+            <div class="mb-8">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-3">
+                    <h1 class="text-3xl font-bold text-slate-900 tracking-tight">Khoá học của tôi</h1>
+                    <div class="flex items-center gap-3">
+                        <div class="bg-amber-50 border border-amber-100 px-4 py-2 rounded-xl flex items-center gap-2">
+                            <span class="text-sm font-medium text-slate-600">Tổng số cúp đã đạt</span>
+                            <div class="flex items-center gap-1 font-bold text-amber-500">
+                                <i data-lucide="trophy" class="w-4 h-4 fill-amber-500"></i> 317/543
+                            </div>
+                        </div>
+                        <button
+                            class="bg-white border border-slate-200 px-4 py-2 rounded-xl flex items-center gap-2 hover:bg-slate-50 transition-colors cursor-pointer text-sm font-medium text-slate-700 shadow-sm">
+                            <i data-lucide="filter" class="w-4 h-4 text-slate-500"></i> Khóa học hiện tại
+                        </button>
+                    </div>
+                </div>
+                <p class="text-slate-500 text-sm">Các khóa học bạn đang sở hữu đã được chia theo từng cấp trình độ,
+                    tương ứng với mỗi chặng mục tiêu. Hãy chọn trình độ mà bạn muốn bắt đầu nhé.</p>
+            </div>
+
+            <!-- Tabs and Filters -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-200 mb-8 gap-4">
+                <div class="flex items-center gap-6" id="course-tabs">
+                    <button class="tab-btn tab-active" onclick="switchTab('main')">Khoá học chính</button>
+                    <button class="tab-btn tab-inactive" onclick="switchTab('recommended')">Khoá học đề xuất</button>
+                </div>
+
+                <div class="flex items-center gap-4 pb-3">
+                    <div class="flex items-center gap-2 text-sm">
+                        <span class="text-slate-500">Lọc theo</span>
+                        <div class="relative group cursor-pointer">
+                            <div class="flex items-center gap-1 font-medium text-slate-800">
+                                Tất cả trình độ
+                                <i data-lucide="chevron-down" class="w-4 h-4"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <button
+                        class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-500 transition-colors">
+                        <i data-lucide="search" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tab Content: Main Courses -->
+            <div id="tab-main" class="block space-y-10">
+
+                <!-- Category 1 -->
+                <div>
+                    <div class="flex items-end justify-between mb-4 px-1">
+                        <div>
+                            <h2 class="text-[20px] font-bold text-slate-900 tracking-tight">IELTS Nền tảng</h2>
+                            <p class="text-[13px] text-slate-500 mt-0.5">4 courses</p>
+                        </div>
+                        <div
+                            class="flex items-center gap-1.5 font-bold text-amber-500 text-sm bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-100/50">
+                            <i data-lucide="trophy" class="w-[15px] h-[15px] fill-amber-500"></i> 192/195
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <!-- Card 1 -->
+                        <div
+                            class="bg-white rounded-[20px] border border-slate-100 shadow-sm hover:shadow-md transition-shadow overflow-hidden group cursor-pointer flex flex-col h-full">
+                            <div
+                                class="h-[140px] bg-gradient-to-r from-blue-50 to-indigo-50 relative flex items-center justify-center p-4">
+                                <!-- Decorative blobs -->
+                                <div
+                                    class="absolute top-2 left-2 w-16 h-16 bg-blue-100 rounded-full blur-xl opacity-60">
+                                </div>
+                                <div
+                                    class="absolute bottom-2 right-2 w-20 h-20 bg-indigo-100 rounded-full blur-xl opacity-60">
+                                </div>
+                                <div class="absolute bottom-0 right-10 w-4 h-4 bg-orange-200 rounded-full opacity-60">
+                                </div>
+                                <div class="absolute top-4 left-1/3 w-3 h-3 bg-blue-300 rounded-full opacity-60"></div>
+                                <div
+                                    class="absolute right-4 top-1/2 w-8 h-8 border-4 border-white rounded-full opacity-80">
+                                </div>
+
+                                <div class="flex items-center gap-3 relative z-10">
+                                    <div class="font-black text-blue-900 text-lg leading-tight w-24">TỪ VỰNG IELTS CƠ
+                                        BẢN</div>
+                                    <img src="https://i.pravatar.cc/150?img=32"
+                                        class="w-20 h-20 rounded-full object-cover border-4 border-white shadow-sm"
+                                        alt="Teacher">
+                                </div>
+                            </div>
+                            <div class="p-5 flex-1 flex flex-col">
+                                <h3 class="font-bold text-slate-900 text-[16px] mb-4">Nền Tảng Từ Vựng</h3>
+                                <div class="mt-auto flex items-center justify-between pt-4 border-t border-slate-100">
+                                    <div class="flex items-center gap-1.5 text-green-600 font-medium text-[13px]">
+                                        <i data-lucide="check-circle-2"
+                                            class="w-[15px] h-[15px] fill-green-600 text-white"></i> Đã hoàn thành
+                                    </div>
+                                    <div class="flex items-center gap-1 font-bold text-amber-500 text-[13px]">
+                                        <i data-lucide="trophy" class="w-[14px] h-[14px] fill-amber-500"></i> 45/30
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card 2 -->
+                        <div
+                            class="bg-white rounded-[20px] border border-slate-100 shadow-sm hover:shadow-md transition-shadow overflow-hidden group cursor-pointer flex flex-col h-full">
+                            <div
+                                class="h-[140px] bg-gradient-to-r from-blue-50 to-indigo-50 relative flex items-center justify-center p-4">
+                                <div
+                                    class="absolute top-2 right-2 w-16 h-16 bg-blue-100 rounded-full blur-xl opacity-60">
+                                </div>
+                                <div
+                                    class="absolute bottom-2 left-2 w-20 h-20 bg-indigo-100 rounded-full blur-xl opacity-60">
+                                </div>
+                                <div class="flex items-center gap-3 relative z-10 w-full justify-center">
+                                    <div class="font-black text-blue-900 text-lg leading-tight w-24 text-right">NGỮ PHÁP
+                                        IELTS CƠ BẢN</div>
+                                    <img src="https://i.pravatar.cc/150?img=5"
+                                        class="w-20 h-20 rounded-full object-cover border-4 border-white shadow-sm"
+                                        alt="Teacher">
+                                </div>
+                            </div>
+                            <div class="p-5 flex-1 flex flex-col">
+                                <h3 class="font-bold text-slate-900 text-[16px] mb-4">Nền Tảng Ngữ Pháp</h3>
+                                <div class="mt-auto flex items-center justify-between pt-4 border-t border-slate-100">
+                                    <div class="flex items-center gap-1.5 text-green-600 font-medium text-[13px]">
+                                        <i data-lucide="check-circle-2"
+                                            class="w-[15px] h-[15px] fill-green-600 text-white"></i> Đã hoàn thành
+                                    </div>
+                                    <div class="flex items-center gap-1 font-bold text-amber-500 text-[13px]">
+                                        <i data-lucide="trophy" class="w-[14px] h-[14px] fill-amber-500"></i> 50/34
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card 3 -->
+                        <div
+                            class="bg-white rounded-[20px] border border-slate-100 shadow-sm hover:shadow-md transition-shadow overflow-hidden group cursor-pointer flex flex-col h-full">
+                            <div
+                                class="h-[140px] bg-gradient-to-r from-blue-50 to-indigo-50 relative flex items-center justify-center p-4">
+                                <div class="flex items-center gap-3 relative z-10">
+                                    <div class="font-black text-blue-900 text-lg leading-tight w-24">BÀI TẬP BỔ
+                                        TRỢ<br><span class="text-[9px] font-normal tracking-wide">nghe chép chính
+                                            tả</span></div>
+                                    <img src="https://i.pravatar.cc/150?img=9"
+                                        class="w-20 h-20 rounded-full object-cover border-4 border-white shadow-sm"
+                                        alt="Teacher">
+                                </div>
+                            </div>
+                            <div class="p-5 flex-1 flex flex-col">
+                                <h3 class="font-bold text-slate-900 text-[16px] mb-4 leading-snug">Bài tập bổ trợ Nghe
+                                    chép chính tả</h3>
+                                <div class="mt-auto flex items-center justify-between pt-4 border-t border-slate-100">
+                                    <div class="flex items-center gap-1.5 text-green-600 font-medium text-[13px]">
+                                        <i data-lucide="check-circle-2"
+                                            class="w-[15px] h-[15px] fill-green-600 text-white"></i> Đã hoàn thành
+                                    </div>
+                                    <div class="flex items-center gap-1 font-bold text-amber-500 text-[13px]">
+                                        <i data-lucide="trophy" class="w-[14px] h-[14px] fill-amber-500"></i> 45/30
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card 4 -->
+                        <div
+                            class="bg-white rounded-[20px] border border-slate-100 shadow-sm hover:shadow-md transition-shadow overflow-hidden group cursor-pointer flex flex-col h-full">
+                            <div
+                                class="h-[140px] bg-gradient-to-r from-blue-50 to-indigo-50 relative flex items-center justify-center p-4">
+                                <div class="flex items-center gap-3 relative z-10 w-full justify-center">
+                                    <div class="font-black text-blue-900 text-lg leading-tight w-24 text-right">PHÁT ÂM
+                                        IELTS CƠ BẢN</div>
+                                    <img src="https://i.pravatar.cc/150?img=11"
+                                        class="w-20 h-20 rounded-full object-cover border-4 border-white shadow-sm"
+                                        alt="Teacher">
+                                </div>
+                            </div>
+                            <div class="p-5 flex-1 flex flex-col">
+                                <h3 class="font-bold text-slate-900 text-[16px] mb-4">Nền Tảng Phát Âm</h3>
+                                <div class="mt-auto flex items-center justify-between pt-4 border-t border-slate-100">
+                                    <div class="flex items-center gap-1.5 text-green-600 font-medium text-[13px]">
+                                        <i data-lucide="check-circle-2"
+                                            class="w-[15px] h-[15px] fill-green-600 text-white"></i> Đã hoàn thành
+                                    </div>
+                                    <div class="flex items-center gap-1 font-bold text-amber-500 text-[13px]">
+                                        <i data-lucide="trophy" class="w-[14px] h-[14px] fill-amber-500"></i> 52/36
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Category 2 -->
+                <div>
+                    <div class="flex items-end justify-between mb-4 px-1">
+                        <div>
+                            <h2 class="text-[20px] font-bold text-slate-900 tracking-tight">IELTS Cơ bản</h2>
+                            <p class="text-[13px] text-slate-500 mt-0.5">7 courses</p>
+                        </div>
+                        <div
+                            class="flex items-center gap-1.5 font-bold text-amber-500 text-sm bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-100/50">
+                            <i data-lucide="trophy" class="w-[15px] h-[15px] fill-amber-500"></i> 125/348
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <!-- Card 5 -->
+                        <div
+                            class="bg-white rounded-[20px] border border-slate-100 shadow-sm hover:shadow-md transition-shadow overflow-hidden group cursor-pointer flex flex-col h-full">
+                            <div
+                                class="h-[140px] bg-gradient-to-r from-blue-50 to-indigo-50 relative flex items-center justify-center p-4">
+                                <div
+                                    class="flex items-center gap-3 relative z-10 border border-white/40 p-2 rounded-xl bg-white/20 backdrop-blur-sm">
+                                    <div class="font-black text-blue-900 text-[15px] leading-tight w-24 text-center">TỪ
+                                        VỰNG IELTS TRUNG CẤP</div>
+                                </div>
+                            </div>
+                            <div class="p-5 flex-1 flex flex-col">
+                                <h3 class="font-bold text-slate-900 text-[16px] mb-4">Từ Vựng Cơ Bản Plus</h3>
+                                <div class="mt-auto flex items-center justify-between pt-4 border-t border-slate-100">
+                                    <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden mr-3">
+                                        <div class="bg-teal-500 w-[45%] h-full rounded-full"></div>
+                                    </div>
+                                    <div
+                                        class="flex items-center gap-1 font-bold text-amber-500 text-[13px] flex-shrink-0">
+                                        <i data-lucide="trophy" class="w-[14px] h-[14px] fill-amber-500"></i> 20/45
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card 6 -->
+                        <div
+                            class="bg-white rounded-[20px] border border-slate-100 shadow-sm hover:shadow-md transition-shadow overflow-hidden group cursor-pointer flex flex-col h-full">
+                            <div
+                                class="h-[140px] bg-gradient-to-r from-blue-50 to-indigo-50 relative flex items-center justify-center p-4">
+                                <div class="flex items-center gap-3 relative z-10 bg-white p-2 rounded-2xl shadow-sm">
+                                    <i data-lucide="headphones" class="w-8 h-8 text-blue-600"></i>
+                                    <div class="font-black text-blue-900 text-[14px] leading-tight w-24">IELTS LISTENING
+                                        CƠ BẢN</div>
+                                </div>
+                            </div>
+                            <div class="p-5 flex-1 flex flex-col">
+                                <h3 class="font-bold text-slate-900 text-[16px] mb-4">IELTS - Listening Cơ bản</h3>
+                                <div class="mt-auto flex items-center justify-between pt-4 border-t border-slate-100">
+                                    <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden mr-3">
+                                        <div class="bg-teal-500 w-[15%] h-full rounded-full"></div>
+                                    </div>
+                                    <div
+                                        class="flex items-center gap-1 font-bold text-amber-500 text-[13px] flex-shrink-0">
+                                        <i data-lucide="trophy" class="w-[14px] h-[14px] fill-amber-500"></i> 5/35
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card 7 -->
+                        <div
+                            class="bg-white rounded-[20px] border border-slate-100 shadow-sm hover:shadow-md transition-shadow overflow-hidden group cursor-pointer flex flex-col h-full">
+                            <div
+                                class="h-[140px] bg-gradient-to-r from-orange-50 to-amber-50 relative flex items-center justify-center p-4">
+                                <div
+                                    class="flex items-center gap-3 relative z-10 bg-white p-2 rounded-2xl shadow-sm border border-orange-100">
+                                    <i data-lucide="mic" class="w-8 h-8 text-orange-500"></i>
+                                    <div class="font-black text-orange-900 text-[14px] leading-tight w-24">IELTS
+                                        SPEAKING CƠ BẢN +</div>
+                                </div>
+                            </div>
+                            <div class="p-5 flex-1 flex flex-col">
+                                <h3 class="font-bold text-slate-900 text-[16px] mb-4">IELTS Speaking Cơ bản Plus</h3>
+                                <div class="mt-auto flex items-center justify-between pt-4 border-t border-slate-100">
+                                    <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden mr-3">
+                                        <div class="bg-teal-500 w-[20%] h-full rounded-full"></div>
+                                    </div>
+                                    <div
+                                        class="flex items-center gap-1 font-bold text-amber-500 text-[13px] flex-shrink-0">
+                                        <i data-lucide="trophy" class="w-[14px] h-[14px] fill-amber-500"></i> 10/50
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card 8 -->
+                        <div
+                            class="bg-white rounded-[20px] border border-slate-100 shadow-sm hover:shadow-md transition-shadow overflow-hidden group cursor-pointer flex flex-col h-full">
+                            <div
+                                class="h-[140px] bg-gradient-to-r from-teal-50 to-emerald-50 relative flex items-center justify-center p-4">
+                                <div
+                                    class="flex items-center gap-3 relative z-10 bg-white p-2 rounded-2xl shadow-sm border border-teal-100">
+                                    <i data-lucide="book-open" class="w-8 h-8 text-teal-600"></i>
+                                    <div class="font-black text-teal-900 text-[14px] leading-tight w-24">IELTS READING
+                                        CƠ BẢN</div>
+                                </div>
+                            </div>
+                            <div class="p-5 flex-1 flex flex-col">
+                                <h3 class="font-bold text-slate-900 text-[16px] mb-4">IELTS - Reading Cơ bản</h3>
+                                <div class="mt-auto flex items-center justify-between pt-4 border-t border-slate-100">
+                                    <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden mr-3">
+                                        <div class="bg-teal-500 w-[5%] h-full rounded-full"></div>
+                                    </div>
+                                    <div
+                                        class="flex items-center gap-1 font-bold text-amber-500 text-[13px] flex-shrink-0">
+                                        <i data-lucide="trophy" class="w-[14px] h-[14px] fill-amber-500"></i> 2/40
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Tab Content: Recommended Courses -->
+            <div id="tab-recommended" class="hidden space-y-10">
+                <div
+                    class="text-center py-16 bg-white rounded-[24px] border border-slate-100 shadow-sm flex flex-col items-center justify-center">
+                    <div class="w-20 h-20 bg-teal-50 text-teal-600 rounded-full flex items-center justify-center mb-6">
+                        <i data-lucide="sparkles" class="w-10 h-10"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-2">Đề xuất khóa học phù hợp với bạn</h3>
+                    <p class="text-slate-500 max-w-md mx-auto mb-8">Dựa trên bài đánh giá năng lực gần nhất, AI của
+                        chúng tôi xây dựng sẵn lộ trình các khóa học tối ưu cho bạn.</p>
+                    <button
+                        class="bg-teal-600 text-white font-medium px-6 py-3 rounded-xl hover:bg-teal-700 transition-[background,transform] active:scale-95 flex items-center gap-2">
+                        <i data-lucide="search" class="w-4 h-4"></i> Khám phá khóa học
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script src="../../assets/js/main.js" defer></script>
+    <script src="../../assets/js/courses.js" defer></script>
+</body>
+
+</html>
