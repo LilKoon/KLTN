@@ -33,9 +33,9 @@ export default function Accounts() {
                     <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Quản lý Người Dùng</h1>
                     <p className="text-slate-500 font-medium text-sm mt-1">Danh sách tất cả tài khoản hiện có trên hệ thống</p>
                 </div>
-                <button className="flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-md shadow-teal-600/20 transition-all focus:ring-2 focus:ring-teal-500 focus:outline-none focus:ring-offset-2">
+                <button className="flex items-center gap-2 bg-teal-600 hover:bg-teal-700 hover:-translate-y-0.5 hover:shadow-lg text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-md shadow-teal-600/20 transition-all duration-300 focus:ring-2 focus:ring-teal-500 focus:outline-none focus:ring-offset-2">
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4"/></svg>
-                    Thêm người dùng mới
+                    Tạo tài khoản mới
                 </button>
             </div>
 
@@ -81,8 +81,8 @@ export default function Accounts() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
-                            {mockUsers.filter(u => u.name.toLowerCase().includes(searchTerm.toLowerCase()) || u.email.toLowerCase().includes(searchTerm.toLowerCase())).map((user) => (
-                                <tr key={user.id} className="hover:bg-slate-50/80 transition-colors">
+                            {mockUsers.filter(u => u.name.toLowerCase().includes(searchTerm.toLowerCase()) || u.email.toLowerCase().includes(searchTerm.toLowerCase())).map((user, idx) => (
+                                <tr key={user.id} className="hover:bg-slate-50/80 transition-all duration-200 animate-slide-in hover:shadow-sm" style={{ opacity: 0, animationDelay: `${0.1 + idx * 0.05}s` }}>
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-3">
                                             <div className="w-10 h-10 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center font-bold shrink-0">

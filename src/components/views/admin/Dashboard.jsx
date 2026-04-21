@@ -77,7 +77,6 @@ export default function Dashboard() {
         { label: 'Tổng Học Viên', value: '14,234', change: '+12%', color: 'text-teal-600', bg: 'bg-teal-50' },
         { label: 'Đang Hoạt Động', value: '2,845', change: '+4.5%', color: 'text-sky-600', bg: 'bg-sky-50' },
         { label: 'Kiểm Tra Mới', value: '1,290', change: '+18%', color: 'text-indigo-600', bg: 'bg-indigo-50' },
-        { label: 'Doanh Thu Quý', value: '$84,500', change: '-2%', color: 'text-rose-600', bg: 'bg-rose-50' },
     ];
 
     return (
@@ -94,11 +93,11 @@ export default function Dashboard() {
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
                 {stats.map((stat, idx) => (
-                    <div key={idx} className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 hover:border-teal-400 transition-colors animate-slide-in" style={{ opacity: 0, animationDelay: `${idx * 0.1}s` }}>
+                    <div key={idx} className="group bg-white rounded-2xl p-6 shadow-sm border border-slate-200 hover:border-teal-400 hover:-translate-y-1 hover:shadow-md transition-all duration-300 animate-slide-in" style={{ opacity: 0, animationDelay: `${idx * 0.1}s` }}>
                         <div className="flex items-center justify-between">
-                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${stat.bg} ${stat.color}`}>
+                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${stat.bg} ${stat.color} group-hover:scale-110 transition-transform duration-300`}>
                                 <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" /></svg>
                             </div>
                             <span className={`text-xs font-bold px-2.5 py-1rounded-full ${stat.change.startsWith('+') ? 'text-emerald-700 bg-emerald-100' : 'text-rose-700 bg-rose-100'} rounded-full`}>
