@@ -1,8 +1,3 @@
-/**
- * flashcard-create.js - Logic for the flashcard creation page.
- * Handles view switching between select / manual / upload / scan-results.
- */
-
 const views = ['view-select', 'view-manual', 'view-upload', 'view-scan-results'];
 
 /**
@@ -45,6 +40,5 @@ function simulateAIProcessing() {
 }
 
 function finishCreation() {
-  // Navigate to detail page to view the newly created flashcard set
   window.location.href = 'flashcard-detail.html';
 }

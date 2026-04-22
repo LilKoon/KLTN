@@ -1,7 +1,3 @@
-/**
- * login.js - Authentication logic for loginform1.html.
- * Handles login/register form toggling and localStorage-based auth.
- */
 
 /**
  * Toggles between the login and register forms with smooth animation.
@@ -52,7 +48,6 @@ function toggleForm(formType) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Login form submission
   const loginFormEl = document.getElementById('login');
   if (loginFormEl) {
     loginFormEl.addEventListener('submit', (e) => {
@@ -68,7 +63,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Register form submission
   const registerFormEl = document.getElementById('register');
   if (registerFormEl) {
     registerFormEl.addEventListener('submit', (e) => {
@@ -79,13 +73,13 @@ document.addEventListener('DOMContentLoaded', () => {
       const confirm = document.getElementById('regConfirm').value;
 
       if (password !== confirm) {
-        alert('Mật khẩu nhập lại không khớp!');
+        alert('Mật khẩu không khớp!');
         return;
       }
 
       const user = { name, email, password };
       localStorage.setItem('user_' + email, JSON.stringify(user));
-      alert('Đăng ký thành công! Vui lòng tiến hành đăng nhập.');
+      alert('Đăng ký thành công! Vui lòng đăng nhập lại.');
       toggleForm('login');
       document.getElementById('loginEmail').value = email;
     });

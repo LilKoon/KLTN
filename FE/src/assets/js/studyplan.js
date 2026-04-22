@@ -1,8 +1,3 @@
-/**
- * studyplan.js - Interactive study map logic for studyplan.html.
- * Handles SVG path animation and node state transitions.
- */
-
 document.addEventListener('DOMContentLoaded', () => {
   const totalSteps = 6;
   const progressPath = document.getElementById('progress-path');
@@ -48,6 +43,6 @@ document.addEventListener('DOMContentLoaded', () => {
     currentCompleted = stepNumber;
   };
 
-  // Simulate initial progress on load
+
   setTimeout(() => window.completeStep(2), 600);
 });

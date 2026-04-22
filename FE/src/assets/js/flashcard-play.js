@@ -1,8 +1,3 @@
-/**
- * flashcard-play.js - Interactive flashcard study session logic.
- * Handles 3D card flipping, keyboard shortcuts, and progress tracking.
- */
-
 let isFlipped = false;
 let currentCardIndex = 0;
 let learningCount = 0;
@@ -81,19 +76,15 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelector('.text-xs.font-bold.text-white').textContent = Math.round(percent) + '%';
   }
 
-  // Attach click handler to flip area
   document.getElementById('flashcardArea').addEventListener('click', flipCard);
 
-  // Attach keyboard handler
   document.addEventListener('keydown', (e) => {
     if (e.code === 'Space') { e.preventDefault(); flipCard(); }
     else if (isFlipped && e.key === '1') nextCard('learning');
     else if (isFlipped && e.key === '2') nextCard('know');
   });
 
-  // Expose nextCard globally for onclick buttons
   window.nextCard = nextCard;
 
-  // Init first card
   updateCardUI();
 });
