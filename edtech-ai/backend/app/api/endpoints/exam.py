@@ -1,6 +1,5 @@
 """
 exam.py — API endpoints cho bài kiểm tra đầu vào.
-
 Chỉ làm nhiệm vụ nhận request → gọi exam_service → trả response.
 Không chứa business logic.
 """
@@ -13,7 +12,7 @@ from jose import jwt, JWTError
 
 from app.core.database import get_db
 from app.core.config import settings
-from app.core.exam_service import create_exam, grade_exam, get_exam_result
+from app.core.exam_service import create_exam, grade_exam, get_exam_result, get_final_test_info
 
 router = APIRouter()
 
@@ -34,6 +33,7 @@ def get_user_id_from_token(token: str) -> str:
 # ─── Schemas ─────────────────────────────────────────────────────────────
 class StartExamRequest(BaseModel):
     token: str
+    exam_type: str = "DAU_VAO"
 
 
 class AnswerItem(BaseModel):
@@ -62,7 +62,7 @@ async def start_exam(body: StartExamRequest, db: AsyncSession = Depends(get_db))
     """
     user_id = get_user_id_from_token(body.token)
 
-    result = await create_exam(db, user_id)
+    result = await create_exam(db, user_id, body.exam_type)
     if not result:
         raise HTTPException(status_code=404, detail="Không đủ câu hỏi trong ngân hàng đề")
 
@@ -97,3 +97,12 @@ async def exam_result(exam_id: str, body: GetResultRequest, db: AsyncSession = D
         raise HTTPException(status_code=404, detail="Không tìm thấy kết quả bài kiểm tra")
 
     return result
+
+
+@router.post("/final-info")
+async def final_info(body: GetResultRequest, db: AsyncSession = Depends(get_db)):
+    """
+    Lấy thông tin đánh giá đầu vào để làm bài kiểm tra cuối khóa.
+    """
+    user_id = get_user_id_from_token(body.token)
+    return await get_final_test_info(db, user_id)
