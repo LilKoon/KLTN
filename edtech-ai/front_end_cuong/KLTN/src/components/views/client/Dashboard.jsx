@@ -1,14 +1,61 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import WelcomeModal from './WelcomeModal';
+import { useAuth } from '../../../context/AuthContext';
+import { apiGetOnboardingStatus } from '../../../api';
 
 export default function Dashboard() {
     const navigate = useNavigate();
+    const { token, user } = useAuth();
+
+    // Onboarding state
+    const [onboarding, setOnboarding] = useState(null); // null = loading
+    const [showWelcome, setShowWelcome] = useState(false);
+
+    useEffect(() => {
+        if (!token) return;
+        apiGetOnboardingStatus(token)
+            .then(data => {
+                setOnboarding(data);
+                // Hiện modal/banner nếu chưa dismiss trong session này
+                const dismissed = sessionStorage.getItem('welcome_dismissed');
+                if (!dismissed) setShowWelcome(true);
+            })
+            .catch(() => {
+                // Nếu lỗi, không hiện modal
+                setOnboarding({ is_new_user: false });
+            });
+    }, [token]);
+
+    const handleWelcomeClose = () => {
+        setShowWelcome(false);
+        sessionStorage.setItem('welcome_dismissed', '1');
+    };
+
     return (
         <div className="min-h-screen bg-slate-50 font-inter p-4 sm:p-6 lg:p-10 space-y-8">
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
                 .font-inter { font-family: 'Inter', sans-serif; }
             `}</style>
+
+            {/* ── Fullscreen welcome modal (user mới) ── */}
+            {showWelcome && onboarding?.is_new_user && (
+                <WelcomeModal
+                    isNewUser={true}
+                    userName={user?.user_name}
+                    onClose={handleWelcomeClose}
+                />
+            )}
+
+            {/* ── Returning banner (user cũ, hiện inline trong page) ── */}
+            {showWelcome && onboarding && !onboarding.is_new_user && (
+                <WelcomeModal
+                    isNewUser={false}
+                    userName={user?.user_name}
+                    onClose={handleWelcomeClose}
+                />
+            )}
 
             {/* Hero / Welcome Banner */}
             <div className="relative overflow-hidden rounded-[2rem] bg-slate-900 border border-slate-800 p-8 sm:p-12 shadow-xl shadow-slate-900/10">

@@ -33,6 +33,9 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('user_role', 'client');
         localStorage.setItem('user_data', JSON.stringify(userData));
 
+        // Xóa flag welcome khi login mới để modal luôn hiện đúng với user
+        sessionStorage.removeItem('welcome_dismissed');
+
         navigate('/client');
     };
 
@@ -48,6 +51,9 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('access_token', data.access_token);
         localStorage.setItem('user_role', 'client');
         localStorage.setItem('user_data', JSON.stringify(userData));
+
+        // Xóa flag welcome khi login mới
+        sessionStorage.removeItem('welcome_dismissed');
 
         navigate('/client');
     };
@@ -84,6 +90,8 @@ export const AuthProvider = ({ children }) => {
         localStorage.removeItem('access_token');
         localStorage.removeItem('user_role');
         localStorage.removeItem('user_data');
+        // Xóa flag welcome để user mới login luôn thấy modal đúng
+        sessionStorage.removeItem('welcome_dismissed');
         navigate('/');
     };
 

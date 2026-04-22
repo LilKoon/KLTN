@@ -95,6 +95,26 @@ export async function apiGetProfile(token) {
 }
 
 /**
+ * Kiểm tra trạng thái onboarding — GET /api/v1/auth/me/onboarding-status
+ * @returns {{ is_new_user, completed_exam_id, score }}
+ */
+export async function apiGetOnboardingStatus(token) {
+  const res = await fetch(`${API_BASE_URL}/auth/me/onboarding-status`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`
+    },
+  });
+
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.detail || "Không thể lấy trạng thái onboarding");
+  }
+  return data;
+}
+
+/**
  * Cập nhật thông tin người dùng — PUT /api/v1/auth/me
  * @param {string} token 
  * @param {Object} profileData 
@@ -146,11 +166,11 @@ export async function apiUploadAvatar(token, file) {
  * Bắt đầu bài kiểm tra — POST /api/v1/exam/start
  * @returns {{ exam_id, questions, total_questions, time_limit_minutes }}
  */
-export async function apiStartExam(token) {
+export async function apiStartExam(token, examType = "DAU_VAO") {
   const res = await fetch(`${API_BASE_URL}/exam/start`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ token }),
+    body: JSON.stringify({ token, exam_type: examType }),
   });
 
   const data = await res.json();
@@ -195,6 +215,23 @@ export async function apiGetExamResult(token, examId) {
   const data = await res.json();
   if (!res.ok) {
     throw new Error(data.detail || "Không thể lấy kết quả");
+  }
+  return data;
+}
+
+/**
+ * Lấy thông tin đầu vào cho Final Test — POST /api/v1/exam/final-info
+ */
+export async function apiGetFinalTestInfo(token) {
+  const res = await fetch(`${API_BASE_URL}/exam/final-info`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token }),
+  });
+
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.detail || "Không thể lấy thông tin khởi tạo Final Test");
   }
   return data;
 }
