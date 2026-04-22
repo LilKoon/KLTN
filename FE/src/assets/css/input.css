@@ -1,9 +1,5 @@
 @import "tailwindcss";
 
-/* ============================================
-   DESIGN TOKENS (@theme)
-   Teal color palette + typography + animations
-   ============================================ */
 @theme {
   /* Teal Palette - Pantone Teal brand colors */
   --color-teal-50: #f0fdfa;
@@ -18,40 +14,53 @@
   --color-teal-900: #134e4a;
   --color-teal-950: #042f2e;
 
-  /* Typography */
+  /* typo */
   --font-sans: 'Inter', sans-serif;
 
-  /* Animations */
+  /* animations */
   --animate-float-soft: float 6s ease-in-out infinite;
   --animate-float-delayed: float 6s ease-in-out 3s infinite;
   --animate-bounce-soft: bounceSoft 2s infinite ease-in-out;
   --animate-fade-in: fadeIn 0.4s ease forwards;
 }
 
-/* ============================================
-   KEYFRAMES
-   ============================================ */
 @keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50%       { transform: translateY(-12px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-12px);
+  }
 }
 
 @keyframes bounceSoft {
-  0%, 100% { transform: scale(1); }
-  50%       { transform: scale(1.08); }
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.08);
+  }
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-/* ============================================
-   UTILITIES (@utility)
-   Reusable single-purpose utility classes
-   ============================================ */
-
-/* Mesh gradient background — used on all inner app pages */
+/* utilities */
 @utility main-bg {
   background-color: #f8fafc;
   background-image:
@@ -61,7 +70,7 @@
   background-attachment: fixed;
 }
 
-/* Study Plan page — green-tinted mesh background */
+/* Study Plan page */
 @utility main-bg-studyplan {
   background: linear-gradient(135deg, #e0f2fe 0%, #ecfdf5 50%, #f0fdf4 100%);
   background-color: #f0fdf4;
@@ -72,7 +81,7 @@
   background-attachment: fixed;
 }
 
-/* Login page — sky/teal blob background */
+/* Login page */
 @utility bg-wavy-pattern {
   background-color: #f0f9ff;
   background-image:
@@ -81,13 +90,12 @@
     radial-gradient(at 50% 100%, hsla(190, 100%, 92%, 1) 0px, transparent 50%);
 }
 
-/* Flashcard play page — dot pattern overlay */
+/* Flashcard play page */
 @utility bg-pattern {
   background-image: radial-gradient(rgba(255, 255, 255, 0.05) 2px, transparent 2px);
   background-size: 30px 30px;
 }
 
-/* Hide scrollbar cross-browser */
 @utility no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
@@ -104,16 +112,13 @@
   animation: fadeIn 0.4s ease forwards;
 }
 
-/* ============================================
-   COMPONENTS (@layer components)
-   Reusable multi-property component classes
-   ============================================ */
 @layer components {
 
-  /* Tab navigation — shared base styles */
   .tab-btn {
-    padding-bottom: 0.75rem; /* pb-3 */
-    padding-left: 0.25rem;   /* px-1 */
+    padding-bottom: 0.75rem;
+    /* pb-3 */
+    padding-left: 0.25rem;
+    /* px-1 */
     padding-right: 0.25rem;
     font-size: 15px;
     background: transparent;
@@ -122,14 +127,12 @@
     transition: color 0.15s ease, border-color 0.15s ease;
   }
 
-  /* Tab navigation — active state */
   .tab-active {
     color: #0d9488;
     border-bottom: 2px solid #0d9488;
     font-weight: 600;
   }
 
-  /* Tab navigation — inactive state */
   .tab-inactive {
     color: #64748b;
     border-bottom: 2px solid transparent;
@@ -141,7 +144,6 @@
     border-bottom: 2px solid #cbd5e1;
   }
 
-  /* Quizizz-style card hover effect (flashcard.html) */
   .q-card-hover {
     transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   }
@@ -152,7 +154,6 @@
     border-color: #e2e8f0;
   }
 
-  /* Lesson card hover (learningprogress.html) */
   .lesson-card {
     transition: all 0.3s ease;
   }
@@ -163,7 +164,6 @@
     transform: translateY(-2px);
   }
 
-  /* ContentEditable placeholder (flashcard-create.html) */
   [contenteditable]:empty:before {
     content: attr(data-placeholder);
     color: rgba(255, 255, 255, 0.6);
@@ -171,7 +171,6 @@
     display: block;
   }
 
-  /* Custom scrollbar (loginform1.html) */
   ::-webkit-scrollbar {
     width: 8px;
   }
