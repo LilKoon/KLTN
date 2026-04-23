@@ -1,0 +1,128 @@
+{
+  "AUTH_001": {
+    "title": "Email đã tồn tại",
+    "message": "Email này đã được đăng ký. Vui lòng dùng email khác hoặc đăng nhập.",
+    "http_status": 400,
+    "category": "auth"
+  },
+  "AUTH_002": {
+    "title": "Sai email hoặc mật khẩu",
+    "message": "Thông tin đăng nhập không chính xác. Hãy thử lại.",
+    "http_status": 401,
+    "category": "auth"
+  },
+  "AUTH_003": {
+    "title": "Email chưa xác thực",
+    "message": "Vui lòng kiểm tra hộp thư và xác thực email trước khi đăng nhập.",
+    "http_status": 403,
+    "category": "auth"
+  },
+  "AUTH_004": {
+    "title": "Email không tồn tại",
+    "message": "Không tìm thấy tài khoản với email này.",
+    "http_status": 404,
+    "category": "auth"
+  },
+  "AUTH_005": {
+    "title": "Tài khoản đã xác thực",
+    "message": "Tài khoản này đã được xác thực trước đó. Hãy đăng nhập.",
+    "http_status": 400,
+    "category": "auth"
+  },
+  "AUTH_006": {
+    "title": "Mã xác nhận không đúng",
+    "message": "Mã OTP bạn nhập không chính xác. Vui lòng kiểm tra lại.",
+    "http_status": 400,
+    "category": "auth"
+  },
+  "AUTH_007": {
+    "title": "Mã xác nhận đã hết hạn",
+    "message": "OTP đã hết hạn. Hãy yêu cầu mã mới.",
+    "http_status": 400,
+    "category": "auth"
+  },
+  "AUTH_008": {
+    "title": "Không thể yêu cầu OTP",
+    "message": "Email không hợp lệ hoặc tài khoản đã được xác thực.",
+    "http_status": 400,
+    "category": "auth"
+  },
+  "AI_001": {
+    "title": "AI tạm thời không khả dụng",
+    "message": "Tất cả các mô hình AI đang bị rate limit hoặc lỗi. Vui lòng thử lại sau vài phút.",
+    "http_status": 502,
+    "category": "ai"
+  },
+  "AI_002": {
+    "title": "Cấp độ CEFR không hợp lệ",
+    "message": "Cấp độ phải là một trong A1, A2, B1, B2, C1, C2.",
+    "http_status": 422,
+    "category": "ai"
+  },
+  "AI_003": {
+    "title": "AI trả về dữ liệu không hợp lệ",
+    "message": "Không thể phân tích kết quả từ AI. Hãy thử lại với yêu cầu khác.",
+    "http_status": 502,
+    "category": "ai"
+  },
+  "PDF_001": {
+    "title": "File không hợp lệ",
+    "message": "Chỉ chấp nhận file .pdf.",
+    "http_status": 422,
+    "category": "pdf"
+  },
+  "PDF_002": {
+    "title": "Không đọc được PDF",
+    "message": "PDF có thể bị hỏng, mã hóa hoặc scan không OCR được.",
+    "http_status": 422,
+    "category": "pdf"
+  },
+  "PDF_003": {
+    "title": "PDF rỗng",
+    "message": "File PDF không chứa text. Nếu là file scan, hệ thống đã thử OCR nhưng không tìm thấy nội dung.",
+    "http_status": 422,
+    "category": "pdf"
+  },
+  "RAG_001": {
+    "title": "Lỗi đánh chỉ mục tài liệu",
+    "message": "Không thể index file PDF vào vector store. Hãy thử lại hoặc dùng file khác.",
+    "http_status": 500,
+    "category": "rag"
+  },
+  "RAG_002": {
+    "title": "Tài liệu không tồn tại",
+    "message": "Không tìm thấy tài liệu được yêu cầu hoặc bạn không có quyền truy cập.",
+    "http_status": 404,
+    "category": "rag"
+  },
+  "RAG_003": {
+    "title": "Chỉ Admin mới được upload",
+    "message": "Bạn cần quyền admin để upload tài liệu này.",
+    "http_status": 403,
+    "category": "rag"
+  },
+  "FLASHCARD_001": {
+    "title": "Bộ thẻ không tồn tại",
+    "message": "Không tìm thấy bộ flashcard hoặc bạn không có quyền truy cập.",
+    "http_status": 404,
+    "category": "flashcard"
+  },
+  "FLASHCARD_002": {
+    "title": "Đánh giá không hợp lệ",
+    "message": "Điểm đánh giá phải nằm trong khoảng 0-3.",
+    "http_status": 422,
+    "category": "flashcard"
+  },
+  "GENERAL_001": {
+    "title": "Không có quyền",
+    "message": "Bạn không đủ quyền để thực hiện thao tác này.",
+    "http_status": 403,
+    "category": "general"
+  },
+  "GENERAL_002": {
+    "title": "Lỗi hệ thống",
+    "message": "Đã xảy ra lỗi không mong muốn. Vui lòng thử lại sau.",
+    "http_status": 500,
+    "category": "general"
+  }
+}

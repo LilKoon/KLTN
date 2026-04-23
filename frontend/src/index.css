@@ -1,0 +1,26 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+@import "tailwindcss";
+@import "./App.css";
+@config "../tailwind.config.js";
+
+@layer utilities {
+    /* Hide scrollbar for clean UI */
+    .no-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+    .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+    
+    /* Mesh background for main content area only */
+    .main-bg {
+        background-color: #f8fafc; /* slate-50 */
+        background-image:
+            radial-gradient(at 0% 0%, hsla(171, 80%, 94%, 0.6) 0px, transparent 50%),
+            radial-gradient(at 100% 100%, hsla(171, 75%, 90%, 0.5) 0px, transparent 50%),
+            radial-gradient(at 100% 0%, hsla(0, 0%, 100%, 1) 0px, transparent 50%);
+        background-attachment: fixed;
+    }
+}

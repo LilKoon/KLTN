@@ -1,0 +1,30 @@
+[
+  {
+    "text": "NumPy Quick Guide\n1. What is NumPy?\nNumPy (Numerical Python) is a fundamental library for numerical computing in Python. It provides\nfast array operations and mathematical functions.\n2. ndarray\nThe core object of NumPy is ndarray, a powerful N-dimensional array that supports vectorized\noperations.\n3. Creating Arrays\nCommon functions: np.array(), np.zeros(), np.ones(), np.arange(), np.linspace()\n4. Key Concepts\n Vectorization (no loops)\n Broadcasting\n Efficient memory usage\n Fast mathematical operations",
+    "chunk_id": 0,
+    "char_start": 0,
+    "doc_id": "5a0b070b-371d-4def-9241-bad8c0ed740e",
+    "source": "NumPy_Quick_Guide"
+  },
+  {
+    "text": " Efficient memory usage\n Fast mathematical operations\n5. Basic Operations\n Arithmetic: +, -, *, /\n Aggregations: np.sum(), np.mean(), np.std()\n Reshape: reshape(), flatten()\n Matrix multiplication: np.dot()",
+    "chunk_id": 1,
+    "char_start": 456,
+    "doc_id": "5a0b070b-371d-4def-9241-bad8c0ed740e",
+    "source": "NumPy_Quick_Guide"
+  },
+  {
+    "text": "NumPy Quick Guide\n1. What is NumPy?\nNumPy (Numerical Python) is a fundamental library for numerical computing in Python. It provides\nfast array operations and mathematical functions.\n2. ndarray\nThe core object of NumPy is ndarray, a powerful N-dimensional array that supports vectorized\noperations.\n3. Creating Arrays\nCommon functions: np.array(), np.zeros(), np.ones(), np.arange(), np.linspace()\n4. Key Concepts\n Vectorization (no loops)\n Broadcasting\n Efficient memory usage\n Fast mathematical operations",
+    "chunk_id": 0,
+    "char_start": 0,
+    "doc_id": "c5cdb747-ada1-4cc5-8fda-b07118351d49",
+    "source": "NumPy_Quick_Guide"
+  },
+  {
+    "text": " Efficient memory usage\n Fast mathematical operations\n5. Basic Operations\n Arithmetic: +, -, *, /\n Aggregations: np.sum(), np.mean(), np.std()\n Reshape: reshape(), flatten()\n Matrix multiplication: np.dot()",
+    "chunk_id": 1,
+    "char_start": 456,
+    "doc_id": "c5cdb747-ada1-4cc5-8fda-b07118351d49",
+    "source": "NumPy_Quick_Guide"
+  }
+]
