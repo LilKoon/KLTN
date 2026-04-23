@@ -31,6 +31,10 @@ app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
 from app.api.endpoints import exam
 app.include_router(exam.router, prefix="/api/v1/exam", tags=["exam"])
 
+from app.api.endpoints import roadmap
+app.include_router(roadmap.router, prefix="/api/v1/roadmap", tags=["roadmap"])
+
 @app.get("/health")
 def health_check():
     return {"status": "ok", "message": "Edtech AI Backend is working!"}
+

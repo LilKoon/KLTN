@@ -235,3 +235,61 @@ export async function apiGetFinalTestInfo(token) {
   }
   return data;
 }
+
+// ─── Roadmap API ───────────────────────────────────────────────────────
+
+/**
+ * Sinh lộ trình học cá nhân hóa — POST /api/v1/roadmap/generate
+ * @param {string} token
+ * @param {string} examId 
+ */
+export async function apiGenerateRoadmap(token, examId) {
+  const res = await fetch(`${API_BASE_URL}/roadmap/generate`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token, exam_id: examId }),
+  });
+
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.detail || "Không thể tạo lộ trình học");
+  }
+  return data;
+}
+
+/**
+ * Lấy lộ trình học hiện tại — POST /api/v1/roadmap/me
+ * @param {string} token 
+ */
+export async function apiGetMyRoadmap(token) {
+  const res = await fetch(`${API_BASE_URL}/roadmap/me`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token }),
+  });
+
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.detail || "Không thể lấy lộ trình học");
+  }
+  return data;
+}
+
+/**
+ * Hoàn thành một node trong lộ trình — PATCH /api/v1/roadmap/node/:nodeStateId/complete
+ * @param {string} token 
+ * @param {string} nodeStateId 
+ */
+export async function apiCompleteNode(token, nodeStateId) {
+  const res = await fetch(`${API_BASE_URL}/roadmap/node/${nodeStateId}/complete`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token }),
+  });
+
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.detail || "Không thể hoàn thành node");
+  }
+  return data;
+}

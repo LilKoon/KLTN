@@ -78,3 +78,72 @@ class ChiTietLamBai(Base):
     LaCauDung = Column("lacaudung", Boolean, nullable=False)
     ThoiGianLamCauHoi = Column("thoigianlamcauhoi", Integer, nullable=True)
     CreatedAt = Column("created_at", TIMESTAMP(timezone=True), server_default=func.now())
+
+
+# ─── Khóa Học ────────────────────────────────────────────────────────────
+class KhoaHoc(Base):
+    __tablename__ = "khoahoc"
+
+    MaKhoaHoc = Column("makhoahoc", UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    TenKhoaHoc = Column("tenkhoahoc", String(255), nullable=False)
+    MoTa = Column("mota", Text, nullable=True)
+    MucDo = Column("mucdo", String(50), nullable=True)  # 'BEGINNER','INTERMEDIATE','ADVANCED'
+    TrangThai = Column("trangthai", String(50), default="ACTIVE")
+    CreatedAt = Column("created_at", TIMESTAMP(timezone=True), server_default=func.now())
+    UpdatedAt = Column("updated_at", TIMESTAMP(timezone=True), server_default=func.now())
+
+
+# ─── Bài Học ─────────────────────────────────────────────────────────────
+class BaiHoc(Base):
+    __tablename__ = "baihoc"
+
+    MaBaiHoc = Column("mabaihoc", UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    MaKhoaHoc = Column("makhoahoc", UUID(as_uuid=True), nullable=True)
+    TenBaiHoc = Column("tenbaihoc", String(255), nullable=False)
+    ThuTu = Column("thutu", Integer, nullable=False)
+    LoaiBaiHoc = Column("loaibaihoc", String(50), nullable=True)  # 'VOCABULARIES','GRAMMAR','LISTENING','TONG_HOP'
+    NoiDungLyThuyet = Column("noidunglythuyet", JSONB, nullable=True)
+    TrangThai = Column("trangthai", String(50), default="ACTIVE")
+    CreatedAt = Column("created_at", TIMESTAMP(timezone=True), server_default=func.now())
+    UpdatedAt = Column("updated_at", TIMESTAMP(timezone=True), server_default=func.now())
+
+
+# ─── Node Khóa Học (Template — dùng chung cho mọi user) ─────────────────
+class NodeKhoaHoc(Base):
+    __tablename__ = "nodekhoahoc"
+
+    MaNode = Column("manode", UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    MaKhoaHoc = Column("makhoahoc", UUID(as_uuid=True), nullable=True)
+    MaBaiHoc = Column("mabaihoc", UUID(as_uuid=True), nullable=True)
+    ThuTu = Column("thutu", Integer, nullable=False)
+    LoaiNode = Column("loainode", String(50), default="CORE")  # 'CORE','AI_BOOST','TEST'
+    ToaDoX = Column("toadox", Numeric(5, 2), nullable=True)
+    ToaDoY = Column("toadoy", Numeric(5, 2), nullable=True)
+    CreatedAt = Column("created_at", TIMESTAMP(timezone=True), server_default=func.now())
+
+
+# ─── Lộ Trình Học (Root — riêng từng user) ───────────────────────────────
+class LoTrinhHoc(Base):
+    __tablename__ = "lotrinhhoc"
+
+    MaLoTrinh = Column("malotrinh", UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    MaNguoiDung = Column("manguoidung", UUID(as_uuid=True), nullable=True)
+    MaKhoaHoc = Column("makhoahoc", UUID(as_uuid=True), nullable=True)
+    MaBaiKiemTraDauVao = Column("mabaikiemtradauvao", UUID(as_uuid=True), nullable=True)
+    TrangThai = Column("trangthai", String(50), default="IN_PROGRESS")  # 'IN_PROGRESS','COMPLETED'
+    CreatedAt = Column("created_at", TIMESTAMP(timezone=True), server_default=func.now())
+    UpdatedAt = Column("updated_at", TIMESTAMP(timezone=True), server_default=func.now())
+
+
+# ─── Trạng Thái Node (riêng từng user) ───────────────────────────────────
+class TrangThaiNode(Base):
+    __tablename__ = "trangthainode"
+
+    MaTrangThaiNode = Column("matrangthainode", UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    MaLoTrinh = Column("malotrinh", UUID(as_uuid=True), nullable=True)
+    MaNode = Column("manode", UUID(as_uuid=True), nullable=True)
+    NoiDungAI = Column("noidungai", JSONB, nullable=True)
+    TrangThai = Column("trangthai", String(50), default="LOCKED")  # 'LOCKED','UNLOCKED','COMPLETED','SKIPPED'
+    ThoiGianHoanThanh = Column("thoigianhoanthanh", TIMESTAMP(timezone=True), nullable=True)
+    CreatedAt = Column("created_at", TIMESTAMP(timezone=True), server_default=func.now())
+    UpdatedAt = Column("updated_at", TIMESTAMP(timezone=True), server_default=func.now())

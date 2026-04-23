@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
-import { apiStartExam, apiSubmitExam } from '../../../api';
+import { apiStartExam, apiSubmitExam, apiGenerateRoadmap } from '../../../api';
 
 export default function PlacementTest() {
     const { token } = useAuth();
@@ -105,6 +105,12 @@ export default function PlacementTest() {
                 time_spent: timePerQuestion[q.question_id] || 0,
             }));
             const result = await apiSubmitExam(token, examId, answersArray);
+            // Tự động sinh lộ trình học ngay sau khi nộp bài
+            try {
+                await apiGenerateRoadmap(token, examId);
+            } catch (e) {
+                console.error("Lỗi sinh lộ trình:", e);
+            }
             navigate(`/client/test-results?examId=${result.exam_id}`);
         } catch (err) {
             setError(err.message);

@@ -35,13 +35,6 @@ EXAM_CONFIG = {
 # LẤY CÂU HỎI NGẪU NHIÊN
 
 async def fetch_random_questions(db: AsyncSession, purpose: str = "DAU_VAO") -> list:
-    """
-    Lấy câu hỏi ngẫu nhiên theo EXAM_CONFIG.
-    - purpose: mục đích lọc câu hỏi, mặc định là 'DAU_VAO'
-      Vì MucDichSuDung là TEXT[], dùng any_() để kiểm tra phần tử trong mảng.
-
-    ★ Để đổi thuật toán (adaptive, weighted...), chỉ cần sửa hàm này.
-    """
     all_questions = []
 
     for entry in EXAM_CONFIG["distribution"]:
