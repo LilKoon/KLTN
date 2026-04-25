@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LogOut, Home, Map, BarChart2, BookOpen, Layers, Bot, Settings, Flame, ChevronRight, Zap, FileText, MessageSquare } from 'lucide-react';
+import { LogOut, Home, Map, BarChart2, BookOpen, Layers, Bot, Settings, Flame, ChevronRight, Zap, MessageSquare } from 'lucide-react';
 
 const ClientSidebar = ({ isSidebarOpen, toggleSidebar }) => {
     const navigate = useNavigate();
@@ -116,18 +116,7 @@ const ClientSidebar = ({ isSidebarOpen, toggleSidebar }) => {
                         </div>
                     </NavLink>
 
-                    <NavLink 
-                        to="/client/auto-document" 
-                        className={({ isActive }) => `flex items-center justify-between px-3 py-2.5 rounded-lg font-medium transition-all cursor-pointer ${isActive ? 'bg-teal-50 text-teal-600 font-semibold' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'}`}
-                        onClick={() => window.innerWidth < 1024 && toggleSidebar()}
-                    >
-                        <div className="flex items-center gap-3">
-                            <FileText className="w-[18px] h-[18px]" /> Tài liệu AI
-                        </div>
-                        <span className="bg-blue-50 text-blue-600 text-[9px] font-bold px-1.5 py-0.5 rounded border border-blue-100">MỚI</span>
-                    </NavLink>
-
-                    <NavLink 
+                    <NavLink
                         to="/client/chatbot" 
                         className={({ isActive }) => `flex items-center justify-between px-3 py-2.5 rounded-lg font-medium transition-all cursor-pointer ${isActive ? 'bg-teal-50 text-teal-600 font-semibold' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'}`}
                         onClick={() => window.innerWidth < 1024 && toggleSidebar()}

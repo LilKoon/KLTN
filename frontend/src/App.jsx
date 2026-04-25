@@ -14,7 +14,6 @@ import LessonView from './components/views/client/LessonView';
 import DailyReview from './components/views/client/DailyReview';
 import ClientProfile from './components/views/client/Profile';
 import LearningPath from './components/views/client/LearningPath';
-import AutoDocument from './components/views/client/AutoDocument';
 import Chatbot from './components/views/client/Chatbot';
 import ProgressReport from './components/views/client/ProgressReport';
 import StageTest from './components/views/client/StageTest';
@@ -71,7 +70,6 @@ const ClientLayout = () => {
                         <Route path="lesson/:maNode" element={<LessonView />} />
                         <Route path="daily-review" element={<DailyReview />} />
                         <Route path="learning-path" element={<LearningPath />} />
-                        <Route path="auto-document" element={<AutoDocument />} />
                         <Route path="chatbot" element={<Chatbot />} />
                         <Route path="progress-report" element={<ProgressReport />} />
                         <Route path="stage-test" element={<StageTest />} />

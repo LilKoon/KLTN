@@ -3,7 +3,7 @@ import asyncio
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import database, models
-from api import auth, cms, test_engine, path_engine, user_stats, ai_engine, flashcard_store, rag_api
+from api import auth, cms, test_engine, path_engine, user_stats, ai_engine, flashcard_store, rag_api, chat_session
 from api.quiz_extraction import router as quiz_extract_router
 from api.oauth import router as oauth_router
 from api.bug_report import router as bug_report_router
@@ -58,6 +58,7 @@ api.include_router(user_stats.router)
 api.include_router(ai_engine.router)
 api.include_router(flashcard_store.router)
 api.include_router(rag_api.router)
+api.include_router(chat_session.router)
 api.include_router(quiz_extract_router)
 api.include_router(oauth_router)
 api.include_router(bug_report_router)

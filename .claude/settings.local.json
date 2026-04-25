@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install *)",
+      "Bash(npm uninstall *)",
+      "Bash(npm run *)",
+      "Bash(python -c \"from api import flashcard_store; [print\\(r.methods, r.path\\) for r in flashcard_store.router.routes]\")",
+      "Bash(python -c \"import main; print\\('OK'\\)\")",
+      "Bash(python -c ' *)",
+      "Bash(python -c \"import main; print\\('backend OK'\\)\")"
+    ]
+  }
+}

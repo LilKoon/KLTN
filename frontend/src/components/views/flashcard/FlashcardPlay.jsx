@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Zap, Settings, Maximize, RotateCcw, Loader2, Award, ArrowRight } from 'lucide-react';
+import { X, Zap, Settings, Maximize, RotateCcw, Loader2, Award, ArrowRight, Volume2 } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../../../context/AuthContext';
@@ -64,6 +64,35 @@ const FlashcardPlay = () => {
     const activeCard = playQueue[currentIndex] || {};
     const progressPercent = playQueue.length > 0 ? (currentIndex / playQueue.length) * 100 : 0;
 
+    const speak = (text, e) => {
+        if (e) e.stopPropagation();
+        if (!text || !window.speechSynthesis) return;
+        try {
+            window.speechSynthesis.cancel();
+            const utter = new SpeechSynthesisUtterance(text);
+            utter.lang = 'en-US';
+            utter.rate = 0.9;
+            window.speechSynthesis.speak(utter);
+        } catch (err) {
+            console.error('Speech synthesis failed:', err);
+        }
+    };
+
+    useEffect(() => {
+        return () => {
+            if (window.speechSynthesis) window.speechSynthesis.cancel();
+        };
+    }, []);
+
+    // Auto-pronounce the example when the card is flipped to the back.
+    useEffect(() => {
+        if (!isFlipped || isFinished) return;
+        const example = activeCard.ViDuNguCanh;
+        if (!example || !example.trim()) return;
+        const t = setTimeout(() => speak(example), 350);
+        return () => clearTimeout(t);
+    }, [isFlipped, currentIndex, isFinished]);
+
     const flipCard = () => {
         if (isFinished) return;
         setIsFlipped(prev => !prev);
@@ -117,6 +146,9 @@ const FlashcardPlay = () => {
             if (e.code === 'Space') {
                 e.preventDefault();
                 flipCard();
+            } else if (e.key === 'p' || e.key === 'P') {
+                e.preventDefault();
+                speak(isFlipped ? (activeCard.ViDuNguCanh || activeCard.TuVung) : activeCard.TuVung);
             } else if (isFlipped && e.key === '1') {
                 nextCard('learning');
             } else if (isFlipped && e.key === '2') {
@@ -222,6 +254,15 @@ const FlashcardPlay = () => {
                                     
                                     {/* Front Face */}
                                     <div className="absolute inset-0 w-full h-full backface-hidden bg-white border border-teal-100 rounded-[24px] flex flex-col items-center justify-center p-8 sm:p-16 text-center shadow-xl">
+                                        <button
+                                            type="button"
+                                            onClick={(e) => speak(activeCard.TuVung, e)}
+                                            disabled={!activeCard.TuVung}
+                                            title="Phát âm (P)"
+                                            className="absolute top-5 right-5 w-11 h-11 rounded-full bg-teal-500 hover:bg-teal-600 text-white flex items-center justify-center shadow-lg shadow-teal-500/30 transition-all disabled:opacity-30 disabled:cursor-not-allowed active:scale-95"
+                                        >
+                                            <Volume2 className="w-5 h-5" />
+                                        </button>
                                         <div className="flex-1 flex flex-col items-center justify-center w-full relative">
                                             {activeCard.LoaiTu && (
                                               <span className="text-teal-600 font-bold mb-3 uppercase tracking-wider text-sm bg-teal-50 px-3 py-1 rounded-full">{activeCard.LoaiTu}</span>
@@ -233,10 +274,13 @@ const FlashcardPlay = () => {
                                                 <p className="text-slate-400 mt-3 font-medium text-lg">/{activeCard.PhienAm}/</p>
                                             )}
                                         </div>
-                                        <div className="mt-auto pt-6 flex items-center gap-2 text-slate-400 text-[13px] font-medium opacity-60 group-hover:opacity-100 transition-opacity">
-                                            <span>Bấm chuột hoặc ấn</span>
-                                            <kbd className="bg-slate-100 border border-slate-200 px-2 py-0.5 rounded text-slate-500 font-sans shadow-sm font-bold">Space</kbd>
-                                            <span>để lật</span>
+                                        <div className="mt-auto pt-6 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-slate-400 text-[13px] font-medium opacity-60 group-hover:opacity-100 transition-opacity">
+                                            <span className="flex items-center gap-1.5">
+                                                <kbd className="bg-slate-100 border border-slate-200 px-2 py-0.5 rounded text-slate-500 font-sans shadow-sm font-bold">Space</kbd> lật
+                                            </span>
+                                            <span className="flex items-center gap-1.5">
+                                                <kbd className="bg-slate-100 border border-slate-200 px-2 py-0.5 rounded text-slate-500 font-sans shadow-sm font-bold">P</kbd> phát âm
+                                            </span>
                                         </div>
                                     </div>
 
@@ -248,9 +292,17 @@ const FlashcardPlay = () => {
                                             </h2>
                                             
                                             {activeCard.ViDuNguCanh && activeCard.ViDuNguCanh.trim() !== '' && (
-                                                <div className="bg-teal-50 px-6 py-4 rounded-xl border border-teal-100 w-full max-w-xl mt-2">
-                                                    <p className="text-teal-800 text-[15px] sm:text-[16px] font-medium italic mb-1 text-left">
-                                                        <span className="font-bold text-teal-600 block text-[11px] uppercase not-italic mb-1">Ví dụ:</span> 
+                                                <div className="bg-teal-50 px-6 py-4 rounded-xl border border-teal-100 w-full max-w-xl mt-2 relative">
+                                                    <button
+                                                        type="button"
+                                                        onClick={(e) => speak(activeCard.ViDuNguCanh, e)}
+                                                        title="Nghe lại ví dụ (P)"
+                                                        className="absolute top-2 right-2 w-9 h-9 rounded-full bg-white hover:bg-teal-100 text-teal-600 border border-teal-200 flex items-center justify-center shadow-sm transition-colors active:scale-95"
+                                                    >
+                                                        <Volume2 className="w-4 h-4" />
+                                                    </button>
+                                                    <p className="text-teal-800 text-[15px] sm:text-[16px] font-medium italic mb-1 text-left pr-10">
+                                                        <span className="font-bold text-teal-600 block text-[11px] uppercase not-italic mb-1">Ví dụ:</span>
                                                         "{activeCard.ViDuNguCanh}"
                                                     </p>
                                                 </div>

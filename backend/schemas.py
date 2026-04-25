@@ -186,6 +186,20 @@ class ReviewSubmitItem(BaseModel):
 class ReviewSubmitRequest(BaseModel):
     results: List[ReviewSubmitItem]
 
+class DeckListItem(BaseModel):
+    id: UUID
+    title: str
+    terms: int
+    level: str
+    description: Optional[str] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class DeckCloneRequest(BaseModel):
+    MaBoTheGoc: UUID
+
 # Quiz PDF Extraction Schemas
 class QuizQuestionToImport(BaseModel):
     question: str

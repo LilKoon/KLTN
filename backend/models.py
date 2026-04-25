@@ -145,3 +145,45 @@ class TaiLieuRAG(Base):
     SoChunk = Column(Integer, default=0)
     LaAdminDoc = Column(Boolean, default=False)
     NgayTao = Column(DateTime, default=datetime.utcnow)
+
+
+class PhienChat(Base):
+    __tablename__ = "phien_chat"
+
+    MaPhien = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    MaNguoiDung = Column(UUID(as_uuid=True), ForeignKey("NguoiDung.MaNguoiDung", ondelete="CASCADE"), nullable=False)
+    TieuDe = Column(String(200), nullable=False, default="Cuộc trò chuyện mới")
+    NgayTao = Column(DateTime, default=datetime.utcnow)
+    NgayCapNhat = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    tin_nhans = relationship("TinNhanChat", back_populates="phien", cascade="all, delete-orphan", order_by="TinNhanChat.ThuTu")
+    tai_lieus = relationship("TaiLieuChat", back_populates="phien", cascade="all, delete-orphan")
+
+
+class TinNhanChat(Base):
+    __tablename__ = "tin_nhan_chat"
+
+    MaTinNhan = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    MaPhien = Column(UUID(as_uuid=True), ForeignKey("phien_chat.MaPhien", ondelete="CASCADE"), nullable=False)
+    VaiTro = Column(String(20), nullable=False)  # 'user' | 'assistant'
+    NoiDung = Column(Text, nullable=False)
+    MaTaiLieu = Column(UUID(as_uuid=True), ForeignKey("tai_lieu_chat.MaTaiLieu", ondelete="SET NULL"), nullable=True)
+    ThuTu = Column(Integer, nullable=False, default=0)
+    NgayTao = Column(DateTime, default=datetime.utcnow)
+
+    phien = relationship("PhienChat", back_populates="tin_nhans")
+    tai_lieu = relationship("TaiLieuChat", foreign_keys=[MaTaiLieu])
+
+
+class TaiLieuChat(Base):
+    __tablename__ = "tai_lieu_chat"
+
+    MaTaiLieu = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    MaPhien = Column(UUID(as_uuid=True), ForeignKey("phien_chat.MaPhien", ondelete="CASCADE"), nullable=False)
+    TenFile = Column(String(255), nullable=False)
+    LoaiNguon = Column(String(20), nullable=False)  # pdf_text | pdf_ocr | image_ocr
+    NoiDungText = Column(Text, nullable=False)
+    SoKyTu = Column(Integer, default=0)
+    NgayTao = Column(DateTime, default=datetime.utcnow)
+
+    phien = relationship("PhienChat", back_populates="tai_lieus")

@@ -36,6 +36,68 @@ def _ocr_pdf(pdf_path: str) -> str:
     return "\n\n".join(pages_text).strip()
 
 
+IMAGE_EXTS = {".png", ".jpg", ".jpeg", ".bmp", ".tiff", ".tif", ".webp"}
+
+
+def _ocr_image(image_path: str) -> str:
+    reader = _get_ocr_reader()
+    results = reader.readtext(image_path, detail=0, paragraph=True)
+    return " ".join(results).strip()
+
+
+def extract_chat_attachment(file_path: str) -> dict:
+    """
+    Extract text from a chatbot attachment.
+    - PDF with embedded text → pymupdf (fitz)
+    - PDF with scanned/image pages → easyocr fallback per page
+    - Image files → easyocr
+    Returns {text, source_type, pages|None}.
+    """
+    import fitz  # pymupdf
+
+    name = file_path.lower()
+    ext = "." + name.rsplit(".", 1)[-1] if "." in name else ""
+
+    if ext == ".pdf":
+        doc = fitz.open(file_path)
+        try:
+            pages_text: list[str] = []
+            need_ocr: list[int] = []
+            for i, page in enumerate(doc):
+                t = (page.get_text() or "").strip()
+                pages_text.append(t)
+                if len(t) < MIN_TEXT_CHARS:
+                    need_ocr.append(i)
+
+            ocr_used = False
+            if need_ocr:
+                ocr_used = True
+                reader = _get_ocr_reader()
+                for i in need_ocr:
+                    page = doc[i]
+                    pix = page.get_pixmap(matrix=fitz.Matrix(2.0, 2.0))
+                    results = reader.readtext(pix.tobytes("png"), detail=0, paragraph=True)
+                    pages_text[i] = " ".join(results)
+
+            text = "\n\n".join(p for p in pages_text if p).strip()
+            return {
+                "text": text,
+                "source_type": "pdf_ocr" if ocr_used else "pdf_text",
+                "pages": len(pages_text),
+            }
+        finally:
+            doc.close()
+
+    if ext in IMAGE_EXTS:
+        return {
+            "text": _ocr_image(file_path),
+            "source_type": "image_ocr",
+            "pages": 1,
+        }
+
+    raise ValueError(f"Unsupported file type: {ext}")
+
+
 def extract_text_from_pdf(pdf_path: str, use_ocr_fallback: bool = True) -> str:
     """Extract text from PDF. Falls back to EasyOCR for scanned pages."""
     text_pages = []

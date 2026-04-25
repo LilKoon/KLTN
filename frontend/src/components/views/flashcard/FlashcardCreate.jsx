@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { ChevronLeft, Layers, Save, Sparkles, CloudUpload, Trash2, Plus, X } from 'lucide-react';
+import { ChevronLeft, Layers, Save, Sparkles, CloudUpload, Trash2, Plus, X, Volume2, FileText, FileType } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../../../context/AuthContext';
@@ -27,6 +27,17 @@ const FlashcardCreate = () => {
     const [isAiLoading, setIsAiLoading] = useState(false);
     const [showAiModal, setShowAiModal] = useState(false);
     const [aiTopic, setAiTopic] = useState('');
+    const [aiLevel, setAiLevel] = useState('B1');
+    const [aiCount, setAiCount] = useState(8);
+
+    const LEVEL_OPTIONS = [
+        { value: 'A1', label: 'A1 — Căn bản' },
+        { value: 'A2', label: 'A2 — Sơ cấp' },
+        { value: 'B1', label: 'B1 — Trung cấp' },
+        { value: 'B2', label: 'B2 — Trung cấp trên' },
+        { value: 'C1', label: 'C1 — Nâng cao' },
+        { value: 'C2', label: 'C2 — Thành thạo' },
+    ];
 
     const handleUpdateCard = (id, field, value) => {
         setDraftCards(cards => cards.map(c => c.id === id ? { ...c, [field]: value } : c));
@@ -39,6 +50,23 @@ const FlashcardCreate = () => {
     const handleRemoveCard = (id) => {
         setDraftCards(cards => cards.filter(c => c.id !== id));
     };
+
+    const speak = (text) => {
+        if (!text || !window.speechSynthesis) return;
+        try {
+            window.speechSynthesis.cancel();
+            const utter = new SpeechSynthesisUtterance(text);
+            utter.lang = 'en-US';
+            utter.rate = 0.9;
+            window.speechSynthesis.speak(utter);
+        } catch (e) {
+            console.error('Speech synthesis failed:', e);
+        }
+    };
+
+    const [savedDeckId, setSavedDeckId] = useState(null);
+    const [showExportModal, setShowExportModal] = useState(false);
+    const [isExporting, setIsExporting] = useState(false);
 
     const handleSaveDeck = async () => {
         const validCards = draftCards.filter(c => c.TuVung.trim() !== '' && c.Nghia.trim() !== '');
@@ -53,12 +81,42 @@ const FlashcardCreate = () => {
                 cards: validCards
             };
             const headers = { Authorization: `Bearer ${token}` };
-            await axios.post('http://127.0.0.1:8000/flashcards/save/custom', payload, { headers });
-            alert("Lưu Bộ thẻ thành công!");
-            navigate('/client/flashcards');
+            const res = await axios.post('http://127.0.0.1:8000/flashcards/save/custom', payload, { headers });
+            setSavedDeckId(res.data?.id || res.data?.MaBoDe);
+            setShowExportModal(true);
         } catch (error) {
             console.error("Lỗi khi lưu thẻ:", error);
             alert("Lỗi lưu dữ liệu. Hãy thử lại.");
+        }
+    };
+
+    const handleExport = async (format) => {
+        if (!savedDeckId) return;
+        setIsExporting(true);
+        try {
+            const headers = { Authorization: `Bearer ${token}` };
+            const res = await axios.get(
+                `http://127.0.0.1:8000/flashcards/${savedDeckId}/export/${format}`,
+                { headers, responseType: 'blob' }
+            );
+            const blob = new Blob([res.data], {
+                type: format === 'pdf'
+                    ? 'application/pdf'
+                    : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${deckTitle || 'flashcards'}.${format === 'pdf' ? 'pdf' : 'docx'}`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error('Lỗi xuất file:', error);
+            alert('Không xuất được file. Vui lòng thử lại.');
+        } finally {
+            setIsExporting(false);
         }
     };
 
@@ -67,7 +125,11 @@ const FlashcardCreate = () => {
         setIsAiLoading(true);
         try {
             const headers = { Authorization: `Bearer ${token}` };
-            const res = await axios.post('http://127.0.0.1:8000/flashcards/generate/text', { topic: aiTopic }, { headers });
+            const res = await axios.post(
+                'http://127.0.0.1:8000/flashcards/generate/text',
+                { topic: aiTopic, level: aiLevel, count: aiCount },
+                { headers }
+            );
             
             const newCards = res.data.flashcards.map(c => ({
                 id: Date.now() + Math.random(),
@@ -93,6 +155,8 @@ const FlashcardCreate = () => {
         try {
             const formData = new FormData();
             formData.append('file', file);
+            formData.append('level', aiLevel);
+            formData.append('count', String(aiCount));
             const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' };
             const res = await axios.post('http://127.0.0.1:8000/flashcards/generate/document', formData, { headers });
             
@@ -156,12 +220,39 @@ const FlashcardCreate = () => {
                             
                             <div className="p-4 sm:p-6 grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                                 <div>
-                                    <input type="text" value={card.TuVung} onChange={e => handleUpdateCard(card.id, 'TuVung', e.target.value)} placeholder="Nhập thuật ngữ..." className="w-full outline-none text-lg text-slate-800 bg-transparent py-2 border-b-2 border-slate-200 focus:border-teal-500 transition-colors" />
+                                    <div className="flex items-center gap-2">
+                                        <input type="text" value={card.TuVung} onChange={e => handleUpdateCard(card.id, 'TuVung', e.target.value)} placeholder="Nhập thuật ngữ..." className="flex-1 outline-none text-lg text-slate-800 bg-transparent py-2 border-b-2 border-slate-200 focus:border-teal-500 transition-colors" />
+                                        <button
+                                            type="button"
+                                            onClick={() => speak(card.TuVung)}
+                                            disabled={!card.TuVung.trim()}
+                                            title="Phát âm"
+                                            className="w-9 h-9 rounded-full bg-teal-50 hover:bg-teal-100 text-teal-600 flex items-center justify-center transition-colors disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+                                        >
+                                            <Volume2 className="w-4 h-4" />
+                                        </button>
+                                    </div>
                                     <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-1 block">Thuật ngữ / Mặt trước</label>
                                 </div>
                                 <div>
                                     <input type="text" value={card.Nghia} onChange={e => handleUpdateCard(card.id, 'Nghia', e.target.value)} placeholder="Nhập định nghĩa..." className="w-full outline-none text-lg text-slate-800 bg-transparent py-2 border-b-2 border-slate-200 focus:border-teal-500 transition-colors" />
                                     <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-1 block">Định nghĩa / Mặt sau</label>
+                                </div>
+                                <div>
+                                    <input type="text" value={card.PhienAm || ''} onChange={e => handleUpdateCard(card.id, 'PhienAm', e.target.value)} placeholder="/fəˈnetɪk/" className="w-full outline-none text-[15px] font-mono text-indigo-600 bg-transparent py-2 border-b-2 border-slate-200 focus:border-indigo-400 transition-colors" />
+                                    <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-1 block">Phiên âm IPA</label>
+                                </div>
+                                <div>
+                                    <select value={card.LoaiTu || ''} onChange={e => handleUpdateCard(card.id, 'LoaiTu', e.target.value)} className="w-full outline-none text-[15px] text-slate-700 bg-transparent py-2 border-b-2 border-slate-200 focus:border-teal-500 transition-colors cursor-pointer">
+                                        <option value="">Loại từ...</option>
+                                        <option value="noun">noun</option>
+                                        <option value="verb">verb</option>
+                                        <option value="adj">adj</option>
+                                        <option value="adv">adv</option>
+                                        <option value="phrase">phrase</option>
+                                        <option value="idiom">idiom</option>
+                                    </select>
+                                    <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-1 block">Loại từ</label>
                                 </div>
                                 <div className="md:col-span-2">
                                     <textarea value={card.ViDuNguCanh || ''} onChange={e => handleUpdateCard(card.id, 'ViDuNguCanh', e.target.value)} placeholder="Ví dụ ngữ cảnh (Tùy chọn)..." className="w-full outline-none text-[14px] text-slate-600 bg-slate-50 border border-slate-100 rounded-lg p-3 resize-none h-14 focus:border-teal-300" />
@@ -187,6 +278,34 @@ const FlashcardCreate = () => {
                             <button onClick={() => setShowAiModal(false)} className="text-slate-400 hover:text-red-500"><X className="w-5 h-5"/></button>
                         </div>
                         <div className="p-6 flex flex-col gap-6">
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Trình độ CEFR</label>
+                                    <select
+                                        value={aiLevel}
+                                        onChange={e => setAiLevel(e.target.value)}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 outline-none focus:border-indigo-400 focus:bg-white transition-colors font-medium text-slate-700 cursor-pointer"
+                                    >
+                                        {LEVEL_OPTIONS.map(opt => (
+                                            <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Số thẻ</label>
+                                    <input
+                                        type="number"
+                                        min={1}
+                                        max={20}
+                                        value={aiCount}
+                                        onChange={e => {
+                                            const n = parseInt(e.target.value, 10);
+                                            setAiCount(Number.isNaN(n) ? 8 : Math.max(1, Math.min(20, n)));
+                                        }}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 outline-none focus:border-indigo-400 focus:bg-white transition-colors font-medium text-slate-700"
+                                    />
+                                </div>
+                            </div>
                             <div>
                                 <label className="block text-sm font-bold text-slate-700 mb-2">Sinh từ theo Chủ đề</label>
                                 <div className="flex gap-2">
@@ -219,6 +338,43 @@ const FlashcardCreate = () => {
                 <div className="fixed inset-0 bg-slate-900/60 z-[60] flex flex-col items-center justify-center">
                     <div className="w-16 h-16 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4"></div>
                     <span className="text-white font-bold text-xl">AI đang bóc tách kiến thức...</span>
+                </div>
+            )}
+
+            {/* EXPORT MODAL — shown after successful save */}
+            {showExportModal && (
+                <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-slide-in">
+                        <div className="p-6 border-b border-slate-100 bg-emerald-50/50">
+                            <h2 className="text-xl font-bold text-emerald-900 flex items-center gap-2">
+                                <Save className="w-5 h-5 text-emerald-600" /> Đã lưu bộ thẻ thành công
+                            </h2>
+                            <p className="text-[13px] text-slate-500 mt-1">Bạn có muốn xuất ra file để in hoặc chia sẻ?</p>
+                        </div>
+                        <div className="p-6 flex flex-col gap-3">
+                            <button
+                                onClick={() => handleExport('pdf')}
+                                disabled={isExporting}
+                                className="w-full flex items-center gap-3 bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 font-bold px-5 py-4 rounded-xl transition-colors disabled:opacity-50"
+                            >
+                                <FileText className="w-5 h-5" /> Xuất PDF
+                            </button>
+                            <button
+                                onClick={() => handleExport('docx')}
+                                disabled={isExporting}
+                                className="w-full flex items-center gap-3 bg-sky-50 hover:bg-sky-100 border border-sky-200 text-sky-700 font-bold px-5 py-4 rounded-xl transition-colors disabled:opacity-50"
+                            >
+                                <FileType className="w-5 h-5" /> Xuất Word (.docx)
+                            </button>
+                            <button
+                                onClick={() => { setShowExportModal(false); navigate('/client/flashcards'); }}
+                                disabled={isExporting}
+                                className="w-full mt-2 px-5 py-3 text-slate-500 hover:text-slate-700 font-semibold text-sm transition-colors"
+                            >
+                                Bỏ qua, về danh sách
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
 

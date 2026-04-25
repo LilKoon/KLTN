@@ -34,7 +34,7 @@ try:
     conn = psycopg2.connect(dbname=DB_NAME, user=DB_USER, password=DB_PASSWORD, host=DB_HOST, port=DB_PORT)
     cursor = conn.cursor()
     
-    sql_path = "C:\\Users\\admin\\Desktop\\letnow\\KLTN_final\\Database\\db_kltn_final.sql"
+    sql_path = "C:\\Users\\admin\\Desktop\\letnow\\KLTN_final\\KLTN\\Database\\db_kltn_final.sql"
     with open(sql_path, "r", encoding="utf-8") as file:
         sql_script = file.read()
     

@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 import database, schemas
 from api.auth import get_current_user, get_optional_user
 from llm.orchestrator import call_llm, LLMTask
-from rag.chunker import extract_text_from_pdf
+from rag.chunker import extract_text_from_pdf, extract_chat_attachment, IMAGE_EXTS
 from error_handler import raise_app_error
 from llm.prompts.chat_rag import build_rag_chat_system, build_rag_user_message
 from rag.rag_pipeline import retrieve_context, rag_generate_and_check
@@ -255,3 +255,54 @@ async def extract_pdf_text(
         if isinstance(exc, AppError):
             raise
         raise_app_error("PDF_002", detail=str(exc))
+
+
+@router.post("/chat/extract-attachment")
+async def extract_chat_attachment_endpoint(
+    file: UploadFile = File(...),
+    current_user=Depends(get_optional_user),
+):
+    """
+    Extract text from a chatbot attachment so the model can use it as context.
+    PDF with text → pymupdf. PDF with images / image files → easyocr.
+    """
+    name = (file.filename or "").lower()
+    if "." not in name:
+        raise HTTPException(status_code=415, detail="Tệp không có phần mở rộng.")
+    ext = "." + name.rsplit(".", 1)[-1]
+    allowed = {".pdf"} | IMAGE_EXTS
+    if ext not in allowed:
+        raise HTTPException(
+            status_code=415,
+            detail=f"Định dạng không hỗ trợ. Chấp nhận: PDF, {', '.join(sorted(IMAGE_EXTS))}",
+        )
+
+    raw = await file.read()
+    if not raw:
+        raise HTTPException(status_code=422, detail="Tệp rỗng.")
+
+    with tempfile.NamedTemporaryFile(suffix=ext, delete=False) as tmp:
+        tmp.write(raw)
+        tmp_path = tmp.name
+
+    try:
+        result = extract_chat_attachment(tmp_path)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Lỗi đọc tệp: {exc}")
+    finally:
+        try:
+            os.unlink(tmp_path)
+        except OSError:
+            pass
+
+    text = (result.get("text") or "").strip()
+    if not text:
+        raise HTTPException(status_code=422, detail="Không trích xuất được nội dung từ tệp.")
+
+    return {
+        "filename": file.filename,
+        "text": text,
+        "source_type": result.get("source_type"),
+        "pages": result.get("pages"),
+        "char_count": len(text),
+    }

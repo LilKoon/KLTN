@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Star, Bookmark, History, Layers, Boxes, Copy, Play, Download, Loader2 } from 'lucide-react';
+import { Plus, Search, Bookmark, History, Layers, Boxes, Copy, Play, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../../../context/AuthContext';
@@ -8,7 +8,6 @@ const Flashcard = () => {
     const navigate = useNavigate();
     const { token } = useAuth();
     const [myDecks, setMyDecks] = useState([]);
-    const [publicDecks, setPublicDecks] = useState([]);
     const [loading, setLoading] = useState(true);
     const [recentActivities, setRecentActivities] = useState([]);
 
@@ -24,9 +23,6 @@ const Flashcard = () => {
     const fetchDecks = async () => {
         try {
             const headers = { Authorization: `Bearer ${token}` };
-            const resPublic = await axios.get('http://127.0.0.1:8000/flashcards/public-decks', { headers });
-            setPublicDecks(resPublic.data);
-            
             const resPrivate = await axios.get('http://127.0.0.1:8000/flashcards/decks', { headers });
             setMyDecks(resPrivate.data);
         } catch (error) {
@@ -39,19 +35,6 @@ const Flashcard = () => {
     useEffect(() => {
         if(token) fetchDecks();
     }, [token]);
-
-    const handleClone = async (e, deckId) => {
-        e.stopPropagation();
-        try {
-            await axios.post('http://127.0.0.1:8000/flashcards/clone', { MaBoTheGoc: deckId }, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            alert("Đã lưu bộ flashcard vào kho cá nhân thành công!");
-            fetchDecks(); // Refresh
-        } catch (err) {
-            alert("Lỗi khi lưu bộ flashcard!");
-        }
-    };
 
     return (
         <div className="flex-1 h-full flex flex-col relative z-20 overflow-x-hidden overflow-y-auto no-scrollbar scroll-smooth" style={{ backgroundColor: '#fcfcfc' }}>
@@ -135,45 +118,6 @@ const Flashcard = () => {
                         <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 text-teal-500 animate-spin" /></div>
                     ) : (
                         <>
-                            {/* Bộ sưu tập Flashcard */}
-                            <section>
-                                <div className="flex items-center justify-between mb-5 px-1">
-                                    <h2 className="text-[18px] sm:text-xl font-bold text-slate-800 flex items-center gap-2 tracking-tight">
-                                        <Star className="w-6 h-6 text-amber-500 fill-amber-500" /> Bộ sưu tập flashcard đại trà
-                                    </h2>
-                                    <button className="text-[13px] font-semibold bg-indigo-50 text-indigo-600 hover:bg-indigo-100 px-3.5 py-1.5 rounded-full transition-colors whitespace-nowrap">Xem thêm</button>
-                                </div>
-                                
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-                                    {publicDecks.length === 0 && <p className="text-slate-500 text-sm">Chưa có bộ sưu tập nào.</p>}
-                                    {publicDecks.map((deck, index) => {
-                                        const gradients = [
-                                            'linear-gradient(to bottom right, #581c87, #7e22ce)', 
-                                            'linear-gradient(to bottom right, #881337, #be123c)', 
-                                            'linear-gradient(to bottom right, #134e4a, #0f766e)'
-                                        ];
-                                        const bgGradient = gradients[index % gradients.length];
-                                        
-                                        return (
-                                        <div key={deck.id} onClick={() => navigate(`/client/flashcards/${deck.id}`)} className="bg-white rounded-[20px] shadow-sm border border-slate-100/80 overflow-hidden cursor-pointer hover:-translate-y-1 hover:shadow-md transition-all group flex flex-col">
-                                            <div className="h-[145px] relative p-3" style={{ backgroundImage: bgGradient }}>
-                                                <h3 className="text-white font-extrabold text-[18px] absolute bottom-3 left-4 z-10 w-3/4 leading-tight drop-shadow-md">{deck.title}</h3>
-                                                <div className="absolute bottom-3 right-3 text-[10px] text-white bg-black/40 backdrop-blur-sm px-2 py-1 rounded font-extrabold flex items-center gap-1 z-10"><Copy className="w-3 h-3" /> {deck.terms} Qs</div>
-                                            </div>
-                                            <div className="p-4 flex flex-col justify-between items-start gap-3 flex-1 relative">
-                                                <p className="text-[14px] font-bold text-slate-700 leading-snug">{deck.description || "Bộ flashcard mặc định của hệ thống"}</p>
-                                                <div className="w-full flex items-center justify-between mt-auto pt-2">
-                                                    <span className="text-[11px] font-semibold text-slate-400 bg-slate-50 px-2 py-1 rounded flex items-center gap-1"><Play className="w-3 h-3" /> System</span>
-                                                    <button onClick={(e) => handleClone(e, deck.id)} className="w-8 h-8 rounded-full bg-slate-100 hover:bg-teal-100 hover:text-teal-600 text-slate-500 flex items-center justify-center transition-colors" title="Lưu về kho">
-                                                        <Download className="w-4 h-4" />
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )})}
-                                </div>
-                            </section>
-
                             {/* Flashcard của tôi */}
                             <section>
                                 <div className="flex items-center justify-between mb-5 px-1">
@@ -188,7 +132,7 @@ const Flashcard = () => {
                                         <div className="col-span-full py-12 flex flex-col items-center justify-center text-center bg-white border border-dashed border-slate-200 rounded-[20px]">
                                             <Bookmark className="w-12 h-12 text-slate-300 mb-3" />
                                             <p className="text-slate-500 font-medium">Bạn chưa lưu bộ Flashcard nào cá nhân.</p>
-                                            <p className="text-[13px] text-slate-400 mt-1 mb-4">Hãy tải từ kho đại trà hoặc tự tạo mới bằng AI nhé!</p>
+                                            <p className="text-[13px] text-slate-400 mt-1 mb-4">Hãy tự tạo mới bằng AI hoặc nhập thủ công nhé!</p>
                                             <button onClick={() => navigate('/client/flashcards/create')} className="px-5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg transition-colors text-[13px]">
                                                 Bắt đầu tạo
                                             </button>
