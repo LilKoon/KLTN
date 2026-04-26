@@ -1,9 +1,11 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LogOut, Home, Map, BarChart2, BookOpen, Layers, Bot, Settings, Flame, ChevronRight, Zap, MessageSquare } from 'lucide-react';
+import { useAuth } from '../../../context/AuthContext';
+import { LogOut, Home, Map, BarChart2, BookOpen, Layers, Bot, Settings, Flame, ChevronRight, Zap, MessageSquare, Calendar, ClipboardCheck } from 'lucide-react';
 
 const ClientSidebar = ({ isSidebarOpen, toggleSidebar }) => {
     const navigate = useNavigate();
+    const { user } = useAuth();
 
     const handleLogout = () => {
         // Todo: Add actual logout logic via AuthContext
@@ -41,7 +43,7 @@ const ClientSidebar = ({ isSidebarOpen, toggleSidebar }) => {
                             </div>
                             <div>
                                 <h3 className="font-bold text-slate-900 text-[14px] leading-tight group-hover:text-teal-600 transition-colors">
-                                    Ngô Anh Thư 
+                                    {user?.user_name || 'Học viên'} 
                                 </h3>
                             </div>
                         </div>
@@ -107,13 +109,29 @@ const ClientSidebar = ({ isSidebarOpen, toggleSidebar }) => {
                     </NavLink>
                     
                     <NavLink 
-                        to="/client/test-results" 
+                        to="/client/exercises-tests" 
                         className={({ isActive }) => `flex items-center justify-between px-3 py-2.5 rounded-lg font-medium transition-all cursor-pointer ${isActive ? 'bg-teal-50 text-teal-600 font-semibold' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'}`}
                         onClick={() => window.innerWidth < 1024 && toggleSidebar()}
                     >
                         <div className="flex items-center gap-3">
                             <Bot className="w-[18px] h-[18px]" /> Bài tập & Test
                         </div>
+                    </NavLink>
+
+                    <NavLink 
+                        to="/client/daily-review" 
+                        className={({ isActive }) => `flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-all cursor-pointer ${isActive ? 'bg-teal-50 text-teal-600 font-semibold' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'}`}
+                        onClick={() => window.innerWidth < 1024 && toggleSidebar()}
+                    >
+                        <Calendar className="w-[18px] h-[18px]" /> Ôn tập hằng ngày
+                    </NavLink>
+                    
+                    <NavLink 
+                        to="/client/placement-test" 
+                        className={({ isActive }) => `flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-all cursor-pointer ${isActive ? 'bg-teal-50 text-teal-600 font-semibold' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'}`}
+                        onClick={() => window.innerWidth < 1024 && toggleSidebar()}
+                    >
+                        <ClipboardCheck className="w-[18px] h-[18px]" /> Test đầu vào
                     </NavLink>
 
                     <NavLink

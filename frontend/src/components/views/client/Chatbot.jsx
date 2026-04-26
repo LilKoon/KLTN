@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import { useAuth } from '../../../context/AuthContext';
+import { useLocation } from 'react-router-dom';
 
 const API_BASE = 'http://127.0.0.1:8000';
 
@@ -108,6 +109,7 @@ function AttachmentCard({ filename, source_type, char_count, variant = 'user' })
 
 export default function Chatbot() {
     const { token } = useAuth();
+    const location = useLocation();
     const authHeaders = useMemo(() => token ? { Authorization: `Bearer ${token}` } : {}, [token]);
 
     const [sessions, setSessions] = useState([]);
@@ -145,6 +147,16 @@ export default function Chatbot() {
             }
         })();
     }, [token, authHeaders]);
+
+    // Handle initial state from navigation (e.g. from Dashboard)
+    useEffect(() => {
+        if (location.state?.initialFile) {
+            setPendingFile(location.state.initialFile);
+        }
+        if (location.state?.initialMessage) {
+            setInput(location.state.initialMessage);
+        }
+    }, [location.state]);
 
     const resetToNewChat = () => {
         setActiveSessionId(null);

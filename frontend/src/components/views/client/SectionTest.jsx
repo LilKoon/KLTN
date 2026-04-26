@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
-import { apiGetExamPlacementTest, apiSubmitExamPlacementTest, apiGetPlacementTestStatus } from '../../../api.js';
+import { apiGetSectionTest, apiSubmitSectionTest } from '../../../api.js';
+import { ChevronRight, TrendingUp, TrendingDown } from 'lucide-react';
 
-export default function PlacementTest() {
+export default function SectionTest() {
     const { token } = useAuth();
     const navigate = useNavigate();
+    const { type } = useParams();
 
     // screen: 'start' | 'test' | 'result' | 'completed-summary'
     const [screen, setScreen] = useState('start');
@@ -26,29 +28,8 @@ export default function PlacementTest() {
     // Results
     const [resultData, setResultData] = useState(null);
 
-    // Check if already completed
-    useEffect(() => {
-        const checkStatus = async () => {
-            if (token) {
-                try {
-                    setLoading(true);
-                    const data = await apiGetPlacementTestStatus(token);
-                    if (data.has_completed) {
-                        setResultData(data.result);
-                        setScreen('completed-summary');
-                    }
-                } catch (e) {
-                    console.error(e);
-                } finally {
-                    setLoading(false);
-                }
-            }
-        };
-        checkStatus();
-    }, [token]);
-
     // Timer
-    const [timeLeft, setTimeLeft] = useState(30 * 60);
+    const [timeLeft, setTimeLeft] = useState(15 * 60);
 
     useEffect(() => {
         if (screen !== 'test' || timeLeft <= 0) return;
@@ -76,7 +57,7 @@ export default function PlacementTest() {
         try {
             setLoading(true);
             setError(null);
-            const data = await apiGetExamPlacementTest(token);
+            const data = await apiGetSectionTest(token, type);
             setQuestions(data.questions);
             if (data.time_limit_minutes) {
                 setTimeLeft(data.time_limit_minutes * 60);
@@ -106,15 +87,24 @@ export default function PlacementTest() {
                 CauTraLoi: ans
             }));
 
-            const result = await apiSubmitExamPlacementTest(token, answersArray);
+            const result = await apiSubmitSectionTest(token, type, answersArray);
             setResultData(result);
-            setScreen('result');
+            setScreen('completed-summary');
         } catch (err) {
             setError(err.message);
         } finally {
             setSubmitting(false);
         }
     };
+
+    const testTitles = {
+        vocabulary: 'Bài test Từ Vựng',
+        grammar: 'Bài test Ngữ Pháp',
+        listening: 'Bài test Kỹ năng Nghe',
+        final: 'Bài Test Cuối Khóa'
+    };
+
+    const title = testTitles[type] || 'Bài Test';
 
     if (loading) {
         return (
@@ -133,7 +123,8 @@ export default function PlacementTest() {
                 <div className="bg-white p-8 rounded-2xl shadow-sm border border-red-100 text-center max-w-md">
                     <h3 className="text-lg font-bold text-slate-800 mb-2">Lỗi</h3>
                     <p className="text-slate-500">{error}</p>
-                    <button onClick={() => window.location.reload()} className="mt-4 px-6 py-2 bg-teal-600 text-white rounded-xl">Thử lại</button>
+                    <button onClick={() => window.location.reload()} className="mt-4 px-6 py-2 bg-teal-600 text-white rounded-xl hover:bg-teal-700 transition-colors">Thử lại</button>
+                    <button onClick={() => navigate('/client/exercises-tests')} className="mt-4 ml-2 px-6 py-2 bg-slate-200 text-slate-700 rounded-xl hover:bg-slate-300 transition-colors">Quay lại</button>
                 </div>
             </div>
         );
@@ -147,25 +138,12 @@ export default function PlacementTest() {
                     <div className="w-20 h-20 bg-teal-50 rounded-full flex items-center justify-center mx-auto mb-6">
                         <span className="text-3xl text-teal-600">📝</span>
                     </div>
-                    <h1 className="text-3xl font-bold text-slate-900 mb-4">Test đầu vào</h1>
+                    <h1 className="text-3xl font-bold text-slate-900 mb-4">{title}</h1>
                     <p className="text-slate-600 mb-8 max-w-lg mx-auto">
-                        Bài kiểm tra giúp hệ thống đánh giá đúng năng lực của bạn để cá nhân hóa lộ trình học tập hiệu quả nhất.
+                        {type === 'final' 
+                            ? 'Bài kiểm tra tổng hợp cuối khóa giúp đánh giá sự tiến bộ của bạn so với bài test đầu vào. Hãy chuẩn bị kỹ lưỡng nhé!' 
+                            : 'Luyện tập kỹ năng này sẽ giúp bạn nhận ra những phần kiến thức cần trau dồi thêm. Thời gian làm bài là 15 phút.'}
                     </p>
-
-                    <div className="bg-slate-50 rounded-2xl p-6 text-left mb-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
-                            <h3 className="font-bold text-slate-800 mb-1 text-sm">Từ Vựng</h3>
-                            <p className="text-xs text-slate-500">Đánh giá vốn từ vựng cơ bản đến nâng cao.</p>
-                        </div>
-                        <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
-                            <h3 className="font-bold text-slate-800 mb-1 text-sm">Ngữ Pháp</h3>
-                            <p className="text-xs text-slate-500">Kiểm tra cấu trúc và ngữ pháp tiếng Anh.</p>
-                        </div>
-                        <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
-                            <h3 className="font-bold text-slate-800 mb-1 text-sm">Kỹ năng Nghe</h3>
-                            <p className="text-xs text-slate-500">Nghe đoạn hội thoại và trả lời câu hỏi.</p>
-                        </div>
-                    </div>
 
                     <button
                         onClick={handleStartTest}
@@ -289,19 +267,35 @@ export default function PlacementTest() {
                     </div>
                     
                     <h1 className="text-3xl font-extrabold text-slate-900 mb-2">Bạn đã hoàn thành bài test!</h1>
-                    <p className="text-slate-500 mb-8">Hệ thống đã ghi nhận năng lực của bạn. Hãy tiếp tục lộ trình học tập để đạt kết quả tốt nhất.</p>
+                    <p className="text-slate-500 mb-8">Kết quả của bạn đã được ghi nhận. Dưới đây là phân tích chi tiết.</p>
                     
                     <div className="bg-slate-50 rounded-3xl p-8 mb-8 border border-slate-100">
                         <div className="text-5xl font-black text-teal-600 mb-2">{resultData.total_score}%</div>
-                        <div className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-6">Tổng điểm đạt được</div>
+                        <div className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">Tổng điểm đạt được</div>
                         
-                        <div className="grid grid-cols-3 gap-4">
-                            {Object.entries(resultData.stats).map(([k, v]) => (
-                                <div key={k} className="bg-white p-3 rounded-2xl shadow-sm border border-slate-100">
-                                    <div className="text-xs font-bold text-slate-400 mb-1 uppercase">{k}</div>
-                                    <div className="text-lg font-bold text-slate-800">{resultData.percentages[k]}%</div>
-                                </div>
-                            ))}
+                        {resultData.progress && resultData.progress.overall !== undefined && (
+                            <div className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full font-bold text-sm mb-6 ${resultData.progress.overall >= 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                {resultData.progress.overall >= 0 ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+                                {resultData.progress.overall >= 0 ? 'Tăng' : 'Giảm'} {Math.abs(resultData.progress.overall)}% so với Test đầu vào
+                            </div>
+                        )}
+                        
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            {Object.entries(resultData.stats).map(([k, v]) => {
+                                if (v.total === 0) return null; // Only show sections that have questions
+                                const progress = resultData.progress ? resultData.progress[k] : 0;
+                                return (
+                                    <div key={k} className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 relative overflow-hidden">
+                                        <div className="text-xs font-bold text-slate-400 mb-1 uppercase">{k}</div>
+                                        <div className="text-xl font-bold text-slate-800">{resultData.percentages[k]}%</div>
+                                        {progress !== undefined && (
+                                            <div className={`mt-2 text-[10px] font-bold ${progress >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+                                                {progress >= 0 ? '▲' : '▼'} {Math.abs(progress)}%
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })}
                         </div>
                     </div>
 
@@ -313,10 +307,10 @@ export default function PlacementTest() {
                             Chi tiết làm bài
                         </button>
                         <button
-                            onClick={() => navigate('/client/dashboard')}
+                            onClick={() => navigate('/client/exercises-tests')}
                             className="flex-1 px-8 py-4 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-2xl shadow-lg shadow-teal-600/30 transition-all"
                         >
-                            Về Trang chủ
+                            Về TT Bài Tập
                         </button>
                     </div>
                 </div>
@@ -332,22 +326,38 @@ export default function PlacementTest() {
                     {/* Overview */}
                     <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 text-center relative overflow-hidden">
                         <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-teal-400 to-blue-500"></div>
-                        <h2 className="text-3xl font-bold text-slate-900 mb-2 mt-4">Kết quả bài test</h2>
+                        <h2 className="text-3xl font-bold text-slate-900 mb-2 mt-4">Kết quả chi tiết</h2>
                         <div className="text-5xl font-extrabold text-teal-600 my-6">{resultData.total_score}%</div>
                         <div className="text-lg font-semibold text-slate-500 mb-2">
                             Đúng: <span className="text-teal-600 font-bold">{resultData.total_correct}</span> / {resultData.total_questions} câu
                         </div>
 
+                        {resultData.progress && resultData.progress.overall !== undefined && (
+                            <div className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full font-bold text-sm mb-6 ${resultData.progress.overall >= 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                {resultData.progress.overall >= 0 ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+                                {resultData.progress.overall >= 0 ? 'Tăng' : 'Giảm'} {Math.abs(resultData.progress.overall)}% so với Test đầu vào
+                            </div>
+                        )}
+
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
-                            {Object.entries(resultData.stats).map(([k, v]) => (
-                                <div key={k} className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                                    <h4 className="text-sm font-bold text-slate-500 mb-1 uppercase tracking-wider">{k}</h4>
-                                    <div className="text-2xl font-bold text-slate-800 mb-1">{resultData.percentages[k]}%</div>
-                                    <div className="text-xs font-semibold text-slate-400">
-                                        Đúng: <span className="text-slate-600">{v.correct}/{v.total}</span>
+                            {Object.entries(resultData.stats).map(([k, v]) => {
+                                if (v.total === 0) return null;
+                                const progress = resultData.progress ? resultData.progress[k] : 0;
+                                return (
+                                    <div key={k} className="bg-slate-50 p-4 rounded-xl border border-slate-100 relative">
+                                        <h4 className="text-sm font-bold text-slate-500 mb-1 uppercase tracking-wider">{k}</h4>
+                                        <div className="text-2xl font-bold text-slate-800 mb-1">{resultData.percentages[k]}%</div>
+                                        <div className="text-xs font-semibold text-slate-400">
+                                            Đúng: <span className="text-slate-600">{v.correct}/{v.total}</span>
+                                        </div>
+                                        {progress !== undefined && (
+                                            <div className={`absolute top-4 right-4 text-[10px] font-bold px-2 py-0.5 rounded ${progress >= 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                                {progress >= 0 ? '▲' : '▼'} {Math.abs(progress)}%
+                                            </div>
+                                        )}
                                     </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     </div>
 
@@ -444,16 +454,16 @@ export default function PlacementTest() {
 
                     <div className="text-center pt-4 flex flex-col sm:flex-row justify-center gap-4">
                         <button
-                            onClick={() => navigate('/client/dashboard')}
+                            onClick={() => navigate('/client/exercises-tests')}
                             className="px-8 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl shadow-sm border border-slate-200 transition-colors"
                         >
-                            Về trang chủ
+                            Về TT Bài Tập
                         </button>
                         <button
                             onClick={() => navigate('/client/learning-path')}
                             className="px-8 py-3 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl shadow-lg transition-colors"
                         >
-                            Cải thiện học tập
+                            Tiếp tục lộ trình
                         </button>
                     </div>
                 </div>

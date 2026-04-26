@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../../../context/AuthContext';
 
 const Login = () => {
-    const { login, registerAccount } = useAuth();
+    const { loginWithAPI, registerWithAPI } = useAuth();
     const [activeTab, setActiveTab] = useState('login');
     const [loginStyles, setLoginStyles] = useState('relative flex scale-100 opacity-100');
     const [registerStyles, setRegisterStyles] = useState('absolute hidden scale-95 opacity-0');
@@ -25,9 +25,11 @@ const Login = () => {
         e.preventDefault();
         setIsLoading(true);
         setError('');
-        const res = await login('client', email, password);
-        if (!res?.success) {
-            setError(res?.error || 'Lỗi kết nối máy chủ');
+        try {
+            await loginWithAPI(email, password);
+            // loginWithAPI handles navigation on success
+        } catch (err) {
+            setError(err.message || 'Lỗi kết nối máy chủ');
         }
         setIsLoading(false);
     };
@@ -43,11 +45,8 @@ const Login = () => {
         }
 
         setIsLoading(true);
-        const res = await registerAccount(regName, regEmail, regPassword);
-        if (!res?.success) {
-            setRegError(res?.error || 'Lỗi đăng ký, vui lòng thử lại.');
-            setIsLoading(false);
-        } else {
+        try {
+            await registerWithAPI(regName, regEmail, regPassword);
             setRegError('');
             setRegSuccess('Đăng ký thành công! Đang chuyển sang Đăng nhập...');
             
@@ -58,6 +57,9 @@ const Login = () => {
                 toggleForm('login');
                 setIsLoading(false);
             }, 1500);
+        } catch (err) {
+            setRegError(err.message || 'Lỗi đăng ký, vui lòng thử lại.');
+            setIsLoading(false);
         }
     };
 

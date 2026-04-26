@@ -19,6 +19,8 @@ import ProgressReport from './components/views/client/ProgressReport';
 import StageTest from './components/views/client/StageTest';
 import FinalTest from './components/views/client/FinalTest';
 import PassFailCheck from './components/views/client/PassFailCheck';
+import ExercisesTests from './components/views/client/ExercisesTests';
+import SectionTest from './components/views/client/SectionTest';
 import Flashcard from './components/views/flashcard/Flashcard';
 import FlashcardCreate from './components/views/flashcard/FlashcardCreate';
 import FlashcardDetail from './components/views/flashcard/FlashcardDetail';
@@ -66,6 +68,8 @@ const ClientLayout = () => {
                         <Route path="dashboard" element={<ClientDashboard />} />
                         <Route path="placement-test" element={<PlacementTest />} />
                         <Route path="test-results" element={<TestResults />} />
+                        <Route path="exercises-tests" element={<ExercisesTests />} />
+                        <Route path="section-test/:type" element={<SectionTest />} />
                         <Route path="learning-materials" element={<LearningMaterials />} />
                         <Route path="lesson/:maNode" element={<LessonView />} />
                         <Route path="daily-review" element={<DailyReview />} />

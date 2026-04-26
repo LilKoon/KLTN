@@ -1,46 +1,159 @@
-import React from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { CloudUpload, FilePlus, Zap, Plus, BookOpen, Code2, Headphones, Mic, Trophy, PlayCircle, ArrowRight, Target, Clock, FileText, PlaySquare } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../../context/AuthContext';
+import { apiGetProfile } from '../../../api';
 
 const Dashboard = () => {
+    const navigate = useNavigate();
+    const { user, token } = useAuth();
+    const fileInputRef = useRef(null);
+    const [isNewUser, setIsNewUser] = useState(false);
+    const [showNewUserModal, setShowNewUserModal] = useState(false);
+
+    useEffect(() => {
+        if (token) {
+            apiGetProfile(token).then(profile => {
+                const isNew = !profile.HasCompletedPlacementTest;
+                setIsNewUser(isNew);
+                
+                // Show modal if they haven't completed the test and haven't dismissed it this session
+                if (isNew && !sessionStorage.getItem('dismissedNewUserModal')) {
+                    setShowNewUserModal(true);
+                }
+            }).catch(err => console.error("Could not fetch profile:", err));
+        }
+    }, [token]);
+
+    const handleFileSelect = (e) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            navigate('/client/chatbot', { 
+                state: { 
+                    initialFile: file, 
+                    initialMessage: 'bạn có thể giúp gì cho tôi' 
+                } 
+            });
+        }
+    };
+
     return (
         <div className="max-w-[1240px] w-full p-6 lg:p-8 flex items-start gap-8 mx-auto pb-12 cursor-default">
+            {showNewUserModal && (
+                <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-3xl p-8 max-w-lg w-full shadow-2xl relative overflow-hidden">
+                        <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-teal-400 to-blue-500"></div>
+                        <h2 className="text-2xl font-bold text-slate-900 mb-2">Chào mừng bạn mới! 🎉</h2>
+                        <p className="text-slate-600 mb-8">Hãy chọn bước tiếp theo để bắt đầu hành trình học tập của bạn.</p>
+                        
+                        <div className="flex flex-col gap-4">
+                            <button 
+                                onClick={() => navigate('/client/placement-test')}
+                                className="w-full bg-teal-50 hover:bg-teal-100 border border-teal-200 p-4 rounded-xl flex items-center gap-4 transition-colors text-left group"
+                            >
+                                <div className="w-12 h-12 bg-teal-500 rounded-full flex items-center justify-center text-white shrink-0 group-hover:scale-110 transition-transform">
+                                    <Target className="w-6 h-6" />
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-teal-900 text-lg">Test đầu vào</h3>
+                                    <p className="text-teal-700 text-sm">Cải thiện trình độ Tiếng Anh</p>
+                                </div>
+                            </button>
+
+                            <button 
+                                onClick={() => navigate('/client/flashcards')}
+                                className="w-full bg-blue-50 hover:bg-blue-100 border border-blue-200 p-4 rounded-xl flex items-center gap-4 transition-colors text-left group"
+                            >
+                                <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white shrink-0 group-hover:scale-110 transition-transform">
+                                    <Zap className="w-6 h-6" />
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-blue-900 text-lg">Học Từ Vựng Flashcard</h3>
+                                    <p className="text-blue-700 text-sm">Xây dựng vốn từ vựng cơ bản</p>
+                                </div>
+                            </button>
+                        </div>
+                        <button 
+                            onClick={() => {
+                                setShowNewUserModal(false);
+                                sessionStorage.setItem('dismissedNewUserModal', 'true');
+                            }} 
+                            className="mt-6 w-full py-3 text-slate-500 font-medium hover:bg-slate-50 rounded-xl transition-colors"
+                        >
+                            Bỏ qua lúc này
+                        </button>
+                    </div>
+                </div>
+            )}
             
             {/* Left Column */}
             <div className="flex-1 w-full min-w-0 flex flex-col gap-8">
                 
                 <h2 className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2 pt-2">
-                    Chào mừng quay trở lại, Ngô Anh Thư! 
+                    {isNewUser ? 'Chào mừng học viên mới' : 'Chào mừng quay trở lại'}, {user?.user_name || 'Học viên'}! 
                     <span className="origin-bottom-right animate-bounce">👋</span>
                 </h2>
 
                 {/* Main Actions: Upload & Flashcard */}
                 <section className="grid grid-cols-1 xl:grid-cols-2 gap-6 relative z-10 w-full">
-                    {/* Action 1: Upload */}
-                    <div className="bg-white rounded-[24px] p-6 shadow-sm border border-slate-100 transition-all duration-300 hover:shadow-md cursor-pointer group flex flex-col pb-8">
-                        <div className="w-12 h-12 rounded-full bg-teal-50 flex items-center justify-center mb-5 text-teal-600 group-hover:scale-105 transition-transform">
-                            <CloudUpload className="w-6 h-6" />
+                    {!isNewUser ? (
+                        <div 
+                            onClick={() => navigate('/client/daily-review')}
+                            className="bg-gradient-to-br from-[#f59e0b] to-[#d97706] rounded-[24px] p-6 shadow-lg border border-amber-300/30 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer group flex flex-col pb-6 relative overflow-hidden xl:col-span-2"
+                        >
+                            <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md border border-white/20 flex items-center justify-center mb-5 text-white shadow-inner relative z-10 transition-transform duration-300 group-hover:scale-110">
+                                <Clock className="w-6 h-6 text-white text-opacity-95" />
+                            </div>
+                            <h3 className="text-[19px] font-bold text-white mb-2 relative z-10">Ôn tập hằng ngày</h3>
+                            <p className="text-amber-50 text-[13px] mb-6 leading-relaxed opacity-95 relative z-10">Chống quên từ vựng bằng Spaced Repetition.</p>
+                            <button className="w-full bg-white text-amber-600 hover:bg-slate-50 font-bold py-3 rounded-xl transition-colors relative z-10 flex items-center justify-center gap-2 mt-auto shadow-sm">
+                                Bắt đầu ôn tập
+                            </button>
+                            <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-amber-400 rounded-full blur-2xl opacity-50 z-0 pointer-events-none group-hover:animate-pulse"></div>
                         </div>
-                        <h3 className="text-[18px] font-bold text-slate-900 mb-2">Upload tài liệu</h3>
-                        <p className="text-slate-500 text-[13px] mb-6 leading-relaxed">Kéo thả PDF hoặc DOCX. AI sẽ tự động tóm tắt và trích xuất điểm chính.</p>
-                        <div className="w-full border border-dashed border-slate-200 group-hover:border-teal-300 group-hover:bg-slate-50 rounded-xl py-6 flex flex-col items-center text-slate-500 transition-colors">
-                            <FilePlus className="w-6 h-6 text-slate-400 mb-2" />
-                            <span className="text-[14px] font-bold text-slate-600 mb-1">Nhấn hoặc kéo thả file</span>
-                            <span className="text-[12px] font-medium text-slate-400">Hỗ trợ tối đa 50MB</span>
-                        </div>
-                    </div>
+                    ) : (
+                        <>
+                            {/* Action 1: Upload */}
+                            <div className="bg-white rounded-[24px] p-6 shadow-sm border border-slate-100 transition-all duration-300 hover:shadow-md cursor-pointer group flex flex-col pb-8">
+                                <div className="w-12 h-12 rounded-full bg-teal-50 flex items-center justify-center mb-5 text-teal-600 group-hover:scale-105 transition-transform">
+                                    <CloudUpload className="w-6 h-6" />
+                                </div>
+                                <h3 className="text-[18px] font-bold text-slate-900 mb-2">Upload tài liệu</h3>
+                                <p className="text-slate-500 text-[13px] mb-6 leading-relaxed">Kéo thả PDF hoặc DOCX. AI sẽ tự động tóm tắt và trích xuất điểm chính.</p>
+                                <div 
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className="w-full border border-dashed border-slate-200 group-hover:border-teal-300 group-hover:bg-slate-50 rounded-xl py-6 flex flex-col items-center text-slate-500 transition-colors cursor-pointer"
+                                >
+                                    <FilePlus className="w-6 h-6 text-slate-400 mb-2" />
+                                    <span className="text-[14px] font-bold text-slate-600 mb-1">Nhấn hoặc kéo thả file</span>
+                                    <span className="text-[12px] font-medium text-slate-400">Hỗ trợ tối đa 50MB</span>
+                                </div>
+                                <input 
+                                    type="file" 
+                                    ref={fileInputRef} 
+                                    onChange={handleFileSelect} 
+                                    className="hidden" 
+                                    accept=".pdf,.png,.jpg,.jpeg,.doc,.docx"
+                                />
+                            </div>
 
-                    {/* Action 2: Create Flashcard */}
-                    <div className="bg-gradient-to-br from-[#20e9b9] to-[#01a682] rounded-[24px] p-6 shadow-lg border border-teal-300/30 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer group flex flex-col pb-6 relative overflow-hidden">
-                        <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md border border-white/20 flex items-center justify-center mb-5 text-white shadow-inner relative z-10 transition-transform duration-300 group-hover:scale-110">
-                            <Zap className="w-6 h-6 text-white text-opacity-95" />
-                        </div>
-                        <h3 className="text-[19px] font-bold text-white mb-2 relative z-10">Tạo Flashcard siêu tốc</h3>
-                        <p className="text-teal-50 text-[13px] mb-6 leading-relaxed opacity-95 relative z-10">Biến ghi chú bài giảng thành bộ thẻ học thông minh với AI chỉ sau vài giây.</p>
-                        <button className="w-full bg-white text-teal-600 hover:bg-slate-50 font-bold py-3 rounded-xl transition-colors relative z-10 flex items-center justify-center gap-2 mt-auto shadow-sm">
-                            <Plus className="w-4 h-4" /> Bắt đầu tạo mới
-                        </button>
-                        <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-teal-400 rounded-full blur-2xl opacity-50 z-0 pointer-events-none group-hover:animate-pulse"></div>
-                    </div>
+                            {/* Action 2: Create Flashcard */}
+                            <div className="bg-gradient-to-br from-[#20e9b9] to-[#01a682] rounded-[24px] p-6 shadow-lg border border-teal-300/30 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer group flex flex-col pb-6 relative overflow-hidden">
+                                <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md border border-white/20 flex items-center justify-center mb-5 text-white shadow-inner relative z-10 transition-transform duration-300 group-hover:scale-110">
+                                    <Zap className="w-6 h-6 text-white text-opacity-95" />
+                                </div>
+                                <h3 className="text-[19px] font-bold text-white mb-2 relative z-10">Tạo Flashcard siêu tốc</h3>
+                                <p className="text-teal-50 text-[13px] mb-6 leading-relaxed opacity-95 relative z-10">Biến ghi chú bài giảng thành bộ thẻ học thông minh với AI chỉ sau vài giây.</p>
+                                <button 
+                                    onClick={() => navigate('/client/flashcards')}
+                                    className="w-full bg-white text-teal-600 hover:bg-slate-50 font-bold py-3 rounded-xl transition-colors relative z-10 flex items-center justify-center gap-2 mt-auto shadow-sm"
+                                >
+                                    <Plus className="w-4 h-4" /> Bắt đầu tạo mới
+                                </button>
+                                <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-teal-400 rounded-full blur-2xl opacity-50 z-0 pointer-events-none group-hover:animate-pulse"></div>
+                            </div>
+                        </>
+                    )}
                 </section>
 
                 {/* Tiếp tục học tập */}
