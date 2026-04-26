@@ -227,3 +227,12 @@ class VerifyEmailRequest(BaseModel):
 
 class ResendOTPRequest(BaseModel):
     email: str
+
+class ProfileUpdate(BaseModel):
+    TenNguoiDung: str
+    SoDienThoai: Optional[str] = None
+    TieuSu: Optional[str] = None
+
+class ChangePassword(BaseModel):
+    current_password: str
+    new_password: str

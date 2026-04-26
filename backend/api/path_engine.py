@@ -53,7 +53,7 @@ def generate_personalized_path(
     Điểm càng cao, càng nhiều node đầu bị đánh nhãn SKIPPED.
     """
     if current_user.DiemNangLuc <= 0:
-        raise HTTPException(status_code=400, detail="Vui lòng làm bài Micro-Test để có điểm năng lực đầu vào.")
+        raise HTTPException(status_code=400, detail="Vui lòng làm bài Test đầu vào để có điểm năng lực trước khi tạo lộ trình.")
         
     # Check current active path
     active_path = db.query(models.LoTrinhCaNhan).filter(
@@ -80,68 +80,126 @@ def generate_personalized_path(
     db.add(new_path)
     db.flush() # Để lấy ID tạm thời
     
-    # AI RULE: 
-    # Nếu Điểm > 8.0 -> 3 bài đầu SKIPPED
-    # Nếu Điểm >= 5.0 -> 1 bài đầu SKIPPED
-    skip_count = 0
-    if current_user.DiemNangLuc >= 8.0:
-        skip_count = 3
-    elif current_user.DiemNangLuc >= 5.0:
-        skip_count = 1
-        
-    # Tạo chuỗi lộ trình (tính toán index nội suy Checkpoint)
+    # -----------------------------
+    # AI RULE: Phân tích kết quả test
+    # -----------------------------
+    weak_skills = []
+    strong_skills = []
+    
+    # Lấy bài kiểm tra đầu vào gần nhất
+    latest_test = db.query(models.BaiKiemTra).filter(
+        models.BaiKiemTra.MaNguoiDung == current_user.MaNguoiDung,
+        models.BaiKiemTra.LoaiBaiKiemTra == 'DAU_VAO'
+    ).order_by(models.BaiKiemTra.created_at.desc()).first()
+
+    if latest_test:
+        pkts = db.query(models.PhanKiemTra).filter(models.PhanKiemTra.MaBaiKiemTra == latest_test.MaBaiKiemTra).all()
+        for pkt in pkts:
+            skill = pkt.KyNang.upper()
+            score = pkt.PhanTramDiem or 0.0
+            # Điểm < 50% được coi là yếu, cần BOOST
+            if score < 50.0:
+                weak_skills.append(skill)
+            # Điểm >= 80% được coi là giỏi, có thể SKIP
+            elif score >= 80.0:
+                strong_skills.append(skill)
+    else:
+        # Fallback nếu không tìm thấy bài test chi tiết
+        if current_user.DiemNangLuc >= 8.0:
+            strong_skills = ['VOCABULARY', 'GRAMMAR', 'LISTENING']
+        elif current_user.DiemNangLuc < 5.0:
+            weak_skills = ['VOCABULARY', 'GRAMMAR', 'LISTENING']
+            
     sequence_items = []
+    
+    # 1. Chèn ngay các bài BOOSTED vào đầu lộ trình cho các kỹ năng yếu
+    if "VOCABULARY" in weak_skills:
+        sequence_items.append({
+            "type": "BOOSTED",
+            "bh": None,
+            "tieu_de": "Tăng cường Từ Vựng (AI Boost)",
+            "loai_node": "BOOSTED",
+            "mota": "Bài tập bổ trợ thiết kế riêng để lấp lỗ hổng Từ Vựng của bạn."
+        })
+    if "GRAMMAR" in weak_skills:
+        sequence_items.append({
+            "type": "BOOSTED",
+            "bh": None,
+            "tieu_de": "Ôn tập Ngữ Pháp (AI Boost)",
+            "loai_node": "BOOSTED",
+            "mota": "Củng cố Ngữ Pháp cơ bản theo kết quả bài test đầu vào."
+        })
+    if "LISTENING" in weak_skills:
+        sequence_items.append({
+            "type": "BOOSTED",
+            "bh": None,
+            "tieu_de": "Luyện Nghe Phản Xạ (AI Boost)",
+            "loai_node": "BOOSTED",
+            "mota": "Làm quen với âm thanh và luyện nghe trước khi vào bài chính."
+        })
+
+    # 2. Map các bài học CORE vào lộ trình
     total_bai_hocs = len(bai_hocs)
     cp1_idx = total_bai_hocs // 3
     cp2_idx = (total_bai_hocs * 2) // 3
     
     for i, bh in enumerate(bai_hocs):
+        ten_bai_lower = bh.TenBaiHoc.lower()
+        is_skipped = False
+        
+        # AI tự động skip nếu kỹ năng này User đã rất giỏi
+        if ("từ vựng" in ten_bai_lower or "vocab" in ten_bai_lower) and "VOCABULARY" in strong_skills:
+            is_skipped = True
+        elif ("ngữ pháp" in ten_bai_lower or "grammar" in ten_bai_lower) and "GRAMMAR" in strong_skills:
+            is_skipped = True
+        elif ("nghe" in ten_bai_lower or "listen" in ten_bai_lower) and "LISTENING" in strong_skills:
+            is_skipped = True
+            
+        loai_node = 'SKIPPED' if is_skipped else 'CORE'
+        mota = "AI đánh giá bạn đã nắm vững kỹ năng này, miễn học để tiết kiệm thời gian." if is_skipped else "Bài học lý thuyết cốt lõi."
+            
         sequence_items.append({
             "type": "LESSON",
             "bh": bh,
-            "tieu_de": bh.TenBaiHoc
+            "tieu_de": bh.TenBaiHoc,
+            "loai_node": loai_node,
+            "mota": mota
         })
+        
+        # Thêm các Checkpoint định kỳ
         if i == cp1_idx:
             sequence_items.append({
                 "type": "CHECKPOINT",
                 "bh": None,
-                "tieu_de": "Bài Test Giữa Kỳ (Trạm số 1)",
+                "tieu_de": "Bài Test Giữa Kỳ (Trạm 1)",
+                "loai_node": "TEST_80",
                 "mota": "Đánh giá năng lực thu nạp kiến thức trong chặng vừa qua. Yêu cầu 80%."
             })
         elif i == cp2_idx:
             sequence_items.append({
                 "type": "CHECKPOINT",
                 "bh": None,
-                "tieu_de": "Bài Test Giữa Kỳ (Trạm số 2)",
-                "mota": "Đánh giá năng lực thu nạp kiến thức trong chặng vừa qua. Yêu cầu 80%."
+                "tieu_de": "Bài Test Giữa Kỳ (Trạm 2)",
+                "loai_node": "TEST_80",
+                "mota": "Đánh giá năng lực thu nạp kiến thức trong chặng 2. Yêu cầu 80%."
             })
             
+    # 3. Trạm cuối cùng
     sequence_items.append({
         "type": "FINAL_TEST",
         "bh": None,
         "tieu_de": "Kiểm Tra Trùm Cuối (Final Test)",
-        "mota": "Trạm dừng chân cuối cùng. Chứng minh bạn đã sẵn sàng."
+        "loai_node": "TEST_80",
+        "mota": "Trạm dừng chân cuối cùng. Đánh giá toàn diện."
     })
 
-    lessons_seen = 0
+    # 4. Ghi lộ trình vào Database
     thu_tu_node = 1
     found_current = False
     
     for item in sequence_items:
-        is_skipped = False
-        
-        # Đã học qua số lượng bài cần skip chưa?
-        if lessons_seen < skip_count:
-            is_skipped = True
-            
-        if item["type"] == "LESSON":
-            lessons_seen += 1
-            loai_node = 'SKIPPED' if is_skipped else 'CORE'
-            mota = "AI đánh giá bạn đã nắm vững kiến thức, tiết kiệm thời gian." if is_skipped else "Bài học lý thuyết cốt lõi không thể bỏ qua."
-        else:
-            # CHECKPOINT hoặc FINAL_TEST
-            loai_node = 'SKIPPED' if is_skipped else 'TEST_80'
-            mota = "AI miễn thi cho chặng này." if is_skipped else item["mota"]
+        loai_node = item["loai_node"]
+        is_skipped = (loai_node == 'SKIPPED')
             
         if is_skipped:
             trang_thai = 'COMPLETED'
@@ -156,7 +214,7 @@ def generate_personalized_path(
             MaLoTrinh=new_path.MaLoTrinh,
             MaBaiHoc=item["bh"].MaBaiHoc if item["bh"] else None,
             TieuDe=item["tieu_de"],
-            MoTa=mota,
+            MoTa=item.get("mota", ""),
             ThuTu=thu_tu_node,
             LoaiNode=loai_node,
             TrangThai=trang_thai

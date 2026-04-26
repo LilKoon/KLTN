@@ -2,8 +2,9 @@ from contextlib import asynccontextmanager
 import asyncio
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 import database, models
-from api import auth, cms, test_engine, path_engine, user_stats, ai_engine, flashcard_store, rag_api, chat_session
+from api import auth, cms, test_engine, path_engine, user_stats, ai_engine, flashcard_store, rag_api, chat_session, exam_service
 from api.quiz_extraction import router as quiz_extract_router
 from api.oauth import router as oauth_router
 from api.bug_report import router as bug_report_router
@@ -62,8 +63,11 @@ api.include_router(chat_session.router)
 api.include_router(quiz_extract_router)
 api.include_router(oauth_router)
 api.include_router(bug_report_router)
+api.include_router(exam_service.router)
 
 api.add_exception_handler(AppError, app_error_handler)
+
+api.mount("/static", StaticFiles(directory="static"), name="static")
 
 app = api
 

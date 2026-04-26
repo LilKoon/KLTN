@@ -1,7 +1,9 @@
 from datetime import datetime, timedelta
 from jose import JWTError, jwt
 import bcrypt
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
+import os
+import shutil
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from typing import Optional
@@ -135,3 +137,57 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
 
     access_token = create_access_token(data={"sub": user.Email, "role": user.VaiTro})
     return {"access_token": access_token, "token_type": "bearer", "user_name": user.TenNguoiDung}
+
+
+@router.get("/me")
+def get_me(current_user: models.NguoiDung = Depends(get_current_user), db: Session = Depends(database.get_db)):
+    has_test = db.query(models.BaiKiemTra).filter(
+        models.BaiKiemTra.MaNguoiDung == current_user.MaNguoiDung,
+        models.BaiKiemTra.LoaiBaiKiemTra == "DAU_VAO",
+        models.BaiKiemTra.TrangThai == "COMPLETED"
+    ).first() is not None
+
+    return {
+        "TenNguoiDung": current_user.TenNguoiDung,
+        "Email": current_user.Email,
+        "SoDienThoai": current_user.SoDienThoai,
+        "TieuSu": current_user.TieuSu,
+        "AvatarUrl": current_user.AvatarUrl,
+        "VaiTro": current_user.VaiTro,
+        "NgayTao": current_user.NgayTao.isoformat() if current_user.NgayTao else None,
+        "HasCompletedPlacementTest": has_test
+    }
+
+@router.put("/me")
+def update_me(profile: schemas.ProfileUpdate, current_user: models.NguoiDung = Depends(get_current_user), db: Session = Depends(database.get_db)):
+    current_user.TenNguoiDung = profile.TenNguoiDung
+    current_user.SoDienThoai = profile.SoDienThoai
+    current_user.TieuSu = profile.TieuSu
+    db.commit()
+    db.refresh(current_user)
+    return {"message": "Cập nhật thành công"}
+
+@router.post("/upload-avatar")
+def upload_avatar(file: UploadFile = File(...), current_user: models.NguoiDung = Depends(get_current_user), db: Session = Depends(database.get_db)):
+    upload_dir = "static/avatars"
+    os.makedirs(upload_dir, exist_ok=True)
+    file_extension = os.path.splitext(file.filename)[1]
+    file_name = f"avatar_{current_user.MaNguoiDung}{file_extension}"
+    file_path = os.path.join(upload_dir, file_name)
+    
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+        
+    current_user.AvatarUrl = f"/{file_path.replace(os.sep, '/')}"
+    db.commit()
+    return {"message": "Tải lên ảnh thành công", "AvatarUrl": current_user.AvatarUrl}
+
+@router.put("/change-password")
+def change_password(data: schemas.ChangePassword, current_user: models.NguoiDung = Depends(get_current_user), db: Session = Depends(database.get_db)):
+    if not verify_password(data.current_password, current_user.MatKhau):
+        raise_app_error("AUTH_002", detail="Mật khẩu hiện tại không đúng")
+    
+    current_user.MatKhau = get_password_hash(data.new_password)
+    db.commit()
+    return {"message": "Đổi mật khẩu thành công"}
+
