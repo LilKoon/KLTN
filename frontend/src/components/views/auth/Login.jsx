@@ -1,29 +1,18 @@
 import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
-import { useGoogleLogin } from '@react-oauth/google';
+import { startGoogleLogin } from '../../../api.js';
 
 const Login = () => {
-    const { loginWithAPI, loginWithGoogleAPI, registerWithAPI } = useAuth();
+    const navigate = useNavigate();
+    const { loginWithAPI, registerWithAPI } = useAuth();
     const [activeTab, setActiveTab] = useState('login');
     const [loginStyles, setLoginStyles] = useState('relative flex scale-100 opacity-100');
     const [registerStyles, setRegisterStyles] = useState('absolute hidden scale-95 opacity-0');
 
-    const handleGoogleLogin = useGoogleLogin({
-        onSuccess: async (tokenResponse) => {
-            try {
-                setLoginLoading(true);
-                setLoginError('');
-                await loginWithGoogleAPI(tokenResponse.access_token);
-            } catch (err) {
-                setLoginError(err.message || 'Đăng nhập Google thất bại');
-            } finally {
-                setLoginLoading(false);
-            }
-        },
-        onError: () => {
-            setLoginError('Đăng nhập Google thất bại');
-        }
-    });
+    const handleGoogleLogin = () => {
+        startGoogleLogin();
+    };
 
     // ─── Login form state ───
     const [loginEmail, setLoginEmail] = useState('');
@@ -81,7 +70,12 @@ const Login = () => {
             await loginWithAPI(loginEmail, loginPassword);
             // loginWithAPI sẽ tự navigate sang /client
         } catch (err) {
-            setLoginError(err.message || 'Đăng nhập thất bại');
+            const msg = err.message || 'Đăng nhập thất bại';
+            if (err.errorId === 'AUTH_003' || /chưa xác thực|EMAIL_NOT_VERIFIED/i.test(msg)) {
+                navigate(`/verify-email?email=${encodeURIComponent(loginEmail)}`);
+                return;
+            }
+            setLoginError(msg);
         } finally {
             setLoginLoading(false);
         }
@@ -112,13 +106,8 @@ const Login = () => {
 
         setRegLoading(true);
         try {
-            const data = await registerWithAPI(regName, regEmail, regPassword, regPhone);
-            setRegSuccess(data.message || 'Đăng ký thành công! Vui lòng đăng nhập.');
-            // Auto switch to login after 1.5s
-            setTimeout(() => {
-                setLoginEmail(regEmail); // Pre-fill email
-                toggleForm('login');
-            }, 1500);
+            await registerWithAPI(regName, regEmail, regPassword, regPhone);
+            navigate(`/verify-email?email=${encodeURIComponent(regEmail)}`);
         } catch (err) {
             setRegError(err.message || 'Đăng ký thất bại');
         } finally {
@@ -277,9 +266,9 @@ const Login = () => {
                                         <div className="flex items-center justify-between mb-1.5 ml-1 mr-1">
                                             <label htmlFor="loginPassword" className="block text-sm font-medium text-slate-700">Mật
                                                 khẩu</label>
-                                            <a href="#"
+                                            <Link to="/forgot-password"
                                                 className="text-xs font-semibold text-teal-600 hover:text-teal-700 transition-colors">Quên
-                                                mật khẩu?</a>
+                                                mật khẩu?</Link>
                                         </div>
                                         <div className="relative">
                                             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">

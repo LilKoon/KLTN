@@ -47,6 +47,12 @@
     "http_status": 400,
     "category": "auth"
   },
+  "AUTH_009": {
+    "title": "Mật khẩu không hợp lệ",
+    "message": "Mật khẩu mới phải có ít nhất 6 ký tự.",
+    "http_status": 422,
+    "category": "auth"
+  },
   "AI_001": {
     "title": "AI tạm thời không khả dụng",
     "message": "Tất cả các mô hình AI đang bị rate limit hoặc lỗi. Vui lòng thử lại sau vài phút.",

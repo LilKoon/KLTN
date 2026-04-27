@@ -8,7 +8,7 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from typing import Optional
 import database, models, schemas
-from services.email_service import generate_otp, send_verification_email
+from services.email_service import generate_otp, send_verification_email, send_password_reset_email
 from error_handler import raise_app_error
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
@@ -68,23 +68,33 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     return encoded_jwt
 
 
-@router.post("/register", response_model=schemas.Token)
+@router.post("/register", response_model=schemas.RegisterResponse)
 def register(user: schemas.UserCreate, db: Session = Depends(database.get_db)):
     if db.query(models.NguoiDung).filter(models.NguoiDung.Email == user.email).first():
         raise_app_error("AUTH_001")
 
+    otp = generate_otp()
     new_user = models.NguoiDung(
         TenNguoiDung=user.TenNguoiDung,
         Email=user.email,
         MatKhau=get_password_hash(user.MatKhau),
-        IsVerified=True,
+        IsVerified=False,
+        VerifyOTP=otp,
+        OTPExpiry=datetime.utcnow() + timedelta(minutes=15),
     )
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
 
-    token = create_access_token(data={"sub": new_user.Email, "role": new_user.VaiTro})
-    return {"access_token": token, "token_type": "bearer", "user_name": new_user.TenNguoiDung}
+    email_sent = send_verification_email(new_user.Email, new_user.TenNguoiDung, otp)
+    if not email_sent:
+        raise_app_error("GENERAL_002", detail="Lỗi gửi email (SMTP). Vui lòng kiểm tra lại cấu hình mật khẩu ứng dụng Gmail.")
+
+    return {
+        "message": "Đăng ký thành công. Vui lòng kiểm tra email để nhập mã xác nhận.",
+        "email": new_user.Email,
+        "email_sent": email_sent,
+    }
 
 
 @router.post("/verify-email")
@@ -123,8 +133,64 @@ def resend_otp(payload: schemas.ResendOTPRequest, db: Session = Depends(database
     user.OTPExpiry = datetime.utcnow() + timedelta(minutes=15)
     db.commit()
 
-    send_verification_email(user.Email, user.TenNguoiDung, new_otp)
+    email_sent = send_verification_email(user.Email, user.TenNguoiDung, new_otp)
+    if not email_sent:
+        raise_app_error("GENERAL_002", detail="Lỗi gửi email (SMTP). Vui lòng kiểm tra lại cấu hình mật khẩu ứng dụng Gmail.")
+        
     return {"message": "\u0110\u00e3 g\u1eedi l\u1ea1i m\u00e3 x\u00e1c nh\u1eadn"}
+
+
+@router.post("/forgot-password")
+def forgot_password(payload: schemas.ForgotPasswordRequest, db: Session = Depends(database.get_db)):
+    user = db.query(models.NguoiDung).filter(models.NguoiDung.Email == payload.email).first()
+    if not user:
+        raise_app_error("AUTH_004")
+
+    otp = generate_otp()
+    user.VerifyOTP = otp
+    user.OTPExpiry = datetime.utcnow() + timedelta(minutes=15)
+    db.commit()
+
+    email_sent = send_password_reset_email(user.Email, user.TenNguoiDung, otp)
+    if not email_sent:
+        raise_app_error("GENERAL_002", detail="Lỗi gửi email (SMTP). Vui lòng kiểm tra lại cấu hình mật khẩu ứng dụng Gmail.")
+        
+    return {
+        "message": "Mã xác nhận đã được gửi đến email của bạn.",
+        "email_sent": email_sent,
+    }
+
+
+@router.post("/verify-reset-otp")
+def verify_reset_otp(payload: schemas.VerifyResetOTPRequest, db: Session = Depends(database.get_db)):
+    user = db.query(models.NguoiDung).filter(models.NguoiDung.Email == payload.email).first()
+    if not user:
+        raise_app_error("AUTH_004")
+    if not user.VerifyOTP or user.VerifyOTP != payload.otp:
+        raise_app_error("AUTH_006")
+    if user.OTPExpiry and datetime.utcnow() > user.OTPExpiry:
+        raise_app_error("AUTH_007")
+    return {"valid": True, "message": "Mã xác nhận hợp lệ."}
+
+
+@router.post("/reset-password")
+def reset_password(payload: schemas.ResetPasswordRequest, db: Session = Depends(database.get_db)):
+    if len(payload.new_password) < 6:
+        raise_app_error("AUTH_009")
+
+    user = db.query(models.NguoiDung).filter(models.NguoiDung.Email == payload.email).first()
+    if not user:
+        raise_app_error("AUTH_004")
+    if not user.VerifyOTP or user.VerifyOTP != payload.otp:
+        raise_app_error("AUTH_006")
+    if user.OTPExpiry and datetime.utcnow() > user.OTPExpiry:
+        raise_app_error("AUTH_007")
+
+    user.MatKhau = get_password_hash(payload.new_password)
+    user.VerifyOTP = None
+    user.OTPExpiry = None
+    db.commit()
+    return {"message": "Đặt lại mật khẩu thành công. Vui lòng đăng nhập lại."}
 
 
 @router.post("/login", response_model=schemas.Token)

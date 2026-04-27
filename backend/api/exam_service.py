@@ -426,11 +426,11 @@ def get_section_test(
     if type == "final":
         distribution = EXAM_CONFIG["distribution"]
     elif type == "vocabulary":
-        distribution = [{"skill": "Vocabulary", "levels": {"1": 5, "2": 5, "3": 5}}]
+        distribution = [{"skill": "Vocabulary", "levels": {"1": 10, "2": 10, "3": 10}}]
     elif type == "grammar":
-        distribution = [{"skill": "Grammar", "levels": {"1": 5, "2": 5, "3": 5}}]
+        distribution = [{"skill": "Grammar", "levels": {"1": 10, "2": 10, "3": 10}}]
     elif type == "listening":
-        distribution = [{"skill": "Listening", "levels": {"1": 15, "2": 0, "3": 0}}]
+        distribution = [{"skill": "Listening", "levels": {"1": 30, "2": 0, "3": 0}}]
     else:
         raise HTTPException(status_code=400, detail="Loại bài test không hợp lệ")
 
@@ -490,7 +490,7 @@ def get_section_test(
         
     return {
         "total_questions": len(results),
-        "time_limit_minutes": 15 if type != "final" else 30,
+        "time_limit_minutes": 30,
         "questions": results,
         "type": type
     }

@@ -18,28 +18,45 @@ export async function apiLogin(email, password) {
   const data = await res.json();
   if (!res.ok) {
     const errMsg = data?.error?.message || data?.detail || "Đăng nhập thất bại";
-    throw new Error(typeof errMsg === 'string' ? errMsg : JSON.stringify(errMsg));
+    const err = new Error(typeof errMsg === 'string' ? errMsg : JSON.stringify(errMsg));
+    err.errorId = data?.error?.id;
+    err.detail = data?.error?.detail || data?.detail;
+    throw err;
   }
   return data;
 }
 
 /**
- * Đăng nhập bằng Google — POST /api/v1/auth/google
- * @param {string} googleAccessToken
+ * Đăng nhập bằng Google — chuyển hướng sang backend /auth/google.
+ * Backend sẽ chuyển hướng tiếp tới Google, sau khi xác thực xong sẽ redirect về
+ * `${FRONTEND_URL}/oauth-callback?token=...&role=...`.
  */
-export async function apiLoginGoogle(googleAccessToken) {
-  const res = await fetch(`${API_BASE_URL}/auth/google`, {
+export function startGoogleLogin() {
+  window.location.href = `${API_BASE_URL}/auth/google`;
+}
+
+async function _postJson(path, body) {
+  const res = await fetch(`${API_BASE_URL}${path}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ token: googleAccessToken }),
+    body: JSON.stringify(body),
   });
-
   const data = await res.json();
   if (!res.ok) {
-    throw new Error(data.detail || "Đăng nhập Google thất bại");
+    const errMsg = data?.error?.message || data?.detail || "Đã xảy ra lỗi";
+    const err = new Error(typeof errMsg === 'string' ? errMsg : JSON.stringify(errMsg));
+    err.errorId = data?.error?.id;
+    throw err;
   }
   return data;
 }
+
+export const apiVerifyEmail = (email, otp) => _postJson("/auth/verify-email", { email, otp });
+export const apiResendOtp = (email) => _postJson("/auth/resend-otp", { email });
+export const apiForgotPassword = (email) => _postJson("/auth/forgot-password", { email });
+export const apiVerifyResetOtp = (email, otp) => _postJson("/auth/verify-reset-otp", { email, otp });
+export const apiResetPassword = (email, otp, newPassword) =>
+  _postJson("/auth/reset-password", { email, otp, new_password: newPassword });
 
 /**
  * Đăng xuất — POST /api/v1/auth/logout

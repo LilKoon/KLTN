@@ -7,6 +7,9 @@ import ClientSidebar from './components/layout/client/ClientSidebar';
 import ClientNavbar from './components/layout/client/ClientNavbar';
 import ClientDashboard from './components/views/client/Dashboard';
 import Login from './components/views/auth/Login';
+import OAuthCallback from './components/views/auth/OAuthCallback';
+import VerifyEmail from './components/views/auth/VerifyEmail';
+import ForgotPassword from './components/views/auth/ForgotPassword';
 import PlacementTest from './components/views/client/PlacementTest';
 import TestResults from './components/views/client/TestResults';
 import LearningMaterials from './components/views/client/LearningMaterials';
@@ -140,6 +143,9 @@ export default function App() {
                 {/* Public Auth Routes */}
                 <Route path="/" element={<Navigate to="/login" replace />} />
                 <Route path="/login" element={<Login />} />
+                <Route path="/oauth-callback" element={<OAuthCallback />} />
+                <Route path="/verify-email" element={<VerifyEmail />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/admin-login" element={<AdminLogin />} />
 
                 {/* Restricted Systems */}

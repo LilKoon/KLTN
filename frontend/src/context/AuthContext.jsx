@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { apiLogin, apiLoginGoogle, apiRegister, apiLogout } from '../api.js';
+import { apiLogin, apiRegister, apiLogout } from '../api.js';
 
 const AuthContext = createContext();
 
@@ -36,20 +36,19 @@ export const AuthProvider = ({ children }) => {
         navigate('/client');
     };
 
-    // Đăng nhập qua Google API
-    const loginWithGoogleAPI = async (googleToken) => {
-        const data = await apiLoginGoogle(googleToken);
-        const userData = { user_name: data.user_name, email: data.email };
-        
-        setToken(data.access_token);
+    // Lưu phiên đăng nhập sau khi backend chuyển hướng về với token (Google OAuth code flow)
+    const setSessionFromOAuth = (accessToken, role) => {
+        const normalizedRole = (role || '').toLowerCase() === 'admin' ? 'admin' : 'client';
+        const userData = {};
+        setToken(accessToken);
         setUser(userData);
-        setUserRole('client');
+        setUserRole(normalizedRole);
 
-        localStorage.setItem('access_token', data.access_token);
-        localStorage.setItem('user_role', 'client');
+        localStorage.setItem('access_token', accessToken);
+        localStorage.setItem('user_role', normalizedRole);
         localStorage.setItem('user_data', JSON.stringify(userData));
 
-        navigate('/client');
+        navigate(normalizedRole === 'admin' ? '/admin' : '/client');
     };
 
     // Đăng ký qua API
@@ -88,7 +87,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ userRole, token, user, login, loginWithAPI, loginWithGoogleAPI, registerWithAPI, logout }}>
+        <AuthContext.Provider value={{ userRole, token, user, login, loginWithAPI, setSessionFromOAuth, registerWithAPI, logout }}>
             {children}
         </AuthContext.Provider>
     );

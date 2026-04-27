@@ -228,6 +228,18 @@ class VerifyEmailRequest(BaseModel):
 class ResendOTPRequest(BaseModel):
     email: str
 
+class ForgotPasswordRequest(BaseModel):
+    email: str
+
+class VerifyResetOTPRequest(BaseModel):
+    email: str
+    otp: str
+
+class ResetPasswordRequest(BaseModel):
+    email: str
+    otp: str
+    new_password: str
+
 class ProfileUpdate(BaseModel):
     TenNguoiDung: str
     SoDienThoai: Optional[str] = None

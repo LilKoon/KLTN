@@ -20,7 +20,6 @@ class NguoiDung(Base):
     VerifyOTP = Column(String(6), nullable=True)
     OTPExpiry = Column(DateTime, nullable=True)
     GoogleId = Column(String(100), nullable=True, unique=True)
-    FacebookId = Column(String(100), nullable=True, unique=True)
     AvatarUrl = Column(String(500), nullable=True)
     OAuthProvider = Column(String(20), nullable=True)
     SoDienThoai = Column(String(20), nullable=True)
