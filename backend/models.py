@@ -23,6 +23,8 @@ class NguoiDung(Base):
     FacebookId = Column(String(100), nullable=True, unique=True)
     AvatarUrl = Column(String(500), nullable=True)
     OAuthProvider = Column(String(20), nullable=True)
+    SoDienThoai = Column(String(20), nullable=True)
+    TieuSu = Column(Text, nullable=True)
 
     bo_the_flashcard = relationship("BoDTheFlashcard", back_populates="nguoi_dung", cascade="all, delete-orphan")
 
@@ -63,8 +65,8 @@ class NganHangCauHoi(Base):
     DapAnDung = Column(Text, nullable=False)
     GiaiThich = Column(Text, nullable=True)
 
-    CefLevel = Column(String(5), nullable=True)
     NguonPDF = Column(String(200), nullable=True)
+    FileAudio = Column(String(255), nullable=True)
 
     khoa_hoc = relationship("KhoaHoc", back_populates="cau_hois")
 
@@ -187,3 +189,36 @@ class TaiLieuChat(Base):
     NgayTao = Column(DateTime, default=datetime.utcnow)
 
     phien = relationship("PhienChat", back_populates="tai_lieus")
+
+class BaiKiemTra(Base):
+    __tablename__ = "BaiKiemTra"
+
+    MaBaiKiemTra = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    MaNguoiDung = Column(UUID(as_uuid=True), ForeignKey("NguoiDung.MaNguoiDung", ondelete="CASCADE"), nullable=False)
+    MaKhoaHoc = Column(UUID(as_uuid=True), nullable=True)
+    LoaiBaiKiemTra = Column(String(50), nullable=False)
+    TrangThai = Column(String(50), default='PENDING')
+    TongDiem = Column(Float, nullable=True)
+    MoTaDanhGiaAI = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+class PhanKiemTra(Base):
+    __tablename__ = "PhanKiemTra"
+
+    MaPKT = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    MaBaiKiemTra = Column(UUID(as_uuid=True), ForeignKey("BaiKiemTra.MaBaiKiemTra", ondelete="CASCADE"), nullable=False)
+    KyNang = Column(String(50), nullable=False)
+    PhanTramDiem = Column(Float, nullable=True)
+    is_the_weak_grade = Column(Boolean, default=False)
+
+class ChiTietLamBai(Base):
+    __tablename__ = "ChiTietLamBai"
+
+    MaChiTiet = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    MaBaiKiemTra = Column(UUID(as_uuid=True), ForeignKey("BaiKiemTra.MaBaiKiemTra", ondelete="CASCADE"), nullable=False)
+    MaCauHoi = Column(UUID(as_uuid=True), ForeignKey("NganHangCauHoi.MaCauHoi", ondelete="CASCADE"), nullable=False)
+    LuaChon = Column(Text, nullable=True)
+    LaCauDung = Column(Boolean, nullable=False)
+    ThoiGianLamCauHoi = Column(Integer, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)

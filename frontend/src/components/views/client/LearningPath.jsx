@@ -2,11 +2,23 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Map as MapIcon, Star, BookOpen, Headphones, Mic, PenTool, Award, Lock, Clock, Trophy } from 'lucide-react';
 
 const LearningPath = () => {
-    const totalSteps = 6;
-    const [currentStep, setCurrentStep] = useState(2);
+    const mockRoadmap = [
+        { id: 1, title: 'Unit 1: Từ vựng Cơ bản', type: 'CORE', status: 'COMPLETED', skill: 'VOCABULARY', x: 100, y: 250, icon: Star },
+        { id: 2, title: 'Unit 2: Thì Hiện tại đơn', type: 'CORE', status: 'COMPLETED', skill: 'GRAMMAR', x: 325, y: 150, icon: BookOpen },
+        { id: 3, title: 'Unit 3: Luyện nghe Cơ bản', type: 'CORE', status: 'CURRENT', skill: 'LISTENING', x: 550, y: 250, icon: Headphones },
+        { id: 4, title: 'Ôn tập Từ Vựng (Nâng cao)', type: 'BOOSTED', status: 'LOCKED', skill: 'VOCABULARY', x: 775, y: 350, icon: Mic },
+        { id: 5, title: 'Unit 4: Thì Quá khứ đơn', type: 'CORE', status: 'LOCKED', skill: 'GRAMMAR', x: 1000, y: 250, icon: PenTool },
+        { id: 6, title: 'BÀI THI CUỐI KỲ', type: 'FINAL_TEST', status: 'LOCKED', skill: 'MIXED', x: 1225, y: 150, icon: Award },
+    ];
+
+    const totalSteps = mockRoadmap.length;
+    // Find current step based on status
+    const currentActiveIndex = mockRoadmap.findIndex(n => n.status === 'CURRENT');
+    const [currentStep, setCurrentStep] = useState(currentActiveIndex !== -1 ? currentActiveIndex + 1 : 1);
+    
     const pathRef = useRef(null);
     const scrollerRef = useRef(null);
-    const [pathLength, setPathLength] = useState(1500); // Default approx length
+    const [pathLength, setPathLength] = useState(1500); 
 
     useEffect(() => {
         if (pathRef.current) {
@@ -15,20 +27,12 @@ const LearningPath = () => {
     }, []);
 
     const completeStep = (stepNumber) => {
-        if (stepNumber <= currentStep) {
-            // Already completed or current
-            setCurrentStep(stepNumber);
-            return;
-        }
         setCurrentStep(stepNumber);
     };
 
-    // Auto-scroll loosely based on step
     useEffect(() => {
-        if (scrollerRef.current) {
-            // Approximate node offset (100 -> 1450)
-            const offsets = [0, 100, 325, 550, 775, 1000, 1225];
-            const targetLeft = offsets[currentStep] || 0;
+        if (scrollerRef.current && mockRoadmap[currentStep - 1]) {
+            const targetLeft = mockRoadmap[currentStep - 1].x;
             scrollerRef.current.scrollTo({
                 left: targetLeft - (scrollerRef.current.clientWidth / 2) + 150,
                 behavior: 'smooth'
@@ -38,9 +42,10 @@ const LearningPath = () => {
 
     const strokeDashoffset = pathLength - ((currentStep / totalSteps) * pathLength);
 
-    const getNodeClass = (nodeNum) => {
-        if (nodeNum < currentStep) return 'node-completed';
-        if (nodeNum === currentStep) return 'node-active';
+    const getNodeClass = (status, type) => {
+        if (type === 'BOOSTED' && status !== 'COMPLETED') return 'node-boosted';
+        if (status === 'COMPLETED') return 'node-completed';
+        if (status === 'CURRENT') return 'node-active';
         return 'node-locked';
     };
 
@@ -60,6 +65,7 @@ const LearningPath = () => {
                 .node-locked { background-color: #f1f5f9; color: #94a3b8; box-shadow: inset 0 -6px 0 rgba(0, 0, 0, 0.05), 0 8px 15px rgba(0, 0, 0, 0.04); }
                 .node-active { background: linear-gradient(135deg, #2dd4bf, #0d9488); color: white; box-shadow: inset 0 -8px 0 rgba(0, 0, 0, 0.1), 0 16px 30px rgba(20, 184, 166, 0.4); border-color: #ccfbf1; }
                 .node-completed { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; box-shadow: inset 0 -8px 0 rgba(0, 0, 0, 0.1), 0 12px 25px rgba(245, 158, 11, 0.3); }
+                .node-boosted { background: linear-gradient(135deg, #a855f7, #7e22ce); color: white; box-shadow: inset 0 -6px 0 rgba(0, 0, 0, 0.1), 0 8px 15px rgba(168, 85, 247, 0.3); }
                 .node-label-box { transition: all 0.3s; }
                 .node-wrapper:hover .node-label-box { box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1); transform: translateY(-2px); }
             `}} />
@@ -98,54 +104,44 @@ const LearningPath = () => {
                             </svg>
 
                             {/* Nodes - Mapped mathematically exact to Bezier control points */}
-                            <div className="absolute z-[2] -translate-x-1/2 -translate-y-1/2 flex flex-col items-center cursor-pointer transition-all duration-300 hover:-translate-y-[55%] hover:scale-105 hover:z-10 node-wrapper" style={{ left: '100px', top: '250px' }} onClick={() => completeStep(1)}>
-                                <div className={`w-[76px] h-[76px] rounded-full flex items-center justify-center border-[4px] border-white transition-all duration-400 relative z-10 ${getNodeClass(1)} ${currentStep === 1 ? 'animate-bounce' : ''}`}>
-                                    <Star className="w-7 h-7" />
-                                </div>
-                                <div className={`mt-[14px] px-4 py-2 rounded-full text-[13px] font-bold shadow-md whitespace-nowrap border node-label-box ${currentStep >= 1 ? 'text-teal-700 bg-teal-50 border-teal-100' : 'text-slate-700 bg-white border-slate-100'}`}>Unit 1: Khởi động</div>
-                            </div>
+                            {mockRoadmap.map((node, index) => {
+                                const isCurrent = currentStep === node.id;
+                                const isPast = currentStep > node.id;
+                                const NodeIcon = node.icon;
+                                
+                                // Color styling based on type and status
+                                let labelStyle = 'text-slate-700 bg-white border-slate-100';
+                                if (node.type === 'FINAL_TEST') {
+                                    labelStyle = isCurrent || isPast ? 'text-amber-700 bg-amber-50 border-amber-200' : 'text-slate-700 bg-white border-slate-100';
+                                } else if (node.type === 'BOOSTED') {
+                                    labelStyle = isCurrent || isPast ? 'text-purple-700 bg-purple-50 border-purple-100' : 'text-slate-700 bg-white border-slate-100';
+                                } else if (isCurrent || isPast) {
+                                    labelStyle = 'text-teal-700 bg-teal-50 border-teal-100';
+                                }
 
-                            <div className="absolute z-[2] -translate-x-1/2 -translate-y-1/2 flex flex-col items-center cursor-pointer transition-all duration-300 hover:-translate-y-[55%] hover:scale-105 hover:z-10 node-wrapper" style={{ left: '325px', top: '150px' }} onClick={() => completeStep(2)}>
-                                <div className={`w-[76px] h-[76px] rounded-full flex items-center justify-center border-[4px] border-white transition-all duration-400 relative z-10 ${getNodeClass(2)} ${currentStep === 2 ? 'animate-bounce' : ''}`}>
-                                    <BookOpen className="w-7 h-7" />
-                                </div>
-                                <div className={`mt-[14px] px-4 py-2 rounded-full text-[13px] font-bold shadow-md whitespace-nowrap border node-label-box ${currentStep >= 2 ? 'text-teal-700 bg-teal-50 border-teal-100' : 'text-slate-700 bg-white border-slate-100'}`}>Unit 2: Từ vựng</div>
-                            </div>
-
-                            <div className="absolute z-[2] -translate-x-1/2 -translate-y-1/2 flex flex-col items-center cursor-pointer transition-all duration-300 hover:-translate-y-[55%] hover:scale-105 hover:z-10 node-wrapper" style={{ left: '550px', top: '250px' }} onClick={() => completeStep(3)}>
-                                <div className={`w-[76px] h-[76px] rounded-full flex items-center justify-center border-[4px] border-white transition-all duration-400 relative z-10 ${getNodeClass(3)} ${currentStep === 3 ? 'animate-bounce' : ''}`}>
-                                    <Headphones className="w-7 h-7" />
-                                </div>
-                                <div className={`mt-[14px] px-4 py-2 rounded-full text-[13px] font-bold shadow-md whitespace-nowrap border node-label-box ${currentStep >= 3 ? 'text-teal-700 bg-teal-50 border-teal-100' : 'text-slate-700 bg-white border-slate-100'}`}>Unit 3: Luyện nghe</div>
-                            </div>
-
-                            <div className="absolute z-[2] -translate-x-1/2 -translate-y-1/2 flex flex-col items-center cursor-pointer transition-all duration-300 hover:-translate-y-[55%] hover:scale-105 hover:z-10 node-wrapper" style={{ left: '775px', top: '350px' }} onClick={() => completeStep(4)}>
-                                <div className={`w-[76px] h-[76px] rounded-full flex items-center justify-center border-[4px] border-white transition-all duration-400 relative z-10 ${getNodeClass(4)} ${currentStep === 4 ? 'animate-bounce' : ''}`}>
-                                    <Mic className="w-7 h-7" />
-                                </div>
-                                <div className={`mt-[14px] px-4 py-2 rounded-full text-[13px] font-bold shadow-md whitespace-nowrap border node-label-box ${currentStep >= 4 ? 'text-teal-700 bg-teal-50 border-teal-100' : 'text-slate-700 bg-white border-slate-100'}`}>Unit 4: Luyện nói</div>
-                            </div>
-
-                            <div className="absolute z-[2] -translate-x-1/2 -translate-y-1/2 flex flex-col items-center cursor-pointer transition-all duration-300 hover:-translate-y-[55%] hover:scale-105 hover:z-10 node-wrapper" style={{ left: '1000px', top: '250px' }} onClick={() => completeStep(5)}>
-                                <div className={`w-[76px] h-[76px] rounded-full flex items-center justify-center border-[4px] border-white transition-all duration-400 relative z-10 ${getNodeClass(5)} ${currentStep === 5 ? 'animate-bounce' : ''}`}>
-                                    <PenTool className="w-7 h-7" />
-                                </div>
-                                <div className={`mt-[14px] px-4 py-2 rounded-full text-[13px] font-bold shadow-md whitespace-nowrap border node-label-box ${currentStep >= 5 ? 'text-teal-700 bg-teal-50 border-teal-100' : 'text-slate-700 bg-white border-slate-100'}`}>Unit 5: Ngữ pháp</div>
-                            </div>
-
-                            <div className="absolute z-[2] -translate-x-1/2 -translate-y-1/2 flex flex-col items-center cursor-pointer transition-all duration-300 hover:-translate-y-[55%] hover:scale-105 hover:z-10 node-wrapper" style={{ left: '1225px', top: '150px' }} onClick={() => completeStep(6)}>
-                                <div className={`w-[88px] h-[88px] rounded-full flex items-center justify-center border-[4px] border-white transition-all duration-400 relative z-10 ${getNodeClass(6)} ${currentStep === 6 ? 'animate-bounce' : ''}`}>
-                                    <Award className="w-10 h-10" />
-                                </div>
-                                <div className={`mt-[14px] px-4 py-2 rounded-full text-[13px] font-bold whitespace-nowrap border node-label-box relative ${currentStep >= 6 ? 'text-amber-700 bg-amber-50 border-amber-200' : 'text-slate-700 bg-white border-slate-100'}`}>
-                                    BÀI THI CUỐI KỲ
-                                    {currentStep < 6 && (
-                                        <div className="absolute -top-3 -right-3 w-6 h-6 bg-amber-500 rounded-full border-2 border-white flex items-center justify-center animate-bounce">
-                                            <Lock className="w-3 h-3 text-white" />
+                                return (
+                                    <div key={node.id} 
+                                        className="absolute z-[2] -translate-x-1/2 -translate-y-1/2 flex flex-col items-center cursor-pointer transition-all duration-300 hover:-translate-y-[55%] hover:scale-105 hover:z-10 node-wrapper" 
+                                        style={{ left: `${node.x}px`, top: `${node.y}px` }} 
+                                        onClick={() => completeStep(node.id)}
+                                    >
+                                        {node.type === 'BOOSTED' && <div className="mb-1 text-[10px] font-bold text-purple-600 uppercase tracking-widest bg-purple-100 px-2 py-0.5 rounded-full">Boosted</div>}
+                                        
+                                        <div className={`${node.type === 'FINAL_TEST' ? 'w-[88px] h-[88px]' : 'w-[76px] h-[76px]'} rounded-full flex items-center justify-center border-[4px] border-white transition-all duration-400 relative z-10 ${getNodeClass(isPast ? 'COMPLETED' : isCurrent ? 'CURRENT' : 'LOCKED', node.type)} ${isCurrent ? 'animate-bounce' : ''}`}>
+                                            <NodeIcon className={`${node.type === 'FINAL_TEST' ? 'w-10 h-10' : 'w-7 h-7'}`} />
                                         </div>
-                                    )}
-                                </div>
-                            </div>
+                                        
+                                        <div className={`mt-[14px] px-4 py-2 rounded-full text-[13px] font-bold shadow-md whitespace-nowrap border node-label-box relative ${labelStyle}`}>
+                                            {node.title}
+                                            {node.type === 'FINAL_TEST' && !isCurrent && !isPast && (
+                                                <div className="absolute -top-3 -right-3 w-6 h-6 bg-amber-500 rounded-full border-2 border-white flex items-center justify-center animate-bounce">
+                                                    <Lock className="w-3 h-3 text-white" />
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })}
                         </div>
                     </div>
                 </div>

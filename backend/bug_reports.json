@@ -26,8 +26,65 @@
     "ip": "127.0.0.1"
   },
   {
+<<<<<<< HEAD
     "report_id": "b3c81066ccae",
     "timestamp": "2026-04-25T05:11:46+00:00",
+=======
+    "report_id": "79763d4603f5",
+    "timestamp": "2026-04-26T02:48:27+00:00",
+    "id": "AUTH_001",
+    "title": "Email đã tồn tại",
+    "message": "Email này đã được đăng ký. Vui lòng dùng email khác hoặc đăng nhập.",
+    "category": "auth",
+    "location": "backend/api/auth.py:register:72",
+    "detail": null,
+    "source": "backend",
+    "url": "/auth/register",
+    "ip": "127.0.0.1"
+  },
+  {
+    "report_id": "97fea0523f16",
+    "timestamp": "2026-04-26T03:04:10+00:00",
+    "id": "AUTH_001",
+    "title": "Email đã tồn tại",
+    "message": "Email này đã được đăng ký. Vui lòng dùng email khác hoặc đăng nhập.",
+    "category": "auth",
+    "location": "backend/api/auth.py:register:72",
+    "detail": null,
+    "source": "backend",
+    "url": "/auth/register",
+    "ip": "127.0.0.1"
+  },
+  {
+    "report_id": "88b42ec0be41",
+    "timestamp": "2026-04-26T03:04:13+00:00",
+    "id": "AUTH_001",
+    "title": "Email đã tồn tại",
+    "message": "Email này đã được đăng ký. Vui lòng dùng email khác hoặc đăng nhập.",
+    "category": "auth",
+    "location": "backend/api/auth.py:register:72",
+    "detail": null,
+    "source": "backend",
+    "url": "/auth/register",
+    "ip": "127.0.0.1"
+  },
+  {
+    "report_id": "106a176cb87d",
+    "timestamp": "2026-04-26T03:08:36+00:00",
+    "id": "AUTH_001",
+    "title": "Email đã tồn tại",
+    "message": "Email này đã được đăng ký. Vui lòng dùng email khác hoặc đăng nhập.",
+    "category": "auth",
+    "location": "backend/api/auth.py:register:72",
+    "detail": null,
+    "source": "backend",
+    "url": "/auth/register",
+    "ip": "127.0.0.1"
+  },
+  {
+    "report_id": "422de0118fa7",
+    "timestamp": "2026-04-26T03:11:02+00:00",
+>>>>>>> 38638facc55f82b2794aabaee6d25ca558651111
     "id": "AUTH_002",
     "title": "Sai email hoặc mật khẩu",
     "message": "Thông tin đăng nhập không chính xác. Hãy thử lại.",
@@ -37,5 +94,60 @@
     "source": "backend",
     "url": "/auth/login",
     "ip": "127.0.0.1"
+<<<<<<< HEAD
+=======
+  },
+  {
+    "report_id": "a08a98a756a4",
+    "timestamp": "2026-04-26T04:39:40+00:00",
+    "id": "AUTH_002",
+    "title": "Sai email hoặc mật khẩu",
+    "message": "Thông tin đăng nhập không chính xác. Hãy thử lại.",
+    "category": "auth",
+    "location": "backend/api/auth.py:login:134",
+    "detail": null,
+    "source": "backend",
+    "url": "/auth/login",
+    "ip": "127.0.0.1"
+  },
+  {
+    "report_id": "1f52997c7d2b",
+    "timestamp": "2026-04-26T08:50:34+00:00",
+    "id": "AUTH_001",
+    "title": "Email đã tồn tại",
+    "message": "Email này đã được đăng ký. Vui lòng dùng email khác hoặc đăng nhập.",
+    "category": "auth",
+    "location": "backend/api/auth.py:register:74",
+    "detail": null,
+    "source": "backend",
+    "url": "/auth/register",
+    "ip": "127.0.0.1"
+  },
+  {
+    "report_id": "5a63b4012b6f",
+    "timestamp": "2026-04-26T08:56:46+00:00",
+    "id": "AUTH_002",
+    "title": "Sai email hoặc mật khẩu",
+    "message": "Thông tin đăng nhập không chính xác. Hãy thử lại.",
+    "category": "auth",
+    "location": "backend/api/auth.py:login:134",
+    "detail": null,
+    "source": "backend",
+    "url": "/auth/login",
+    "ip": "127.0.0.1"
+  },
+  {
+    "report_id": "b50a1231e153",
+    "timestamp": "2026-04-26T09:33:43+00:00",
+    "id": "AUTH_002",
+    "title": "Sai email hoặc mật khẩu",
+    "message": "Thông tin đăng nhập không chính xác. Hãy thử lại.",
+    "category": "auth",
+    "location": "backend/api/auth.py:login:134",
+    "detail": null,
+    "source": "backend",
+    "url": "/auth/login",
+    "ip": "127.0.0.1"
+>>>>>>> 38638facc55f82b2794aabaee6d25ca558651111
   }
 ]

@@ -17,7 +17,8 @@ export async function apiLogin(email, password) {
 
   const data = await res.json();
   if (!res.ok) {
-    throw new Error(data.detail || "Đăng nhập thất bại");
+    const errMsg = data?.error?.message || data?.detail || "Đăng nhập thất bại";
+    throw new Error(typeof errMsg === 'string' ? errMsg : JSON.stringify(errMsg));
   }
   return data;
 }
@@ -73,7 +74,8 @@ export async function apiRegister(name, email, password, phone) {
 
   const data = await res.json();
   if (!res.ok) {
-    throw new Error(data.detail || "Đăng ký thất bại");
+    const errMsg = data?.error?.message || data?.detail || "Đăng ký thất bại";
+    throw new Error(typeof errMsg === 'string' ? errMsg : JSON.stringify(errMsg));
   }
   return data;
 }
@@ -144,6 +146,30 @@ export async function apiUploadAvatar(token, file) {
   return data;
 }
 
+/**
+ * Đổi mật khẩu — PUT /api/v1/auth/change-password
+ * @param {string} token 
+ * @param {string} currentPassword 
+ * @param {string} newPassword 
+ */
+export async function apiChangePassword(token, currentPassword, newPassword) {
+  const res = await fetch(`${API_BASE_URL}/auth/change-password`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`
+    },
+    body: JSON.stringify({ current_password: currentPassword, new_password: newPassword }),
+  });
+
+  const data = await res.json();
+  if (!res.ok) {
+    const errMsg = data?.error?.message || data?.detail || "Đổi mật khẩu thất bại";
+    throw new Error(typeof errMsg === 'string' ? errMsg : JSON.stringify(errMsg));
+  }
+  return data;
+}
+
 // ─── Exam API ──────────────────────────────────────────────────────────
 
 /**
@@ -201,4 +227,79 @@ export async function apiGetExamResult(token, examId) {
     throw new Error(data.detail || "Không thể lấy kết quả");
   }
   return data;
+}
+
+// ─── Placement & Daily Review API ──────────────────────────────────────
+
+export async function apiGetExamPlacementTest(token) {
+  const res = await fetch(`${API_BASE_URL}/exam/placement-test`, {
+    headers: { "Authorization": `Bearer ${token}` }
+  });
+  if (!res.ok) throw new Error("Không thể tải bài test đầu vào");
+  return res.json();
+}
+
+export async function apiSubmitExamPlacementTest(token, answers) {
+  const res = await fetch(`${API_BASE_URL}/exam/placement-submit`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`
+    },
+    body: JSON.stringify({ answers })
+  });
+  if (!res.ok) throw new Error("Lỗi khi nộp bài test");
+  return res.json();
+}
+
+export async function apiGetDailyReview(token) {
+  const res = await fetch(`${API_BASE_URL}/exam/daily-review`, {
+    headers: { "Authorization": `Bearer ${token}` }
+  });
+  if (!res.ok) throw new Error("Không thể tải ôn tập hằng ngày");
+  return res.json();
+}
+
+export async function apiGetPlacementTestStatus(token) {
+  const res = await fetch(`${API_BASE_URL}/exam/placement-test/status`, {
+    headers: { "Authorization": `Bearer ${token}` }
+  });
+  if (!res.ok) throw new Error("Không thể tải trạng thái bài test");
+  return res.json();
+}
+
+export async function apiSubmitDailyReview(token, results) {
+  const res = await fetch(`${API_BASE_URL}/exam/daily-review-submit`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`
+    },
+    body: JSON.stringify({ results })
+  });
+  if (!res.ok) throw new Error("Lỗi khi nộp kết quả ôn tập");
+  return res.json();
+}
+
+// ─── Section Tests (Vocabulary, Grammar, Listening, Final) ─────────────
+
+export async function apiGetSectionTest(token, type) {
+  const res = await fetch(`${API_BASE_URL}/exam/section-test?type=${type}`, {
+    headers: { "Authorization": `Bearer ${token}` }
+  });
+  if (!res.ok) throw new Error("Không thể tải bài test");
+  return res.json();
+}
+
+export async function apiSubmitSectionTest(token, type, answers) {
+  const res = await fetch(`${API_BASE_URL}/exam/section-submit`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`
+    },
+    body: JSON.stringify({ type, answers })
+  });
+  if (!res.ok) throw new Error("Lỗi khi nộp bài test");
+  return res.json();
 }
