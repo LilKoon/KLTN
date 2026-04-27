@@ -1,6 +1,10 @@
+import warnings
 from contextlib import asynccontextmanager
 import asyncio
 from fastapi import FastAPI
+
+# Suppress PyTorch DataLoader pin_memory warning when running on CPU without accelerator
+warnings.filterwarnings("ignore", message=".*'pin_memory' argument is set as true but no accelerator is found.*")
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import database, models
