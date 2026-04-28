@@ -40,7 +40,8 @@
       "Bash(PGPASSWORD=bun123 \"/c/Program Files/PostgreSQL/17/bin/psql.exe\" -h localhost -p 8386 -U postgres -d kltn_backup_temp -c \"SELECT COUNT\\(*\\) FROM nganhangcauhoi WHERE fileaudiodinhkem IS NOT NULL AND fileaudiodinhkem!=''; SELECT fileaudiodinhkem FROM nganhangcauhoi WHERE fileaudiodinhkem IS NOT NULL AND fileaudiodinhkem!='' LIMIT 3;\")",
       "Bash(/c/Users/admin/anaconda3/envs/edtech/python.exe import_questions.py)",
       "Bash(PYTHONIOENCODING=utf-8 /c/Users/admin/anaconda3/envs/edtech/python.exe import_questions.py)",
-      "Bash(PYTHONIOENCODING=utf-8 /c/Users/admin/anaconda3/envs/edtech/python.exe import_questions.py --help)"
+      "Bash(PYTHONIOENCODING=utf-8 /c/Users/admin/anaconda3/envs/edtech/python.exe import_questions.py --help)",
+      "Bash(grep -n \"section-test\\\\|placement-test\\\\|/exam/\\\\|navigate.*test\\\\|test\\\\s*$\\\\|loại bài\\\\|section_test\" \"C:\\\\Users\\\\admin\\\\Desktop\\\\letnow\\\\KLTN_final\\\\KLTN\\\\frontend\\\\src\\\\components\\\\views\\\\client\\\\ExercisesTests.jsx\")"
     ]
   }
 }

@@ -51,6 +51,39 @@ async function _postJson(path, body) {
   return data;
 }
 
+async function _authedFetch(token, path, options = {}) {
+  const res = await fetch(`${API_BASE_URL}${path}`, {
+    ...options,
+    headers: {
+      ...(options.headers || {}),
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  if (res.status === 204) return null;
+  const data = await res.json().catch(() => null);
+  if (!res.ok) {
+    const msg = data?.error?.message || data?.detail || "Đã xảy ra lỗi";
+    throw new Error(typeof msg === 'string' ? msg : JSON.stringify(msg));
+  }
+  return data;
+}
+
+export const apiSaveAIQuiz = (token, payload) =>
+  _authedFetch(token, "/ai/quiz/save", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+export const apiListAIQuizzes = (token) =>
+  _authedFetch(token, "/ai/quiz/list");
+
+export const apiGetAIQuiz = (token, id) =>
+  _authedFetch(token, `/ai/quiz/${id}`);
+
+export const apiDeleteAIQuiz = (token, id) =>
+  _authedFetch(token, `/ai/quiz/${id}`, { method: "DELETE" });
+
 export const apiVerifyEmail = (email, otp) => _postJson("/auth/verify-email", { email, otp });
 export const apiResendOtp = (email) => _postJson("/auth/resend-otp", { email });
 export const apiForgotPassword = (email) => _postJson("/auth/forgot-password", { email });

@@ -221,3 +221,16 @@ class ChiTietLamBai(Base):
     LaCauDung = Column(Boolean, nullable=False)
     ThoiGianLamCauHoi = Column(Integer, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class BaiTestAI(Base):
+    __tablename__ = "BaiTestAI"
+
+    MaBaiTestAI = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    MaNguoiDung = Column(UUID(as_uuid=True), ForeignKey("NguoiDung.MaNguoiDung", ondelete="CASCADE"), nullable=False)
+    TenBaiTest = Column(String(255), nullable=False)
+    ChuDe = Column(String(255), nullable=True)
+    CapDo = Column(String(10), nullable=True)
+    SoLuongCau = Column(Integer, default=0)
+    DSCauHoi = Column(JSONB, nullable=False)
+    NgayTao = Column(DateTime, default=datetime.utcnow)

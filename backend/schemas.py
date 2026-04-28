@@ -144,6 +144,26 @@ class QuizGenerateRequest(BaseModel):
     topic: str = "Grammar & Vocabulary"
     count: int = 8
 
+class AIQuizSaveRequest(BaseModel):
+    title: Optional[str] = None
+    topic: Optional[str] = None
+    level: Optional[str] = "B1"
+    questions: List[QuizQuestion]
+
+class AIQuizSummary(BaseModel):
+    id: UUID
+    title: str
+    topic: Optional[str] = None
+    level: Optional[str] = None
+    count: int
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class AIQuizDetail(AIQuizSummary):
+    questions: List[QuizQuestion]
+
 class ChatMessage(BaseModel):
     role: str
     content: str

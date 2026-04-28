@@ -2,10 +2,11 @@ import json
 import os
 import tempfile
 from typing import List
+from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session
 
-import database, schemas
+import database, models, schemas
 from api.auth import get_current_user, get_optional_user
 from llm.orchestrator import call_llm, LLMTask
 from rag.chunker import extract_text_from_pdf, extract_chat_attachment, IMAGE_EXTS
@@ -143,6 +144,108 @@ async def generate_quiz(
         return [schemas.QuizQuestion(**item) for item in data]
     except Exception as exc:
         raise_app_error("AI_001", detail=str(exc))
+
+
+@router.post("/quiz/save", response_model=schemas.AIQuizSummary)
+def save_ai_quiz(
+    req: schemas.AIQuizSaveRequest,
+    db: Session = Depends(database.get_db),
+    current_user=Depends(get_current_user),
+):
+    if not req.questions:
+        raise HTTPException(status_code=422, detail="Cần ít nhất 1 câu hỏi.")
+    title = (req.title or req.topic or "Bài test AI").strip() or "Bài test AI"
+    deck = models.BaiTestAI(
+        MaNguoiDung=current_user.MaNguoiDung,
+        TenBaiTest=title,
+        ChuDe=(req.topic or "").strip() or None,
+        CapDo=(req.level or "B1").upper(),
+        SoLuongCau=len(req.questions),
+        DSCauHoi=[q.model_dump() for q in req.questions],
+    )
+    db.add(deck)
+    db.commit()
+    db.refresh(deck)
+    return schemas.AIQuizSummary(
+        id=deck.MaBaiTestAI,
+        title=deck.TenBaiTest,
+        topic=deck.ChuDe,
+        level=deck.CapDo,
+        count=deck.SoLuongCau,
+        created_at=deck.NgayTao,
+    )
+
+
+@router.get("/quiz/list", response_model=List[schemas.AIQuizSummary])
+def list_ai_quizzes(
+    db: Session = Depends(database.get_db),
+    current_user=Depends(get_current_user),
+):
+    decks = (
+        db.query(models.BaiTestAI)
+        .filter(models.BaiTestAI.MaNguoiDung == current_user.MaNguoiDung)
+        .order_by(models.BaiTestAI.NgayTao.desc())
+        .all()
+    )
+    return [
+        schemas.AIQuizSummary(
+            id=d.MaBaiTestAI,
+            title=d.TenBaiTest,
+            topic=d.ChuDe,
+            level=d.CapDo,
+            count=d.SoLuongCau,
+            created_at=d.NgayTao,
+        )
+        for d in decks
+    ]
+
+
+@router.get("/quiz/{quiz_id}", response_model=schemas.AIQuizDetail)
+def get_ai_quiz(
+    quiz_id: UUID,
+    db: Session = Depends(database.get_db),
+    current_user=Depends(get_current_user),
+):
+    deck = (
+        db.query(models.BaiTestAI)
+        .filter(
+            models.BaiTestAI.MaBaiTestAI == quiz_id,
+            models.BaiTestAI.MaNguoiDung == current_user.MaNguoiDung,
+        )
+        .first()
+    )
+    if not deck:
+        raise HTTPException(status_code=404, detail="Không tìm thấy bài test.")
+    return schemas.AIQuizDetail(
+        id=deck.MaBaiTestAI,
+        title=deck.TenBaiTest,
+        topic=deck.ChuDe,
+        level=deck.CapDo,
+        count=deck.SoLuongCau,
+        created_at=deck.NgayTao,
+        questions=[schemas.QuizQuestion(**q) for q in deck.DSCauHoi],
+    )
+
+
+@router.delete("/quiz/{quiz_id}")
+def delete_ai_quiz(
+    quiz_id: UUID,
+    db: Session = Depends(database.get_db),
+    current_user=Depends(get_current_user),
+):
+    deck = (
+        db.query(models.BaiTestAI)
+        .filter(
+            models.BaiTestAI.MaBaiTestAI == quiz_id,
+            models.BaiTestAI.MaNguoiDung == current_user.MaNguoiDung,
+        )
+        .first()
+    )
+    if not deck:
+        raise HTTPException(status_code=404, detail="Không tìm thấy bài test.")
+    db.delete(deck)
+    db.commit()
+    return {"message": "Đã xoá bài test."}
 
 
 @router.post("/chat")
