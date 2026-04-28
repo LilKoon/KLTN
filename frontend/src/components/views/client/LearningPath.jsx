@@ -1,141 +1,169 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Map as MapIcon, Star, BookOpen, Headphones, Mic, PenTool, Award, Lock, Clock, Trophy } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../../context/AuthContext';
+import { CheckCircle2, Circle, Lock, PlayCircle, Sparkles, Trophy, ChevronRight, BookOpen, Target } from 'lucide-react';
 
 const LearningPath = () => {
-    const mockRoadmap = [
-        { id: 1, title: 'Unit 1: Từ vựng Cơ bản', type: 'CORE', status: 'COMPLETED', skill: 'VOCABULARY', x: 100, y: 250, icon: Star },
-        { id: 2, title: 'Unit 2: Thì Hiện tại đơn', type: 'CORE', status: 'COMPLETED', skill: 'GRAMMAR', x: 325, y: 150, icon: BookOpen },
-        { id: 3, title: 'Unit 3: Luyện nghe Cơ bản', type: 'CORE', status: 'CURRENT', skill: 'LISTENING', x: 550, y: 250, icon: Headphones },
-        { id: 4, title: 'Ôn tập Từ Vựng (Nâng cao)', type: 'BOOSTED', status: 'LOCKED', skill: 'VOCABULARY', x: 775, y: 350, icon: Mic },
-        { id: 5, title: 'Unit 4: Thì Quá khứ đơn', type: 'CORE', status: 'LOCKED', skill: 'GRAMMAR', x: 1000, y: 250, icon: PenTool },
-        { id: 6, title: 'BÀI THI CUỐI KỲ', type: 'FINAL_TEST', status: 'LOCKED', skill: 'MIXED', x: 1225, y: 150, icon: Award },
-    ];
-
-    const totalSteps = mockRoadmap.length;
-    // Find current step based on status
-    const currentActiveIndex = mockRoadmap.findIndex(n => n.status === 'CURRENT');
-    const [currentStep, setCurrentStep] = useState(currentActiveIndex !== -1 ? currentActiveIndex + 1 : 1);
+    const { token } = useAuth();
+    const navigate = useNavigate();
     
-    const pathRef = useRef(null);
-    const scrollerRef = useRef(null);
-    const [pathLength, setPathLength] = useState(1500); 
+    const [pathData, setPathData] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [generating, setGenerating] = useState(false);
 
-    useEffect(() => {
-        if (pathRef.current) {
-            setPathLength(pathRef.current.getTotalLength());
+    const fetchPath = async () => {
+        if (!token) {
+            setLoading(false);
+            return;
         }
-    }, []);
-
-    const completeStep = (stepNumber) => {
-        setCurrentStep(stepNumber);
-    };
-
-    useEffect(() => {
-        if (scrollerRef.current && mockRoadmap[currentStep - 1]) {
-            const targetLeft = mockRoadmap[currentStep - 1].x;
-            scrollerRef.current.scrollTo({
-                left: targetLeft - (scrollerRef.current.clientWidth / 2) + 150,
-                behavior: 'smooth'
+        setLoading(true);
+        try {
+            console.log("Fetching path with token:", token);
+            const res = await fetch('http://127.0.0.1:8000/path/current', {
+                headers: { 'Authorization': `Bearer ${token}` }
             });
+            console.log("Response status:", res.status);
+            if (res.status === 404) {
+                setPathData(null);
+            } else if (res.ok) {
+                const data = await res.json();
+                setPathData(data);
+            } else {
+                console.error("Failed to fetch path:", res.statusText);
+                setPathData(null);
+            }
+        } catch (err) {
+            console.error("Network error fetching path:", err);
+            setPathData(null);
+        } finally {
+            setLoading(false);
         }
-    }, [currentStep]);
-
-    const strokeDashoffset = pathLength - ((currentStep / totalSteps) * pathLength);
-
-    const getNodeClass = (status, type) => {
-        if (type === 'BOOSTED' && status !== 'COMPLETED') return 'node-boosted';
-        if (status === 'COMPLETED') return 'node-completed';
-        if (status === 'CURRENT') return 'node-active';
-        return 'node-locked';
     };
+
+    useEffect(() => {
+        fetchPath();
+    }, [token]);
+
+    const handleGenerate = async () => {
+        setGenerating(true);
+        try {
+            await fetch('http://127.0.0.1:8000/path/generate', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            fetchPath();
+        } catch (err) {
+            alert("Không thể tạo lộ trình. Vui lòng thử lại.");
+        } finally {
+            setGenerating(false);
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="flex-1 flex items-center justify-center bg-white">
+                <div className="flex flex-col items-center gap-4">
+                    <div className="w-12 h-12 border-4 border-slate-100 border-t-slate-900 rounded-full animate-spin"></div>
+                    <span className="text-slate-500 font-medium">Đang tối ưu lộ trình...</span>
+                </div>
+            </div>
+        );
+    }
+
+    if (!pathData) {
+        return (
+            <div className="flex-1 flex flex-col items-center justify-center bg-slate-50 p-6">
+                <div className="max-w-md w-full bg-white p-10 rounded-[2rem] shadow-sm border border-slate-100 text-center">
+                    <div className="w-20 h-20 bg-slate-900 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl shadow-slate-200">
+                        <Sparkles className="w-10 h-10 text-white" />
+                    </div>
+                    <h1 className="text-2xl font-bold text-slate-900 mb-4">Lộ trình của bạn đã sẵn sàng</h1>
+                    <p className="text-slate-500 mb-8 leading-relaxed">
+                        Hệ thống sẽ tổng hợp các bài học dựa trên kỹ năng bạn cần cải thiện nhất từ bài kiểm tra đầu vào.
+                    </p>
+                    <button 
+                        onClick={handleGenerate}
+                        disabled={generating}
+                        className="w-full bg-slate-900 hover:bg-slate-800 text-white py-4 rounded-xl font-bold transition-all active:scale-95 flex items-center justify-center gap-2"
+                    >
+                        {generating ? "Đang xử lý..." : "Bắt đầu lộ trình ngay"}
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    const nodes = pathData.cac_node || [];
+    const completedNodes = nodes.filter(n => n.TrangThai === 'COMPLETED');
+    const currentNode = nodes.find(n => n.TrangThai === 'CURRENT') || nodes[nodes.length-1];
+    const progress = Math.round((completedNodes.length / nodes.length) * 100);
 
     return (
-        <div className="flex flex-1 overflow-hidden relative w-full h-[calc(100vh-80px)] bg-[#f0fdf4]" style={{
-            backgroundImage: `
-                radial-gradient(at 0% 0%, rgba(204, 251, 241, 0.5) 0px, transparent 50%),
-                radial-gradient(at 100% 100%, rgba(187, 247, 208, 0.4) 0px, transparent 50%),
-                radial-gradient(at 100% 0%, rgba(255, 255, 255, 0.8) 0px, transparent 50%)
-            `,
-            backgroundAttachment: 'fixed'
-        }}>
-            {/* Custom CSS overrides for this page specifically */}
-            <style dangerouslySetInnerHTML={{__html: `
-                .map-viewport { scroll-behavior: smooth; }
-                .path-front { transition: stroke-dashoffset 1.5s cubic-bezier(0.34, 1.56, 0.64, 1); filter: drop-shadow(0 4px 12px rgba(45, 212, 191, 0.5)); }
-                .node-locked { background-color: #f1f5f9; color: #94a3b8; box-shadow: inset 0 -6px 0 rgba(0, 0, 0, 0.05), 0 8px 15px rgba(0, 0, 0, 0.04); }
-                .node-active { background: linear-gradient(135deg, #2dd4bf, #0d9488); color: white; box-shadow: inset 0 -8px 0 rgba(0, 0, 0, 0.1), 0 16px 30px rgba(20, 184, 166, 0.4); border-color: #ccfbf1; }
-                .node-completed { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; box-shadow: inset 0 -8px 0 rgba(0, 0, 0, 0.1), 0 12px 25px rgba(245, 158, 11, 0.3); }
-                .node-boosted { background: linear-gradient(135deg, #a855f7, #7e22ce); color: white; box-shadow: inset 0 -6px 0 rgba(0, 0, 0, 0.1), 0 8px 15px rgba(168, 85, 247, 0.3); }
-                .node-label-box { transition: all 0.3s; }
-                .node-wrapper:hover .node-label-box { box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1); transform: translateY(-2px); }
-            `}} />
-
-            {/* Left: Map Area */}
-            <div className="flex-1 relative overflow-hidden h-full">
-                {/* Floating Status Bar */}
-                <div className="absolute top-6 left-1/2 -translate-x-1/2 z-20 bg-white/90 backdrop-blur-md px-6 py-3 rounded-full shadow-lg border border-slate-100 flex items-center gap-4 transition-all">
-                    <div className="w-10 h-10 rounded-full bg-teal-50 border border-teal-100 flex items-center justify-center shadow-sm">
-                        <MapIcon className="w-5 h-5 text-teal-600" />
+        <div className="flex-1 flex h-[calc(100vh-80px)] bg-slate-50 overflow-hidden">
+            {/* Main Content: Timeline */}
+            <div className="flex-1 overflow-y-auto px-6 py-12 scroll-smooth no-scrollbar">
+                <div className="max-w-2xl mx-auto">
+                    <div className="mb-12">
+                        <h1 className="text-3xl font-extrabold text-slate-900 mb-2">Hành trình học tập</h1>
+                        <p className="text-slate-500">Mỗi bước đi là một sự tiến bộ mới.</p>
                     </div>
-                    <div>
-                        <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Tiến độ lộ trình</div>
-                        <div className="text-[15px] font-extrabold text-slate-800">
-                            <span className="text-teal-600 bg-teal-50 px-2 py-0.5 rounded-md mr-1 border border-teal-100">{currentStep}/{totalSteps}</span>
-                            Bài học hoàn thành
-                        </div>
-                    </div>
-                </div>
 
-                {/* Map Playground */}
-                <div ref={scrollerRef} className="map-viewport absolute inset-0 overflow-x-auto overflow-y-hidden no-scrollbar">
-                    <div className="relative min-w-[1600px] min-h-[600px] h-full flex items-center justify-center">
-                        {/* 1600x500 Canvas exactly matching SVG viewBox for perfect pixel mapping */}
-                        <div className="relative w-[1600px] h-[500px] shrink-0">
-                            
-                            <svg className="absolute inset-0 w-full h-full z-[1] fill-transparent stroke-[18] stroke-slate-200" style={{ strokeLinecap: 'round', strokeLinejoin: 'round' }} viewBox="0 0 1600 500" preserveAspectRatio="none">
-                                <path d="M 100 250 Q 325 50 550 250 T 1000 250 T 1450 250" />
-                            </svg>
+                    <div className="relative">
+                        {/* Vertical Line */}
+                        <div className="absolute left-6 top-2 bottom-2 w-0.5 bg-slate-200"></div>
 
-                            <svg className="absolute inset-0 w-full h-full z-[1] fill-transparent stroke-[18] stroke-teal-400 path-front pointer-events-none" style={{ strokeLinecap: 'round', strokeLinejoin: 'round' }} viewBox="0 0 1600 500" preserveAspectRatio="none">
-                                <path ref={pathRef}
-                                    strokeDasharray={pathLength}
-                                    strokeDashoffset={isNaN(strokeDashoffset) ? 0 : strokeDashoffset}
-                                    d="M 100 250 Q 325 50 550 250 T 1000 250 T 1450 250" />
-                            </svg>
-
-                            {/* Nodes - Mapped mathematically exact to Bezier control points */}
-                            {mockRoadmap.map((node, index) => {
-                                const isCurrent = currentStep === node.id;
-                                const isPast = currentStep > node.id;
-                                const NodeIcon = node.icon;
-                                
-                                // Color styling based on type and status
-                                let labelStyle = 'text-slate-700 bg-white border-slate-100';
-                                if (node.type === 'FINAL_TEST') {
-                                    labelStyle = isCurrent || isPast ? 'text-amber-700 bg-amber-50 border-amber-200' : 'text-slate-700 bg-white border-slate-100';
-                                } else if (node.type === 'BOOSTED') {
-                                    labelStyle = isCurrent || isPast ? 'text-purple-700 bg-purple-50 border-purple-100' : 'text-slate-700 bg-white border-slate-100';
-                                } else if (isCurrent || isPast) {
-                                    labelStyle = 'text-teal-700 bg-teal-50 border-teal-100';
-                                }
+                        {/* Nodes */}
+                        <div className="space-y-10">
+                            {nodes.map((node, i) => {
+                                const isCompleted = node.TrangThai === 'COMPLETED';
+                                const isCurrent = node.TrangThai === 'CURRENT';
+                                const isLocked = node.TrangThai === 'LOCKED';
 
                                 return (
-                                    <div key={node.id} 
-                                        className="absolute z-[2] -translate-x-1/2 -translate-y-1/2 flex flex-col items-center cursor-pointer transition-all duration-300 hover:-translate-y-[55%] hover:scale-105 hover:z-10 node-wrapper" 
-                                        style={{ left: `${node.x}px`, top: `${node.y}px` }} 
-                                        onClick={() => completeStep(node.id)}
+                                    <div 
+                                        key={node.MaNode} 
+                                        className={`relative pl-16 group transition-all duration-300 ${isLocked ? 'opacity-60' : 'opacity-100'}`}
                                     >
-                                        {node.type === 'BOOSTED' && <div className="mb-1 text-[10px] font-bold text-purple-600 uppercase tracking-widest bg-purple-100 px-2 py-0.5 rounded-full">Boosted</div>}
-                                        
-                                        <div className={`${node.type === 'FINAL_TEST' ? 'w-[88px] h-[88px]' : 'w-[76px] h-[76px]'} rounded-full flex items-center justify-center border-[4px] border-white transition-all duration-400 relative z-10 ${getNodeClass(isPast ? 'COMPLETED' : isCurrent ? 'CURRENT' : 'LOCKED', node.type)} ${isCurrent ? 'animate-bounce' : ''}`}>
-                                            <NodeIcon className={`${node.type === 'FINAL_TEST' ? 'w-10 h-10' : 'w-7 h-7'}`} />
+                                        {/* Icon Node */}
+                                        <div className={`absolute left-0 w-12 h-12 rounded-full border-4 border-white shadow-sm flex items-center justify-center z-10 transition-all duration-500 ${
+                                            isCompleted ? 'bg-emerald-500 text-white scale-110' : 
+                                            isCurrent ? 'bg-slate-900 text-white ring-4 ring-slate-100 scale-125 shadow-lg shadow-slate-200' : 
+                                            'bg-slate-100 text-slate-400'
+                                        }`}>
+                                            {isCompleted ? <CheckCircle2 className="w-6 h-6" /> : 
+                                             isCurrent ? <PlayCircle className="w-7 h-7" /> : 
+                                             <Lock className="w-5 h-5" />}
                                         </div>
-                                        
-                                        <div className={`mt-[14px] px-4 py-2 rounded-full text-[13px] font-bold shadow-md whitespace-nowrap border node-label-box relative ${labelStyle}`}>
-                                            {node.title}
-                                            {node.type === 'FINAL_TEST' && !isCurrent && !isPast && (
-                                                <div className="absolute -top-3 -right-3 w-6 h-6 bg-amber-500 rounded-full border-2 border-white flex items-center justify-center animate-bounce">
-                                                    <Lock className="w-3 h-3 text-white" />
+
+                                        {/* Content Card */}
+                                        <div 
+                                            onClick={() => !isLocked && navigate(`/client/lesson/${node.MaNode}`)}
+                                            className={`p-6 rounded-2xl border transition-all duration-300 ${
+                                                isCurrent ? 'bg-white border-slate-900 shadow-xl shadow-slate-100 -translate-y-1 cursor-pointer' : 
+                                                isCompleted ? 'bg-white border-slate-100 hover:border-emerald-200 cursor-pointer' : 
+                                                'bg-slate-50 border-transparent cursor-not-allowed'
+                                            }`}
+                                        >
+                                            <div className="flex justify-between items-start mb-2">
+                                                <span className={`text-[11px] font-bold uppercase tracking-widest px-2 py-0.5 rounded ${
+                                                    node.LoaiNode === 'BOOSTED' ? 'bg-rose-50 text-rose-600' : 
+                                                    node.LoaiNode === 'TEST_80' ? 'bg-amber-50 text-amber-600' : 
+                                                    'bg-slate-50 text-slate-500'
+                                                }`}>
+                                                    {node.LoaiNode === 'BOOSTED' ? 'Củng cố AI' : node.LoaiNode === 'TEST_80' ? 'Kiểm tra' : 'Bài học'}
+                                                </span>
+                                                {isCompleted && <span className="text-[11px] font-bold text-emerald-600">ĐÃ XONG</span>}
+                                            </div>
+                                            <h3 className={`text-lg font-bold mb-1 ${isLocked ? 'text-slate-400' : 'text-slate-900'}`}>
+                                                {node.TieuDe}
+                                            </h3>
+                                            <p className="text-sm text-slate-500 line-clamp-2 leading-relaxed">
+                                                {node.MoTa || "Bắt đầu bài học này để tiến gần hơn đến mục tiêu của bạn."}
+                                            </p>
+                                            
+                                            {isCurrent && (
+                                                <div className="mt-4 flex items-center gap-2 text-slate-900 font-bold text-sm">
+                                                    Học ngay <ChevronRight className="w-4 h-4" />
                                                 </div>
                                             )}
                                         </div>
@@ -147,76 +175,60 @@ const LearningPath = () => {
                 </div>
             </div>
 
-            {/* Right Side Floating Panel */}
-            <div className="w-[340px] xl:w-[380px] pt-8 pr-6 lg:pr-8 pb-8 flex flex-col overflow-y-auto no-scrollbar z-20 relative shrink-0">
-                <h2 className="text-[20px] font-bold text-slate-900 tracking-tight mb-5 ml-1">Study Plan</h2>
-
-                <div className="bg-white rounded-[24px] p-6 shadow-sm border border-white flex flex-col gap-4 relative">
-                    {/* Top Graphic */}
-                    <div className="flex flex-col items-center">
-                        <div className="relative w-[150px] h-36 flex items-center justify-center mt-2 mb-3">
-                            <div className="absolute bottom-0 w-[130px] h-[60px] bg-gradient-to-t from-emerald-600 to-emerald-400 rounded-full shadow-[inset_0_-8px_16px_rgba(0,0,0,0.15)] flex items-center justify-center border-b-[6px] border-amber-900 outline outline-[3px] outline-green-100/80">
-                                <div className="absolute left-3 bottom-2 w-3 h-2 bg-slate-200/50 rounded-full"></div>
-                                <div className="absolute right-3 bottom-3 w-4 h-2 bg-slate-200/50 rounded-full"></div>
-                            </div>
-
-                            <div className="absolute bottom-6 w-full flex justify-center z-10 animate-float-soft">
-                                <div className="w-[50px] h-[55px] bg-amber-400 rounded-t-[2rem] rounded-b-xl border-[3px] border-amber-500 relative flex justify-center items-end pb-1.5 ">
-                                    <div className="w-6 h-3 bg-lime-400 rounded-t-full border-t border-l border-r border-lime-500 relative">
-                                        <div className="absolute top-0.5 left-1.5 w-1 h-1 bg-black rounded-full"></div>
-                                        <div className="absolute top-0.5 right-1.5 w-1 h-1 bg-black rounded-full"></div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="absolute top-0 left-[-15px] z-20">
-                                <div className="w-[52px] h-[52px] rounded-full border-[3px] border-[#2563eb] bg-white flex items-center justify-center relative shadow-sm">
-                                    <div className="absolute -inset-1 border-[2px] border-blue-100 rounded-full"></div>
-                                    <span className="font-bold text-[16px] text-[#2563eb]">5.0</span>
-                                </div>
-                            </div>
-                        </div>
-                        <h4 className="font-bold text-slate-800 text-[17px] tracking-tight text-center">IELTS Cơ bản</h4>
-                        <div className="flex items-center justify-center gap-1.5 text-slate-500 text-[13px] mt-1 whitespace-nowrap">
-                            <Clock className="w-3.5 h-3.5" /> Ngoài kế hoạch dự kiến
+            {/* Sidebar Stats: Simple & Optimized */}
+            <div className="w-[380px] bg-white border-l border-slate-100 p-10 flex flex-col gap-10">
+                <div>
+                    <h2 className="text-xl font-bold text-slate-900 mb-6">Tiến trình của bạn</h2>
+                    <div className="relative w-32 h-32 mx-auto mb-6">
+                        <svg className="w-full h-full transform -rotate-90">
+                            <circle cx="64" cy="64" r="58" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-slate-100" />
+                            <circle cx="64" cy="64" r="58" stroke="currentColor" strokeWidth="8" fill="transparent" 
+                                strokeDasharray={364.4}
+                                strokeDashoffset={364.4 - (364.4 * progress) / 100}
+                                className="text-slate-900 transition-all duration-1000 ease-out" 
+                            />
+                        </svg>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                            <span className="text-2xl font-black text-slate-900">{progress}%</span>
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Hoàn tất</span>
                         </div>
                     </div>
+                </div>
 
-                    {/* Stats */}
-                    <div className="flex flex-col mt-4">
-                        <h3 className="text-[17px] font-bold text-slate-800 mb-4 border-b border-slate-100 pb-3 tracking-tight">Tiến độ</h3>
-                        
-                        <div className="flex items-center justify-between mb-5">
-                            <span className="text-[14px] font-bold text-slate-700">Số cúp đã đạt</span>
-                            <div className="flex items-center gap-1.5 font-bold text-amber-500 text-[14px]">
-                                <Trophy className="w-4 h-4 fill-transparent" /> 125/348
+                <div className="space-y-6">
+                    <div className="p-5 rounded-2xl bg-slate-50 border border-slate-100">
+                        <div className="flex items-center gap-3 mb-3">
+                            <div className="p-2 bg-white rounded-lg shadow-sm">
+                                <Target className="w-5 h-5 text-slate-900" />
                             </div>
+                            <span className="font-bold text-slate-800 text-sm">Mục tiêu hiện tại</span>
                         </div>
-
-                        <div className="mb-5">
-                            <h4 className="text-[14px] font-bold text-slate-700 mb-3">Số Units đạt 2 cúp trở lên</h4>
-                            <div className="w-full bg-[#2563eb] h-[10px] rounded-full overflow-hidden flex relative mb-4">
-                                <div className="bg-[#22c55e] w-[38%] h-full relative z-10 border-r-2 border-white rounded-full"></div>
-                            </div>
-
-                            <div className="flex flex-col gap-2.5 text-[13px] text-slate-600 font-medium">
-                                <div className="flex items-center gap-2.5">
-                                    <div className="w-2.5 h-2.5 rounded-full bg-[#22c55e]"></div> Hoàn thành: 44/116 Units
-                                </div>
-                                <div className="flex items-center gap-2.5">
-                                    <div className="w-2.5 h-2.5 rounded-full bg-[#2563eb]"></div> Kế hoạch: 116/116 Units
-                                </div>
-                            </div>
-                        </div>
-
-                        <p className="text-[13px] text-slate-500 leading-relaxed mb-6 mt-1">
-                            Bạn đang học chậm hơn kế hoạch. Phải cố gắng hơn nữa để đạt được mục tiêu đấy!
+                        <p className="text-sm text-slate-600 font-medium leading-relaxed">
+                            {currentNode?.TieuDe || "Hoàn thành toàn bộ lộ trình"}
                         </p>
-
-                        <button className="w-full bg-[#2563eb] hover:bg-blue-700 text-white font-bold py-[14px] rounded-xl transition-all shadow-md active:scale-[0.98]">
-                            Tiếp tục học
-                        </button>
                     </div>
+
+                    <div className="p-5 rounded-2xl bg-slate-50 border border-slate-100">
+                        <div className="flex items-center gap-3 mb-3">
+                            <div className="p-2 bg-white rounded-lg shadow-sm">
+                                <Trophy className="w-5 h-5 text-amber-500" />
+                            </div>
+                            <span className="font-bold text-slate-800 text-sm">Điểm tích lũy</span>
+                        </div>
+                        <p className="text-2xl font-black text-slate-900">1,240 <span className="text-xs font-bold text-slate-400 uppercase">XP</span></p>
+                    </div>
+                </div>
+
+                <div className="mt-auto">
+                    <button 
+                        onClick={() => currentNode && navigate(`/client/lesson/${currentNode.MaNode}`)}
+                        className="w-full bg-slate-900 hover:bg-slate-800 text-white py-4 rounded-xl font-bold transition-all shadow-lg active:scale-95"
+                    >
+                        Tiếp tục học ngay
+                    </button>
+                    <p className="text-center text-[11px] text-slate-400 mt-4 font-medium italic">
+                        Lộ trình được cá nhân hóa bởi AI dựa trên kết quả test.
+                    </p>
                 </div>
             </div>
         </div>

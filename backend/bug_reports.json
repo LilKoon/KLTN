@@ -89,5 +89,31 @@
     "source": "backend",
     "url": "/auth/login",
     "ip": "127.0.0.1"
+  },
+  {
+    "report_id": "3083e06631ec",
+    "timestamp": "2026-04-27T06:15:25+00:00",
+    "id": "AUTH_002",
+    "title": "Sai email hoặc mật khẩu",
+    "message": "Thông tin đăng nhập không chính xác. Hãy thử lại.",
+    "category": "auth",
+    "location": "backend/api/auth.py:login:200",
+    "detail": null,
+    "source": "backend",
+    "url": "/auth/login",
+    "ip": "127.0.0.1"
+  },
+  {
+    "report_id": "06e5ffeee366",
+    "timestamp": "2026-04-27T06:16:32+00:00",
+    "id": "AUTH_002",
+    "title": "Sai email hoặc mật khẩu",
+    "message": "Thông tin đăng nhập không chính xác. Hãy thử lại.",
+    "category": "auth",
+    "location": "backend/api/auth.py:login:200",
+    "detail": null,
+    "source": "backend",
+    "url": "/auth/login",
+    "ip": "127.0.0.1"
   }
 ]

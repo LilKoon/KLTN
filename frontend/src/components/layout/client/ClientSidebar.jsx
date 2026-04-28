@@ -1,14 +1,13 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
-import { LogOut, Home, Map, BarChart2, BookOpen, Layers, Bot, Settings, Flame, ChevronRight, Zap, MessageSquare, Calendar, ClipboardCheck } from 'lucide-react';
+import { LogOut, Home, Map, BookOpen, Layers, Bot, Settings, Flame, ChevronRight, Zap, MessageSquare } from 'lucide-react';
 
 const ClientSidebar = ({ isSidebarOpen, toggleSidebar }) => {
     const navigate = useNavigate();
     const { user } = useAuth();
 
     const handleLogout = () => {
-        // Todo: Add actual logout logic via AuthContext
         navigate('/login');
     };
 
@@ -28,7 +27,6 @@ const ClientSidebar = ({ isSidebarOpen, toggleSidebar }) => {
             >
                 {/* User Profile & Streak */}
                 <div className="px-6 py-5 border-b border-slate-100 flex flex-col gap-4 relative overflow-hidden bg-white hover:bg-slate-50 transition-colors">
-                    {/* Subtle decorative bg */}
                     <div className="absolute -right-4 -top-4 w-24 h-24 bg-teal-50 rounded-full blur-xl z-0 pointer-events-none"></div>
                     
                     <div className="relative z-10 flex items-center justify-between">
@@ -63,6 +61,8 @@ const ClientSidebar = ({ isSidebarOpen, toggleSidebar }) => {
 
                 {/* Navigation Menu */}
                 <nav className="flex flex-col gap-1 p-3 overflow-y-auto no-scrollbar flex-1">
+
+                    {/* ── MENU CHÍNH ── */}
                     <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 ml-3 mt-2">Menu chính</div>
                     
                     <NavLink 
@@ -73,7 +73,10 @@ const ClientSidebar = ({ isSidebarOpen, toggleSidebar }) => {
                     >
                         <Home className="w-[18px] h-[18px]" /> Trang chủ
                     </NavLink>
-                    
+
+                    {/* ── HỌC TẬP ── */}
+                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 ml-3 mt-6">Học tập</div>
+
                     <NavLink 
                         to="/client/learning-path" 
                         className={({ isActive }) => `flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-all cursor-pointer ${isActive ? 'bg-teal-50 text-teal-600 font-semibold' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'}`}
@@ -81,25 +84,23 @@ const ClientSidebar = ({ isSidebarOpen, toggleSidebar }) => {
                     >
                         <Map className="w-[18px] h-[18px]" /> Lộ trình học tập
                     </NavLink>
-                    
+
                     <NavLink 
-                        to="/client/progress-report" 
+                        to="/client/exercises-tests" 
                         className={({ isActive }) => `flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-all cursor-pointer ${isActive ? 'bg-teal-50 text-teal-600 font-semibold' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'}`}
                         onClick={() => window.innerWidth < 1024 && toggleSidebar()}
                     >
-                        <BarChart2 className="w-[18px] h-[18px]" /> Tiến độ học
+                        <Bot className="w-[18px] h-[18px]" /> Bài tập &amp; Test
                     </NavLink>
 
-                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 ml-3 mt-6">Học tập</div>
-                    
                     <NavLink 
                         to="/client/learning-materials" 
                         className={({ isActive }) => `flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-all cursor-pointer ${isActive ? 'bg-teal-50 text-teal-600 font-semibold' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'}`}
                         onClick={() => window.innerWidth < 1024 && toggleSidebar()}
                     >
-                        <BookOpen className="w-[18px] h-[18px]" /> Khóa học của tôi
+                        <BookOpen className="w-[18px] h-[18px]" /> Kho tài liệu
                     </NavLink>
-                    
+
                     <NavLink 
                         to="/client/flashcards" 
                         className={({ isActive }) => `flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-all cursor-pointer ${isActive ? 'bg-teal-50 text-teal-600 font-semibold' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'}`}
@@ -107,32 +108,9 @@ const ClientSidebar = ({ isSidebarOpen, toggleSidebar }) => {
                     >
                         <Layers className="w-[18px] h-[18px]" /> Kho flashcard
                     </NavLink>
-                    
-                    <NavLink 
-                        to="/client/exercises-tests" 
-                        className={({ isActive }) => `flex items-center justify-between px-3 py-2.5 rounded-lg font-medium transition-all cursor-pointer ${isActive ? 'bg-teal-50 text-teal-600 font-semibold' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'}`}
-                        onClick={() => window.innerWidth < 1024 && toggleSidebar()}
-                    >
-                        <div className="flex items-center gap-3">
-                            <Bot className="w-[18px] h-[18px]" /> Bài tập & Test
-                        </div>
-                    </NavLink>
 
-                    <NavLink 
-                        to="/client/daily-review" 
-                        className={({ isActive }) => `flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-all cursor-pointer ${isActive ? 'bg-teal-50 text-teal-600 font-semibold' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'}`}
-                        onClick={() => window.innerWidth < 1024 && toggleSidebar()}
-                    >
-                        <Calendar className="w-[18px] h-[18px]" /> Ôn tập hằng ngày
-                    </NavLink>
-                    
-                    <NavLink 
-                        to="/client/placement-test" 
-                        className={({ isActive }) => `flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-all cursor-pointer ${isActive ? 'bg-teal-50 text-teal-600 font-semibold' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'}`}
-                        onClick={() => window.innerWidth < 1024 && toggleSidebar()}
-                    >
-                        <ClipboardCheck className="w-[18px] h-[18px]" /> Test đầu vào
-                    </NavLink>
+                    {/* ── AI ── */}
+                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 ml-3 mt-6">AI</div>
 
                     <NavLink
                         to="/client/chatbot" 
@@ -144,11 +122,11 @@ const ClientSidebar = ({ isSidebarOpen, toggleSidebar }) => {
                         </div>
                         <span className="bg-blue-50 text-blue-600 text-[9px] font-bold px-1.5 py-0.5 rounded border border-blue-100">MỚI</span>
                     </NavLink>
+
                 </nav>
 
-                {/* Upgrade / Settings at bottom */}
+                {/* Bottom: Upgrade Card + Logout */}
                 <div className="mt-auto p-4 border-t border-slate-100">
-                    {/* Upgrade Card */}
                     <div className="bg-gradient-to-br from-teal-50 to-white rounded-xl p-4 border border-teal-100 shadow-sm relative overflow-hidden group hover:border-teal-200 transition-colors mb-4">
                         <div className="absolute -right-4 -top-4 w-16 h-16 bg-teal-100 rounded-full blur-2xl group-hover:bg-teal-200 transition-colors"></div>
                         <h4 className="font-bold text-slate-900 text-[13px] mb-1 relative z-10 flex items-center gap-1.5">

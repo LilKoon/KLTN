@@ -27,7 +27,7 @@ const FlashcardCreate = () => {
     const [isAiLoading, setIsAiLoading] = useState(false);
     const [showAiModal, setShowAiModal] = useState(false);
     const [aiTopic, setAiTopic] = useState('');
-    const [aiLevel, setAiLevel] = useState('B1');
+    const [deckLevel, setDeckLevel] = useState((location.state?.deck?.level || 'B1').toUpperCase());
     const [aiCount, setAiCount] = useState(8);
 
     const LEVEL_OPTIONS = [
@@ -78,6 +78,7 @@ const FlashcardCreate = () => {
         try {
             const payload = {
                 TenBoThe: deckTitle || 'Bộ Flashcard Mới',
+                CapDo: deckLevel,
                 cards: validCards
             };
             const headers = { Authorization: `Bearer ${token}` };
@@ -127,7 +128,7 @@ const FlashcardCreate = () => {
             const headers = { Authorization: `Bearer ${token}` };
             const res = await axios.post(
                 'http://127.0.0.1:8000/flashcards/generate/text',
-                { topic: aiTopic, level: aiLevel, count: aiCount },
+                { topic: aiTopic, level: deckLevel, count: aiCount },
                 { headers }
             );
             
@@ -155,7 +156,7 @@ const FlashcardCreate = () => {
         try {
             const formData = new FormData();
             formData.append('file', file);
-            formData.append('level', aiLevel);
+            formData.append('level', deckLevel);
             formData.append('count', String(aiCount));
             const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' };
             const res = await axios.post('http://127.0.0.1:8000/flashcards/generate/document', formData, { headers });
@@ -278,33 +279,47 @@ const FlashcardCreate = () => {
                             <button onClick={() => setShowAiModal(false)} className="text-slate-400 hover:text-red-500"><X className="w-5 h-5"/></button>
                         </div>
                         <div className="p-6 flex flex-col gap-6">
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Trình độ CEFR</label>
-                                    <select
-                                        value={aiLevel}
-                                        onChange={e => setAiLevel(e.target.value)}
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 outline-none focus:border-indigo-400 focus:bg-white transition-colors font-medium text-slate-700 cursor-pointer"
-                                    >
-                                        {LEVEL_OPTIONS.map(opt => (
-                                            <option key={opt.value} value={opt.value}>{opt.label}</option>
-                                        ))}
-                                    </select>
+                            <div className="bg-indigo-50/60 border border-indigo-200 rounded-2xl p-4">
+                                <label className="flex items-center gap-2 text-sm font-bold text-indigo-900 mb-3">
+                                    <Sparkles className="w-4 h-4 text-indigo-500" />
+                                    Cấp độ CEFR — chọn trước khi sinh
+                                </label>
+                                <div className="grid grid-cols-3 gap-2">
+                                    {LEVEL_OPTIONS.map(opt => (
+                                        <button
+                                            key={opt.value}
+                                            type="button"
+                                            onClick={() => setDeckLevel(opt.value)}
+                                            className={
+                                                'px-3 py-2 rounded-xl text-sm font-bold border-2 transition-colors ' +
+                                                (deckLevel === opt.value
+                                                    ? 'bg-indigo-600 border-indigo-600 text-white shadow'
+                                                    : 'bg-white border-slate-200 text-slate-600 hover:border-indigo-300')
+                                            }
+                                            title={opt.label}
+                                        >
+                                            {opt.value}
+                                        </button>
+                                    ))}
                                 </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Số thẻ</label>
-                                    <input
-                                        type="number"
-                                        min={1}
-                                        max={20}
-                                        value={aiCount}
-                                        onChange={e => {
-                                            const n = parseInt(e.target.value, 10);
-                                            setAiCount(Number.isNaN(n) ? 8 : Math.max(1, Math.min(20, n)));
-                                        }}
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 outline-none focus:border-indigo-400 focus:bg-white transition-colors font-medium text-slate-700"
-                                    />
-                                </div>
+                                <p className="text-[11px] text-slate-500 mt-2">
+                                    Đang chọn: <span className="font-bold text-indigo-700">{LEVEL_OPTIONS.find(o => o.value === deckLevel)?.label}</span>
+                                </p>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Số thẻ</label>
+                                <input
+                                    type="number"
+                                    min={1}
+                                    max={20}
+                                    value={aiCount}
+                                    onChange={e => {
+                                        const n = parseInt(e.target.value, 10);
+                                        setAiCount(Number.isNaN(n) ? 8 : Math.max(1, Math.min(20, n)));
+                                    }}
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 outline-none focus:border-indigo-400 focus:bg-white transition-colors font-medium text-slate-700"
+                                />
                             </div>
                             <div>
                                 <label className="block text-sm font-bold text-slate-700 mb-2">Sinh từ theo Chủ đề</label>

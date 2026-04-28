@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Bookmark, History, Layers, Boxes, Copy, Play, Loader2 } from 'lucide-react';
+import { Plus, Search, Star, Bookmark, History, Layers, Boxes, Copy, Play, Download, Loader2, Sparkles, CloudUpload, X, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../../../context/AuthContext';
@@ -8,21 +8,50 @@ const Flashcard = () => {
     const navigate = useNavigate();
     const { token } = useAuth();
     const [myDecks, setMyDecks] = useState([]);
+    const [publicDecks, setPublicDecks] = useState([]);
     const [loading, setLoading] = useState(true);
     const [recentActivities, setRecentActivities] = useState([]);
 
-    const [showCreateDropdown, setShowCreateDropdown] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 8;
+    
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchQuery]);
+    const [showAiModal, setShowAiModal] = useState(false);
+    const [aiTopic, setAiTopic] = useState('');
+    const [aiLevel, setAiLevel] = useState('B1');
+    const [forceNew, setForceNew] = useState(false);
+    const [isAiLoading, setIsAiLoading] = useState(false);
+    const fileInputRef = React.useRef(null);
+
+    const LEVEL_OPTIONS = [
+        { value: 'A1', label: 'A1 — Căn bản' },
+        { value: 'A2', label: 'A2 — Sơ cấp' },
+        { value: 'B1', label: 'B1 — Trung cấp' },
+        { value: 'B2', label: 'B2 — Trung cấp trên' },
+        { value: 'C1', label: 'C1 — Nâng cao' },
+        { value: 'C2', label: 'C2 — Thành thạo' },
+    ];
 
     useEffect(() => {
         try {
             const recent = JSON.parse(localStorage.getItem('recent_flashcards') || '[]');
-            setRecentActivities(recent);
-        } catch (e) {}
+            // Filter out invalid items and slice to 3
+            const validRecent = recent.filter(item => item && item.id && item.title).slice(0, 3);
+            setRecentActivities(validRecent);
+        } catch (e) {
+            console.error("Lỗi đọc hoạt động gần đây:", e);
+        }
     }, []);
 
     const fetchDecks = async () => {
         try {
             const headers = { Authorization: `Bearer ${token}` };
+            const resPublic = await axios.get('http://127.0.0.1:8000/flashcards/public-decks', { headers });
+            setPublicDecks(resPublic.data);
+            
             const resPrivate = await axios.get('http://127.0.0.1:8000/flashcards/decks', { headers });
             setMyDecks(resPrivate.data);
         } catch (error) {
@@ -35,6 +64,99 @@ const Flashcard = () => {
     useEffect(() => {
         if(token) fetchDecks();
     }, [token]);
+
+    const handleDeleteDeck = async (e, deckId) => {
+        e.stopPropagation();
+        if (!window.confirm("Bạn có chắc chắn muốn xóa bộ thẻ này không? Không thể hoàn tác hành động này.")) return;
+        try {
+            const headers = { Authorization: `Bearer ${token}` };
+            await axios.delete(`http://127.0.0.1:8000/flashcards/${deckId}`, { headers });
+            fetchDecks();
+        } catch (error) {
+            console.error("Lỗi xóa bộ thẻ:", error);
+            alert("Có lỗi xảy ra khi xóa bộ thẻ.");
+        }
+    };
+
+    const handleClone = async (e, deckId) => {
+        e.stopPropagation();
+        try {
+            await axios.post('http://127.0.0.1:8000/flashcards/clone', { MaBoTheGoc: deckId }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            alert("Đã lưu bộ flashcard vào kho cá nhân thành công!");
+            fetchDecks(); // Refresh
+        } catch (err) {
+            alert("Lỗi khi lưu bộ flashcard!");
+        }
+    };
+
+    const handleGenerateAiTopic = async () => {
+        if(!aiTopic.trim()) return;
+        setIsAiLoading(true);
+        try {
+            const headers = { Authorization: `Bearer ${token}` };
+            // 1. Generate text
+            const res = await axios.post('http://127.0.0.1:8000/flashcards/generate/text', {
+                topic: aiTopic,
+                level: aiLevel,
+                force_new: forceNew
+            }, { headers });
+
+            // 2. Save only the returned cards (max 10)
+            await axios.post('http://127.0.0.1:8000/flashcards/save/custom', {
+                TenBoThe: `AI: ${res.data.TenChuDe}`,
+                CapDo: aiLevel,
+                cards: res.data.flashcards
+            }, { headers });
+            
+            alert("Tạo bộ flashcard thành công!");
+            setShowAiModal(false);
+            setAiTopic('');
+            setForceNew(false);
+            fetchDecks();
+        } catch (error) {
+            console.error("Lỗi AI:", error);
+            const msg = error.response?.data?.detail || "Lỗi khi sinh từ bằng AI!";
+            alert(msg);
+        } finally {
+            setIsAiLoading(false);
+        }
+    };
+
+    const handleFileUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        setIsAiLoading(true);
+        setShowAiModal(false);
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('level', aiLevel);
+            const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' };
+
+            const res = await axios.post('http://127.0.0.1:8000/flashcards/generate/document', formData, { headers });
+
+            await axios.post('http://127.0.0.1:8000/flashcards/save/custom', {
+                TenBoThe: `Document: ${res.data.TenChuDe}`,
+                CapDo: aiLevel,
+                cards: res.data.flashcards
+            }, { headers });
+            
+            alert("Tạo bộ flashcard từ tài liệu thành công!");
+            fetchDecks();
+        } catch (error) {
+            console.error("Lỗi xử lý tài liệu:", error);
+            alert("Rất tiếc! AI không thể đọc được file này hoặc đã có lỗi hệ thống.");
+        } finally {
+            setIsAiLoading(false);
+        }
+    };
+
+    const sortedMyDecks = [...myDecks].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    const filteredMyDecks = sortedMyDecks.filter(deck => (deck.title || '').toLowerCase().includes((searchQuery || '').toLowerCase()));
+    const totalPages = Math.ceil(filteredMyDecks.length / itemsPerPage);
+    const currentDecks = filteredMyDecks.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
     return (
         <div className="flex-1 h-full flex flex-col relative z-20 overflow-x-hidden overflow-y-auto no-scrollbar scroll-smooth" style={{ backgroundColor: '#fcfcfc' }}>
@@ -50,47 +172,25 @@ const Flashcard = () => {
                     
                     {/* Function floating cards */}
                     <div className="flex flex-col sm:flex-row items-center gap-6 relative z-50 mx-auto">
-                        {/* Tạo Flashcard */}
-                        <div className="relative group">
-                            <div onClick={() => setShowCreateDropdown(!showCreateDropdown)} className="bg-white rounded-[24px] w-[220px] h-[140px] px-6 py-5 flex flex-col items-center justify-center gap-3 cursor-pointer transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(20,184,166,0.15)] shadow-sm border border-slate-100/80">
-                                <div className="w-12 h-12 rounded-[14px] bg-teal-50 flex items-center justify-center text-teal-600 group-hover:bg-teal-500 group-hover:text-white transition-colors group-hover:shadow-md group-hover:rotate-6">
-                                    <Plus className="w-6 h-6 stroke-[2.5]" />
-                                </div>
-                                <div className="flex flex-col items-center mt-1">
-                                    <span className="font-bold text-slate-800 text-[15px] group-hover:text-teal-700 transition">Tạo mới</span>
-                                    <span className="text-[12px] text-slate-400 font-medium">bộ flashcard</span>
-                                </div>
-                            </div>
-                            
-                            {/* Dropdown Options */}
-                            {showCreateDropdown && (
-                                <div className="absolute top-[110%] left-0 w-full bg-white rounded-xl shadow-xl border border-slate-100 p-2 z-50 flex flex-col gap-1 origin-top">
-                                    <div onClick={() => navigate('/client/flashcards/create?mode=manual')} className="flex items-center gap-3 px-3 py-2.5 hover:bg-teal-50 rounded-lg cursor-pointer transition-colors group/item relative overflow-hidden">
-                                        <div className="w-8 h-8 rounded-full bg-teal-50 flex items-center justify-center text-teal-600 group-hover/item:scale-110 transition-transform"><Layers className="w-4 h-4" /></div>
-                                        <div className="flex flex-col relative z-10">
-                                            <span className="font-bold text-slate-700 text-[13px] group-hover/item:text-teal-700">Tạo thủ công</span>
-                                            <span className="text-[10px] text-slate-400">Tự nhập từ vựng</span>
-                                        </div>
-                                    </div>
-                                    <div onClick={() => navigate('/client/flashcards/create?mode=ai')} className="flex items-center gap-3 px-3 py-2.5 hover:bg-indigo-50 rounded-lg cursor-pointer transition-colors group/item relative overflow-hidden">
-                                        <div className="w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 group-hover/item:scale-110 transition-transform"><Boxes className="w-4 h-4" /></div>
-                                        <div className="flex flex-col relative z-10">
-                                            <span className="font-bold text-slate-700 text-[13px] group-hover/item:text-indigo-700">Tạo bằng AI</span>
-                                            <span className="text-[10px] text-slate-400">Tự động scan tài liệu</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Tìm kiếm chủ đề */}
-                        <div className="bg-white rounded-[24px] w-[220px] h-[140px] px-6 py-5 flex flex-col items-center justify-center gap-3 cursor-pointer transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(244,63,94,0.15)] shadow-sm group border border-slate-100/80">
-                            <div className="w-12 h-12 rounded-[14px] bg-rose-50 flex items-center justify-center text-rose-500 group-hover:bg-rose-500 group-hover:text-white transition-colors group-hover:shadow-md group-hover:scale-110">
-                                <Search className="w-[22px] h-[22px] stroke-[2.5]" />
+                        {/* Tạo thủ công */}
+                        <div onClick={() => navigate('/client/flashcards/create?mode=manual')} className="bg-white rounded-[24px] w-[220px] h-[140px] px-6 py-5 flex flex-col items-center justify-center gap-3 cursor-pointer transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(20,184,166,0.15)] shadow-sm border border-slate-100/80 group">
+                            <div className="w-12 h-12 rounded-[14px] bg-teal-50 flex items-center justify-center text-teal-600 group-hover:bg-teal-500 group-hover:text-white transition-colors group-hover:shadow-md group-hover:rotate-6">
+                                <Plus className="w-6 h-6 stroke-[2.5]" />
                             </div>
                             <div className="flex flex-col items-center mt-1">
-                                <span className="font-bold text-rose-500 text-[15px]">Tìm kiếm</span>
-                                <span className="text-[12px] text-slate-400 font-medium">trong thư viện</span>
+                                <span className="font-bold text-slate-800 text-[15px] group-hover:text-teal-700 transition">Tạo thủ công</span>
+                                <span className="text-[12px] text-slate-400 font-medium">bộ flashcard</span>
+                            </div>
+                        </div>
+
+                        {/* Tạo bằng AI */}
+                        <div onClick={() => setShowAiModal(true)} className="bg-white rounded-[24px] w-[220px] h-[140px] px-6 py-5 flex flex-col items-center justify-center gap-3 cursor-pointer transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(99,102,241,0.15)] shadow-sm border border-slate-100/80 group">
+                            <div className="w-12 h-12 rounded-[14px] bg-indigo-50 flex items-center justify-center text-indigo-600 group-hover:bg-indigo-500 group-hover:text-white transition-colors group-hover:shadow-md group-hover:scale-110">
+                                <Sparkles className="w-[22px] h-[22px] stroke-[2.5]" />
+                            </div>
+                            <div className="flex flex-col items-center mt-1">
+                                <span className="font-bold text-slate-800 text-[15px] group-hover:text-indigo-700 transition">Tạo bằng AI</span>
+                                <span className="text-[12px] text-slate-400 font-medium">tự động scan tài liệu</span>
                             </div>
                         </div>
                     </div>
@@ -99,7 +199,7 @@ const Flashcard = () => {
                     <div className="mt-14 w-full max-w-[700px] relative z-20 px-4">
                         <div className="bg-white rounded-[24px] p-2 pl-6 pr-3 shadow-md border border-slate-200/60 flex items-center gap-3 focus-within:shadow-[0_12px_40px_rgba(20,184,166,0.15)] focus-within:border-teal-300 transition-all group">
                             <Search className="w-5 h-5 text-slate-400 group-focus-within:text-teal-500 transition-colors" />
-                            <input type="text" placeholder="Tìm bộ flashcard, quiz, tài liệu học..." className="flex-1 bg-transparent py-3 border-none focus:outline-none text-slate-700 font-medium text-[15px] placeholder:text-slate-400" />
+                            <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Tìm bộ flashcard của tôi..." className="flex-1 bg-transparent py-3 border-none focus:outline-none text-slate-700 font-medium text-[15px] placeholder:text-slate-400" />
                             <button className="bg-teal-500 hover:bg-teal-600 text-white w-12 h-12 rounded-[16px] flex items-center justify-center transition-all shadow-sm active:scale-95">
                                 <Search className="w-5 h-5" />
                             </button>
@@ -118,27 +218,62 @@ const Flashcard = () => {
                         <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 text-teal-500 animate-spin" /></div>
                     ) : (
                         <>
+                            {/* Bộ sưu tập Flashcard */}
+                            <section>
+                                <div className="flex items-center justify-between mb-5 px-1">
+                                    <h2 className="text-[18px] sm:text-xl font-bold text-slate-800 flex items-center gap-2 tracking-tight">
+                                        <Star className="w-6 h-6 text-amber-500 fill-amber-500" /> Bộ sưu tập flashcard đại trà
+                                    </h2>
+                                    <button className="text-[13px] font-semibold bg-indigo-50 text-indigo-600 hover:bg-indigo-100 px-3.5 py-1.5 rounded-full transition-colors whitespace-nowrap">Xem thêm</button>
+                                </div>
+                                
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                                    {publicDecks.length === 0 && <p className="text-slate-500 text-sm">Chưa có bộ sưu tập nào.</p>}
+                                    {publicDecks.map((deck, index) => {
+                                        const gradients = [
+                                            'linear-gradient(to bottom right, #581c87, #7e22ce)', 
+                                            'linear-gradient(to bottom right, #881337, #be123c)', 
+                                            'linear-gradient(to bottom right, #134e4a, #0f766e)'
+                                        ];
+                                        const bgGradient = gradients[index % gradients.length];
+                                        
+                                        return (
+                                        <div key={deck.id} onClick={() => navigate(`/client/flashcards/${deck.id}`)} className="bg-white rounded-[20px] shadow-sm border border-slate-100/80 overflow-hidden cursor-pointer hover:-translate-y-1 hover:shadow-md transition-all group flex flex-col">
+                                            <div className="h-[145px] relative p-3" style={{ backgroundImage: bgGradient }}>
+                                                <h3 className="text-white font-extrabold text-[18px] absolute bottom-3 left-4 z-10 w-3/4 leading-tight drop-shadow-md">{deck.title}</h3>
+                                                <div className="absolute bottom-3 right-3 text-[10px] text-white bg-black/40 backdrop-blur-sm px-2 py-1 rounded font-extrabold flex items-center gap-1 z-10"><Copy className="w-3 h-3" /> {deck.terms} Qs</div>
+                                            </div>
+                                            <div className="p-4 flex flex-col justify-between items-start gap-3 flex-1 relative">
+                                                <p className="text-[14px] font-bold text-slate-700 leading-snug">{deck.description || "Bộ flashcard mặc định của hệ thống"}</p>
+                                                <div className="w-full flex items-center justify-between mt-auto pt-2">
+                                                    <span className="text-[11px] font-semibold text-slate-400 bg-slate-50 px-2 py-1 rounded flex items-center gap-1"><Play className="w-3 h-3" /> System</span>
+                                                    <button onClick={(e) => handleClone(e, deck.id)} className="w-8 h-8 rounded-full bg-slate-100 hover:bg-teal-100 hover:text-teal-600 text-slate-500 flex items-center justify-center transition-colors" title="Lưu về kho">
+                                                        <Download className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )})}
+                                </div>
+                            </section>
+
                             {/* Flashcard của tôi */}
                             <section>
                                 <div className="flex items-center justify-between mb-5 px-1">
                                     <h2 className="text-[18px] sm:text-xl font-bold text-slate-800 flex items-center gap-2 tracking-tight">
-                                        <Bookmark className="w-6 h-6 text-indigo-500 fill-indigo-500/20" /> Flashcard của tôi
+                                        <Bookmark className="w-6 h-6 text-indigo-500 fill-indigo-500/20" /> Flashcard của tôi ({myDecks.length}/20)
                                     </h2>
-                                    <button className="text-[13px] font-semibold bg-indigo-50 text-indigo-600 hover:bg-indigo-100 px-3.5 py-1.5 rounded-full transition-colors whitespace-nowrap">Xem thiết lập</button>
                                 </div>
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-                                    {myDecks.length === 0 && (
+                                    {filteredMyDecks.length === 0 && (
                                         <div className="col-span-full py-12 flex flex-col items-center justify-center text-center bg-white border border-dashed border-slate-200 rounded-[20px]">
                                             <Bookmark className="w-12 h-12 text-slate-300 mb-3" />
-                                            <p className="text-slate-500 font-medium">Bạn chưa lưu bộ Flashcard nào cá nhân.</p>
-                                            <p className="text-[13px] text-slate-400 mt-1 mb-4">Hãy tự tạo mới bằng AI hoặc nhập thủ công nhé!</p>
-                                            <button onClick={() => navigate('/client/flashcards/create')} className="px-5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg transition-colors text-[13px]">
-                                                Bắt đầu tạo
-                                            </button>
+                                            <p className="text-slate-500 font-medium">Không tìm thấy bộ Flashcard nào phù hợp.</p>
+                                            <p className="text-[13px] text-slate-400 mt-1 mb-4">Hãy thử tìm kiếm từ khóa khác hoặc tự tạo mới bằng AI nhé!</p>
                                         </div>
                                     )}
-                                    {myDecks.map((deck, idx) => {
+                                    {currentDecks.map((deck, idx) => {
                                         const myGradients = [
                                             'linear-gradient(to bottom right, #115e59, #14b8a6)', 
                                             'linear-gradient(to bottom right, #075985, #0ea5e9)', 
@@ -156,11 +291,45 @@ const Flashcard = () => {
                                                 <p className="text-[14px] font-bold text-slate-700">Chủ đề: {deck.title}</p>
                                                 <div className="w-full flex items-center justify-between mt-auto pt-2">
                                                     <span className="text-[11px] font-semibold text-slate-400 bg-slate-50 px-2 py-1 rounded flex items-center gap-1"><Play className="w-3 h-3" /> Bắt đầu học</span>
+                                                    <button onClick={(e) => handleDeleteDeck(e, deck.id)} className="text-slate-400 hover:text-red-500 hover:bg-red-50 p-1.5 rounded transition-colors" title="Xóa bộ thẻ">
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
                                                 </div>
                                             </div>
                                         </div>
                                     )})}
+                                    {totalPages > 1 && Array.from({ length: itemsPerPage - currentDecks.length }).map((_, i) => (
+                                        <div key={`empty-${i}`} className="invisible pointer-events-none" style={{ minHeight: '260px' }}></div>
+                                    ))}
                                 </div>
+                                
+                                {totalPages > 1 && (
+                                    <div className="flex justify-center items-center gap-2 mt-8">
+                                        <button 
+                                            disabled={currentPage === 1}
+                                            onClick={() => setCurrentPage(prev => prev - 1)}
+                                            className="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                        >
+                                            <ChevronLeft className="w-4 h-4" />
+                                        </button>
+                                        {Array.from({length: totalPages}, (_, i) => i + 1).map(page => (
+                                            <button
+                                                key={page}
+                                                onClick={() => setCurrentPage(page)}
+                                                className={`w-8 h-8 flex items-center justify-center rounded-lg text-[13px] font-bold transition-colors ${currentPage === page ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:bg-slate-50'}`}
+                                            >
+                                                {page}
+                                            </button>
+                                        ))}
+                                        <button 
+                                            disabled={currentPage === totalPages}
+                                            onClick={() => setCurrentPage(prev => prev + 1)}
+                                            className="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                        >
+                                            <ChevronRight className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                )}
                             </section>
                         </>
                     )}
@@ -202,6 +371,82 @@ const Flashcard = () => {
                     </div>
                 </div>
             </div>
+
+            {/* AI MODAL */}
+            {showAiModal && (
+                <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-slide-in">
+                        <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-indigo-50/50">
+                            <h2 className="text-xl font-bold text-indigo-900 flex items-center gap-2"><Sparkles className="w-5 h-5 text-indigo-500"/> Sinh thẻ bằng AI</h2>
+                            <button onClick={() => setShowAiModal(false)} className="text-slate-400 hover:text-red-500"><X className="w-5 h-5"/></button>
+                        </div>
+                        <div className="p-6 flex flex-col gap-6">
+                            <div className="bg-indigo-50/60 border border-indigo-200 rounded-2xl p-4">
+                                <label className="flex items-center gap-2 text-sm font-bold text-indigo-900 mb-3">
+                                    <Sparkles className="w-4 h-4 text-indigo-500" />
+                                    Cấp độ CEFR — chọn trước khi sinh
+                                </label>
+                                <div className="grid grid-cols-3 gap-2">
+                                    {LEVEL_OPTIONS.map(opt => (
+                                        <button
+                                            key={opt.value}
+                                            type="button"
+                                            onClick={() => setAiLevel(opt.value)}
+                                            className={
+                                                'px-3 py-2 rounded-xl text-sm font-bold border-2 transition-colors ' +
+                                                (aiLevel === opt.value
+                                                    ? 'bg-indigo-600 border-indigo-600 text-white shadow'
+                                                    : 'bg-white border-slate-200 text-slate-600 hover:border-indigo-300')
+                                            }
+                                            title={opt.label}
+                                        >
+                                            {opt.value}
+                                        </button>
+                                    ))}
+                                </div>
+                                <p className="text-[11px] text-slate-500 mt-2">
+                                    Đang chọn: <span className="font-bold text-indigo-700">{LEVEL_OPTIONS.find(o => o.value === aiLevel)?.label}</span>
+                                </p>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700 mb-2">Sinh từ theo Chủ đề</label>
+                                <div className="flex gap-2">
+                                    <input type="text" value={aiTopic} onChange={e=>setAiTopic(e.target.value)} placeholder="VD: Động vật biển, IELTS List 1..." className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-indigo-400 focus:bg-white transition-colors"/>
+                                    <button onClick={handleGenerateAiTopic} disabled={isAiLoading} className="bg-indigo-600 text-white font-bold px-6 py-3 rounded-xl disabled:opacity-50 hover:bg-indigo-700 transition-colors">Sinh & Lưu</button>
+                                </div>
+                                <label className="flex items-center gap-2 mt-3 cursor-pointer group">
+                                    <input type="checkbox" checked={forceNew} onChange={e => setForceNew(e.target.checked)} className="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500" />
+                                    <span className="text-sm font-medium text-slate-500 group-hover:text-slate-700 transition-colors">Ép AI sinh bộ từ mới (Bỏ qua bộ nhớ đệm)</span>
+                                </label>
+                            </div>
+                            
+                            <div className="relative flex py-2 items-center">
+                                <div className="flex-grow border-t border-slate-200"></div>
+                                <span className="flex-shrink-0 mx-4 text-slate-400 text-xs font-bold uppercase">Hoặc Quét Tệp</span>
+                                <div className="flex-grow border-t border-slate-200"></div>
+                            </div>
+
+                            <div 
+                                className="w-full rounded-2xl border-2 border-dashed border-indigo-200 bg-indigo-50/30 hover:bg-indigo-50 transition-colors p-8 flex flex-col items-center cursor-pointer group"
+                                onClick={() => fileInputRef.current?.click()}
+                            >
+                                <CloudUpload className="w-10 h-10 text-indigo-400 mb-2 group-hover:scale-110 transition-transform"/>
+                                <p className="font-bold text-slate-700">Tải lên tệp PDF hoặc Word</p>
+                                <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept=".pdf,.txt,.docx" className="hidden" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* FULL SCREEN LOADING */}
+            {isAiLoading && (
+                <div className="fixed inset-0 bg-slate-900/60 z-[60] flex flex-col items-center justify-center">
+                    <div className="w-16 h-16 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+                    <span className="text-white font-bold text-xl">AI đang tự động tạo và lưu bộ thẻ...</span>
+                </div>
+            )}
         </div>
     );
 };
