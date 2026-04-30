@@ -41,7 +41,12 @@
       "Bash(/c/Users/admin/anaconda3/envs/edtech/python.exe import_questions.py)",
       "Bash(PYTHONIOENCODING=utf-8 /c/Users/admin/anaconda3/envs/edtech/python.exe import_questions.py)",
       "Bash(PYTHONIOENCODING=utf-8 /c/Users/admin/anaconda3/envs/edtech/python.exe import_questions.py --help)",
-      "Bash(grep -n \"section-test\\\\|placement-test\\\\|/exam/\\\\|navigate.*test\\\\|test\\\\s*$\\\\|loại bài\\\\|section_test\" \"C:\\\\Users\\\\admin\\\\Desktop\\\\letnow\\\\KLTN_final\\\\KLTN\\\\frontend\\\\src\\\\components\\\\views\\\\client\\\\ExercisesTests.jsx\")"
+      "Bash(grep -n \"section-test\\\\|placement-test\\\\|/exam/\\\\|navigate.*test\\\\|test\\\\s*$\\\\|loại bài\\\\|section_test\" \"C:\\\\Users\\\\admin\\\\Desktop\\\\letnow\\\\KLTN_final\\\\KLTN\\\\frontend\\\\src\\\\components\\\\views\\\\client\\\\ExercisesTests.jsx\")",
+      "Read(//c/Users/admin/Desktop/letnow/train_learning_path/**)",
+      "Bash(/c/Users/admin/anaconda3/envs/edtech/python.exe -c \"import onnxruntime as ort; print\\(ort.__version__\\)\")",
+      "Bash(mkdir -p \"C:\\\\Users\\\\admin\\\\Desktop\\\\letnow\\\\KLTN_final\\\\KLTN\\\\backend\\\\learning_engine\\\\artifacts\")",
+      "Bash(cp 'C:\\\\Users\\\\admin\\\\Desktop\\\\letnow\\\\train_learning_path\\\\artifacts\\\\grammar.onnx' 'C:\\\\Users\\\\admin\\\\Desktop\\\\letnow\\\\train_learning_path\\\\artifacts\\\\listening.onnx' 'C:\\\\Users\\\\admin\\\\Desktop\\\\letnow\\\\train_learning_path\\\\artifacts\\\\vocab.onnx' 'C:\\\\Users\\\\admin\\\\Desktop\\\\letnow\\\\train_learning_path\\\\artifacts\\\\severity.onnx' 'C:\\\\Users\\\\admin\\\\Desktop\\\\letnow\\\\train_learning_path\\\\artifacts\\\\trend_gru.onnx' 'C:\\\\Users\\\\admin\\\\Desktop\\\\letnow\\\\KLTN_final\\\\KLTN\\\\backend\\\\learning_engine\\\\artifacts/')",
+      "Bash(PYTHONIOENCODING=utf-8 /c/Users/admin/anaconda3/envs/edtech/python.exe *)"
     ]
   }
 }

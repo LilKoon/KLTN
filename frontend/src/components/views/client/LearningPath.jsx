@@ -8,6 +8,7 @@ const LearningPath = () => {
     const navigate = useNavigate();
     
     const [pathData, setPathData] = useState(null);
+    const [hasPlacement, setHasPlacement] = useState(null); // null = chưa rõ, true/false sau khi check
     const [loading, setLoading] = useState(false);
     const [generating, setGenerating] = useState(false);
 
@@ -18,23 +19,30 @@ const LearningPath = () => {
         }
         setLoading(true);
         try {
-            console.log("Fetching path with token:", token);
-            const res = await fetch('http://127.0.0.1:8000/path/current', {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            console.log("Response status:", res.status);
-            if (res.status === 404) {
-                setPathData(null);
-            } else if (res.ok) {
+            const headers = { Authorization: `Bearer ${token}` };
+            const res = await fetch('http://127.0.0.1:8000/path/current', { headers });
+            if (res.ok) {
                 const data = await res.json();
                 setPathData(data);
-            } else {
-                console.error("Failed to fetch path:", res.statusText);
-                setPathData(null);
+                return;
+            }
+            // Không có path → check user đã làm placement test chưa
+            setPathData(null);
+            try {
+                const sRes = await fetch('http://127.0.0.1:8000/exam/placement-test/status', { headers });
+                if (sRes.ok) {
+                    const sData = await sRes.json();
+                    setHasPlacement(!!sData.has_completed);
+                } else {
+                    setHasPlacement(false);
+                }
+            } catch {
+                setHasPlacement(false);
             }
         } catch (err) {
-            console.error("Network error fetching path:", err);
+            console.error('Network error fetching path:', err);
             setPathData(null);
+            setHasPlacement(false);
         } finally {
             setLoading(false);
         }
@@ -71,6 +79,30 @@ const LearningPath = () => {
     }
 
     if (!pathData) {
+        // Chưa làm test đầu vào → CTA dẫn sang placement test
+        if (hasPlacement === false) {
+            return (
+                <div className="flex-1 flex flex-col items-center justify-center bg-slate-50 p-6">
+                    <div className="max-w-md w-full bg-white p-10 rounded-[2rem] shadow-sm border border-slate-100 text-center">
+                        <div className="w-20 h-20 bg-teal-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl shadow-teal-100">
+                            <Target className="w-10 h-10 text-white" />
+                        </div>
+                        <h1 className="text-2xl font-bold text-slate-900 mb-3">Cần làm bài test đầu vào</h1>
+                        <p className="text-slate-500 mb-8 leading-relaxed">
+                            Hệ thống cần điểm Ngữ pháp, Từ vựng và Nghe để xây lộ trình cá nhân hoá. Hãy hoàn thành bài test đầu vào trước nhé!
+                        </p>
+                        <button
+                            onClick={() => navigate('/client/placement-test')}
+                            className="w-full bg-teal-600 hover:bg-teal-700 text-white py-4 rounded-xl font-bold transition-all active:scale-95 flex items-center justify-center gap-2"
+                        >
+                            Làm bài test đầu vào <ChevronRight className="w-5 h-5" />
+                        </button>
+                    </div>
+                </div>
+            );
+        }
+
+        // Đã làm test nhưng không có path (engine fail / dữ liệu cũ) → fallback nút generate
         return (
             <div className="flex-1 flex flex-col items-center justify-center bg-slate-50 p-6">
                 <div className="max-w-md w-full bg-white p-10 rounded-[2rem] shadow-sm border border-slate-100 text-center">
@@ -81,7 +113,7 @@ const LearningPath = () => {
                     <p className="text-slate-500 mb-8 leading-relaxed">
                         Hệ thống sẽ tổng hợp các bài học dựa trên kỹ năng bạn cần cải thiện nhất từ bài kiểm tra đầu vào.
                     </p>
-                    <button 
+                    <button
                         onClick={handleGenerate}
                         disabled={generating}
                         className="w-full bg-slate-900 hover:bg-slate-800 text-white py-4 rounded-xl font-bold transition-all active:scale-95 flex items-center justify-center gap-2"

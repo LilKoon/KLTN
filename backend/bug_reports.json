@@ -141,5 +141,18 @@
     "source": "backend",
     "url": "/auth/login",
     "ip": "127.0.0.1"
+  },
+  {
+    "report_id": "91ddacbc9f2a",
+    "timestamp": "2026-04-29T17:28:26+00:00",
+    "id": "AUTH_001",
+    "title": "Email đã tồn tại",
+    "message": "Email này đã được đăng ký. Vui lòng dùng email khác hoặc đăng nhập.",
+    "category": "auth",
+    "location": "backend/api/auth.py:register:74",
+    "detail": null,
+    "source": "backend",
+    "url": "/auth/register",
+    "ip": "127.0.0.1"
   }
 ]

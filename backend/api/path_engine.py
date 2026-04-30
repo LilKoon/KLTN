@@ -48,179 +48,72 @@ def generate_personalized_path(
     db: Session = Depends(database.get_db)
 ):
     """
-    Thuật toán AI tự động nhào nặn ra lô trình:
-    Dựa trên DiemNangLuc đầu vào, quét kho BaiHoc.
-    Điểm càng cao, càng nhiều node đầu bị đánh nhãn SKIPPED.
+    Sinh learning path bằng rules-based engine (ONNX) dựa trên điểm placement test.
+    Idempotent: gọi lại sẽ regenerate (xoá lộ trình cũ, tạo mới).
     """
-    if current_user.DiemNangLuc <= 0:
-        raise HTTPException(status_code=400, detail="Vui lòng làm bài Test đầu vào để có điểm năng lực trước khi tạo lộ trình.")
-        
-    # Check current active path
-    active_path = db.query(models.LoTrinhCaNhan).filter(
-        models.LoTrinhCaNhan.MaNguoiDung == current_user.MaNguoiDung,
-        models.LoTrinhCaNhan.TrangThai == 'ACTIVE'
-    ).first()
-    
-    if active_path:
-        return active_path # Đã tạo rồi
+    # 1. Bắt buộc đã hoàn thành placement test
+    latest_test = db.query(models.BaiKiemTra).filter(
+        models.BaiKiemTra.MaNguoiDung == current_user.MaNguoiDung,
+        models.BaiKiemTra.LoaiBaiKiemTra == 'DAU_VAO',
+        models.BaiKiemTra.TrangThai == 'COMPLETED',
+    ).order_by(models.BaiKiemTra.created_at.desc()).first()
 
-    # Lấy khóa "IELTS Nền tảng 5.0" làm Core
-    core_course = db.query(models.KhoaHoc).filter(models.KhoaHoc.TenKhoaHoc == "IELTS Nền tảng 5.0").first()
-    if not core_course:
-         raise HTTPException(status_code=500, detail="Seed Course missing from DB")
-         
-    bai_hocs = db.query(models.BaiHoc).filter(models.BaiHoc.MaKhoaHoc == core_course.MaKhoaHoc).order_by(models.BaiHoc.ThuTu).all()
+    if not latest_test:
+        raise HTTPException(
+            status_code=400,
+            detail="Vui lòng hoàn thành bài test đầu vào trước khi tạo lộ trình.",
+        )
 
-    # Tạo Lộ Trình Ca Nhân
+    # 2. Đọc điểm % từng kỹ năng từ PhanKiemTra
+    pkts = db.query(models.PhanKiemTra).filter(
+        models.PhanKiemTra.MaBaiKiemTra == latest_test.MaBaiKiemTra
+    ).all()
+    pct = {p.KyNang.upper(): (p.PhanTramDiem or 0.0) for p in pkts}
+    g = pct.get("GRAMMAR", 0.0) / 10.0
+    l = pct.get("LISTENING", 0.0) / 10.0
+    v = pct.get("VOCABULARY", 0.0) / 10.0
+
+    # 3. Inference + build path
+    from learning_engine import get_engine, build_learning_path
+    from learning_engine.path_builder import overall_to_cefr
+    cefr = overall_to_cefr((g + l + v) / 3.0)
+    pred = get_engine().predict({"level": cefr, "grammar": g, "listening": l, "vocab": v})
+    path_nodes = build_learning_path(pred, cefr)
+
+    # 4. Xoá lộ trình cũ (unique constraint MaNguoiDung) → cascade xoá nodes
+    db.query(models.LoTrinhCaNhan).filter(
+        models.LoTrinhCaNhan.MaNguoiDung == current_user.MaNguoiDung
+    ).delete(synchronize_session=False)
+    db.flush()
+
     new_path = models.LoTrinhCaNhan(
         MaLoTrinh=uuid.uuid4(),
         MaNguoiDung=current_user.MaNguoiDung,
-        TrangThai='ACTIVE'
+        TrangThai='ACTIVE',
     )
     db.add(new_path)
-    db.flush() # Để lấy ID tạm thời
-    
-    # -----------------------------
-    # AI RULE: Phân tích kết quả test
-    # -----------------------------
-    weak_skills = []
-    strong_skills = []
-    
-    # Lấy bài kiểm tra đầu vào gần nhất
-    latest_test = db.query(models.BaiKiemTra).filter(
-        models.BaiKiemTra.MaNguoiDung == current_user.MaNguoiDung,
-        models.BaiKiemTra.LoaiBaiKiemTra == 'DAU_VAO'
-    ).order_by(models.BaiKiemTra.created_at.desc()).first()
+    db.flush()
 
-    if latest_test:
-        pkts = db.query(models.PhanKiemTra).filter(models.PhanKiemTra.MaBaiKiemTra == latest_test.MaBaiKiemTra).all()
-        for pkt in pkts:
-            skill = pkt.KyNang.upper()
-            score = pkt.PhanTramDiem or 0.0
-            # Điểm < 50% được coi là yếu, cần BOOST
-            if score < 50.0:
-                weak_skills.append(skill)
-            # Điểm >= 80% được coi là giỏi, có thể SKIP
-            elif score >= 80.0:
-                strong_skills.append(skill)
-    else:
-        # Fallback nếu không tìm thấy bài test chi tiết
-        if current_user.DiemNangLuc >= 8.0:
-            strong_skills = ['VOCABULARY', 'GRAMMAR', 'LISTENING']
-        elif current_user.DiemNangLuc < 5.0:
-            weak_skills = ['VOCABULARY', 'GRAMMAR', 'LISTENING']
-            
-    sequence_items = []
-    
-    # 1. Chèn ngay các bài BOOSTED vào đầu lộ trình cho các kỹ năng yếu
-    if "VOCABULARY" in weak_skills:
-        sequence_items.append({
-            "type": "BOOSTED",
-            "bh": None,
-            "tieu_de": "Tăng cường Từ Vựng (AI Boost)",
-            "loai_node": "BOOSTED",
-            "mota": "Bài tập bổ trợ thiết kế riêng để lấp lỗ hổng Từ Vựng của bạn."
-        })
-    if "GRAMMAR" in weak_skills:
-        sequence_items.append({
-            "type": "BOOSTED",
-            "bh": None,
-            "tieu_de": "Ôn tập Ngữ Pháp (AI Boost)",
-            "loai_node": "BOOSTED",
-            "mota": "Củng cố Ngữ Pháp cơ bản theo kết quả bài test đầu vào."
-        })
-    if "LISTENING" in weak_skills:
-        sequence_items.append({
-            "type": "BOOSTED",
-            "bh": None,
-            "tieu_de": "Luyện Nghe Phản Xạ (AI Boost)",
-            "loai_node": "BOOSTED",
-            "mota": "Làm quen với âm thanh và luyện nghe trước khi vào bài chính."
-        })
-
-    # 2. Map các bài học CORE vào lộ trình
-    total_bai_hocs = len(bai_hocs)
-    cp1_idx = total_bai_hocs // 3
-    cp2_idx = (total_bai_hocs * 2) // 3
-    
-    for i, bh in enumerate(bai_hocs):
-        ten_bai_lower = bh.TenBaiHoc.lower()
-        is_skipped = False
-        
-        # AI tự động skip nếu kỹ năng này User đã rất giỏi
-        if ("từ vựng" in ten_bai_lower or "vocab" in ten_bai_lower) and "VOCABULARY" in strong_skills:
-            is_skipped = True
-        elif ("ngữ pháp" in ten_bai_lower or "grammar" in ten_bai_lower) and "GRAMMAR" in strong_skills:
-            is_skipped = True
-        elif ("nghe" in ten_bai_lower or "listen" in ten_bai_lower) and "LISTENING" in strong_skills:
-            is_skipped = True
-            
-        loai_node = 'SKIPPED' if is_skipped else 'CORE'
-        mota = "AI đánh giá bạn đã nắm vững kỹ năng này, miễn học để tiết kiệm thời gian." if is_skipped else "Bài học lý thuyết cốt lõi."
-            
-        sequence_items.append({
-            "type": "LESSON",
-            "bh": bh,
-            "tieu_de": bh.TenBaiHoc,
-            "loai_node": loai_node,
-            "mota": mota
-        })
-        
-        # Thêm các Checkpoint định kỳ
-        if i == cp1_idx:
-            sequence_items.append({
-                "type": "CHECKPOINT",
-                "bh": None,
-                "tieu_de": "Bài Test Giữa Kỳ (Trạm 1)",
-                "loai_node": "TEST_80",
-                "mota": "Đánh giá năng lực thu nạp kiến thức trong chặng vừa qua. Yêu cầu 80%."
-            })
-        elif i == cp2_idx:
-            sequence_items.append({
-                "type": "CHECKPOINT",
-                "bh": None,
-                "tieu_de": "Bài Test Giữa Kỳ (Trạm 2)",
-                "loai_node": "TEST_80",
-                "mota": "Đánh giá năng lực thu nạp kiến thức trong chặng 2. Yêu cầu 80%."
-            })
-            
-    # 3. Trạm cuối cùng
-    sequence_items.append({
-        "type": "FINAL_TEST",
-        "bh": None,
-        "tieu_de": "Kiểm Tra Trùm Cuối (Final Test)",
-        "loai_node": "TEST_80",
-        "mota": "Trạm dừng chân cuối cùng. Đánh giá toàn diện."
-    })
-
-    # 4. Ghi lộ trình vào Database
-    thu_tu_node = 1
-    found_current = False
-    
-    for item in sequence_items:
-        loai_node = item["loai_node"]
-        is_skipped = (loai_node == 'SKIPPED')
-            
-        if is_skipped:
-            trang_thai = 'COMPLETED'
-        elif not found_current:
-            trang_thai = 'CURRENT'
-            found_current = True
-        else:
-            trang_thai = 'LOCKED'
-            
+    for n in path_nodes:
         db.add(models.TrangThaiNode(
             MaNode=uuid.uuid4(),
             MaLoTrinh=new_path.MaLoTrinh,
-            MaBaiHoc=item["bh"].MaBaiHoc if item["bh"] else None,
-            TieuDe=item["tieu_de"],
-            MoTa=item.get("mota", ""),
-            ThuTu=thu_tu_node,
-            LoaiNode=loai_node,
-            TrangThai=trang_thai
+            MaBaiHoc=None,
+            TieuDe=n["title"],
+            MoTa=n["description"],
+            ThuTu=n["thu_tu"],
+            LoaiNode=n["kind"],
+            TrangThai='CURRENT' if n["thu_tu"] == 1 else 'LOCKED',
+            NoiDungBoost={
+                "skill": n["skill"],
+                "skill_vi": n["skill_vi"],
+                "target_level": n["target_level"],
+                "weight": n["weight"],
+                "is_weak": n["is_weak"],
+                "exercises_count": n["exercises_count"],
+            },
         ))
-        thu_tu_node += 1
-        
+
     db.commit()
     db.refresh(new_path)
     return new_path

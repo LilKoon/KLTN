@@ -288,8 +288,72 @@ def submit_placement_test(
         
     # Also update user overall score
     current_user.DiemNangLuc = overall_score / 10 # Map to 10 point scale maybe
+
+    # ─── Sinh learning path bằng rules-based engine ───
+    learning_path_summary = None
+    try:
+        from learning_engine import get_engine, build_learning_path
+        from learning_engine.path_builder import overall_to_cefr
+
+        g = (percentages.get("GRAMMAR", 0) or 0) / 10.0
+        l = (percentages.get("LISTENING", 0) or 0) / 10.0
+        v = (percentages.get("VOCABULARY", 0) or 0) / 10.0
+        cefr = overall_to_cefr((g + l + v) / 3.0)
+
+        pred = get_engine().predict({
+            "level": cefr,
+            "grammar": g,
+            "listening": l,
+            "vocab": v,
+        })
+        path_nodes = build_learning_path(pred, cefr)
+
+        # Xoá lộ trình cũ (unique constraint trên MaNguoiDung) → cascade xoá nodes
+        db.query(models.LoTrinhCaNhan).filter(
+            models.LoTrinhCaNhan.MaNguoiDung == current_user.MaNguoiDung
+        ).delete(synchronize_session=False)
+        db.flush()
+
+        lo_trinh = models.LoTrinhCaNhan(
+            MaNguoiDung=current_user.MaNguoiDung,
+            TrangThai="ACTIVE",
+        )
+        db.add(lo_trinh)
+        db.flush()
+
+        for n in path_nodes:
+            db.add(models.TrangThaiNode(
+                MaLoTrinh=lo_trinh.MaLoTrinh,
+                TieuDe=n["title"],
+                MoTa=n["description"],
+                ThuTu=n["thu_tu"],
+                LoaiNode=n["kind"],
+                TrangThai="CURRENT" if n["thu_tu"] == 1 else "LOCKED",
+                NoiDungBoost={
+                    "skill": n["skill"],
+                    "skill_vi": n["skill_vi"],
+                    "target_level": n["target_level"],
+                    "weight": n["weight"],
+                    "is_weak": n["is_weak"],
+                    "exercises_count": n["exercises_count"],
+                },
+            ))
+
+        learning_path_summary = {
+            "cefr_level": cefr,
+            "severity": pred["severity"],
+            "weak_skills": pred["weak_skills"],
+            "weights": pred["weights"],
+            "total_nodes": len(path_nodes),
+            "lo_trinh_id": str(lo_trinh.MaLoTrinh),
+        }
+    except Exception as exc:
+        # Không phá flow nộp bài nếu engine lỗi
+        print(f"[LEARNING_PATH] Sinh lộ trình thất bại: {exc}")
+        learning_path_summary = {"error": str(exc)}
+
     db.commit()
-    
+
     return {
         "exam_id": str(exam.MaBaiKiemTra),
         "total_score": overall_score,
@@ -297,7 +361,8 @@ def submit_placement_test(
         "total_questions": len(answers),
         "percentages": percentages,
         "stats": stats,
-        "details": detailed_results
+        "details": detailed_results,
+        "learning_path": learning_path_summary,
     }
 
 @router.get("/daily-review")
