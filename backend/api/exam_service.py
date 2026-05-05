@@ -293,20 +293,20 @@ def submit_placement_test(
     learning_path_summary = None
     try:
         from learning_engine import get_engine, build_learning_path
-        from learning_engine.path_builder import overall_to_cefr
+        from learning_engine.path_builder import overall_to_level
 
         g = (percentages.get("GRAMMAR", 0) or 0) / 10.0
         l = (percentages.get("LISTENING", 0) or 0) / 10.0
         v = (percentages.get("VOCABULARY", 0) or 0) / 10.0
-        cefr = overall_to_cefr((g + l + v) / 3.0)
+        level = overall_to_level((g + l + v) / 3.0)
 
         pred = get_engine().predict({
-            "level": cefr,
+            "level": level,
             "grammar": g,
             "listening": l,
             "vocab": v,
         })
-        path_nodes = build_learning_path(pred, cefr)
+        path_nodes = build_learning_path(pred, level)
 
         # Xoá lộ trình cũ (unique constraint trên MaNguoiDung) → cascade xoá nodes
         db.query(models.LoTrinhCaNhan).filter(
@@ -340,7 +340,7 @@ def submit_placement_test(
             ))
 
         learning_path_summary = {
-            "cefr_level": cefr,
+            "level": level,
             "severity": pred["severity"],
             "weak_skills": pred["weak_skills"],
             "weights": pred["weights"],

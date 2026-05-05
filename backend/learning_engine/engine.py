@@ -22,6 +22,22 @@ import onnxruntime as ort
 LEVEL_ORDER = ["A1", "A2", "B1", "B2", "C1", "C2"]
 LEVEL_TO_NUM = {lv: i + 1 for i, lv in enumerate(LEVEL_ORDER)}
 
+# 3-bucket A/B/C → CEFR proxy ở giữa mỗi bucket (A1+A2 → A2, B1+B2 → B1, C1+C2 → C1).
+# Mục đích: ONNX models train theo CEFR; user-facing chỉ dùng A/B/C.
+ABC_TO_CEFR = {"A": "A2", "B": "B1", "C": "C1"}
+
+
+def normalize_level(level: str) -> str:
+    """Chấp nhận 'A'/'B'/'C' (mới) hoặc CEFR cũ. Trả về CEFR cho ONNX."""
+    if not level:
+        return "B1"
+    lv = level.strip().upper()
+    if lv in ABC_TO_CEFR:
+        return ABC_TO_CEFR[lv]
+    if lv in LEVEL_TO_NUM:
+        return lv
+    return "B1"
+
 SKILL_KEYS = ["grammar", "listening", "vocab"]
 TREND_KEYS = {"grammar": "trend_g", "listening": "trend_l", "vocab": "trend_v"}
 
@@ -73,9 +89,9 @@ class EnglishLearningEngine:
         return float(pred[0] - last[0]), float(pred[1] - last[1]), float(pred[2] - last[2])
 
     def _build_features(self, payload: dict):
-        level = payload["level"]
+        level = normalize_level(payload["level"])
         if level not in LEVEL_TO_NUM:
-            raise ValueError(f"Unknown CEFR level: {level}")
+            raise ValueError(f"Unknown level: {payload['level']}")
         g = float(payload["grammar"])
         l = float(payload["listening"])
         v = float(payload["vocab"])

@@ -1,0 +1,244 @@
+-- ============================================================
+-- KLTN - DATABASE CONFIG (PostgreSQL)
+-- Sinh ra khớp với backend/models.py
+-- DATABASE_URL: postgresql://postgres:postgres@localhost:5432/edtech_ai
+-- ============================================================
+
+-- 1. Tạo database (chạy ở DB postgres mặc định)
+-- CREATE DATABASE edtech_ai;
+-- \c edtech_ai
+
+-- 2. Extension cho UUID
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
+-- ============================================================
+-- PHÂN HỆ 1: NGƯỜI DÙNG
+-- ============================================================
+CREATE TABLE "NguoiDung" (
+    "MaNguoiDung"   UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    "TenNguoiDung"  VARCHAR(255) NOT NULL,
+    "Email"         VARCHAR(255) UNIQUE NOT NULL,
+    "MatKhau"       VARCHAR(255) NOT NULL,
+    "VaiTro"        VARCHAR(50)  DEFAULT 'USER',     -- USER | ADMIN
+    "TrangThai"     VARCHAR(50)  DEFAULT 'ACTIVE',   -- ACTIVE | BANNED
+    "DiemNangLuc"   DOUBLE PRECISION DEFAULT 0.0,
+    "NgayTao"       TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
+    "IsVerified"    BOOLEAN      DEFAULT FALSE,
+    "VerifyOTP"     VARCHAR(6),
+    "OTPExpiry"     TIMESTAMP,
+    "GoogleId"      VARCHAR(100) UNIQUE,
+    "AvatarUrl"     VARCHAR(500),
+    "OAuthProvider" VARCHAR(20),
+    "SoDienThoai"   VARCHAR(20),
+    "TieuSu"        TEXT
+);
+
+-- ============================================================
+-- PHÂN HỆ 2: KHUNG NỘI DUNG (KhoaHoc, BaiHoc, NganHangCauHoi)
+-- ============================================================
+CREATE TABLE "KhoaHoc" (
+    "MaKhoaHoc"  UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    "TenKhoaHoc" VARCHAR(255) NOT NULL,
+    "MoTa"       TEXT,
+    "MucDo"      VARCHAR(50),
+    "TrangThai"  VARCHAR(50)  DEFAULT 'ACTIVE',
+    "NgayTao"    TIMESTAMP    DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE "BaiHoc" (
+    "MaBaiHoc"        UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    "MaKhoaHoc"       UUID        REFERENCES "KhoaHoc"("MaKhoaHoc") ON DELETE CASCADE,
+    "TenBaiHoc"       VARCHAR(255) NOT NULL,
+    "ThuTu"           INTEGER      NOT NULL,
+    "NoiDungLyThuyet" JSONB,
+    "TrangThai"       VARCHAR(50)  DEFAULT 'ACTIVE',
+    "KyNang"          VARCHAR(50),     -- GRAMMAR | LISTENING | VOCABULARY
+    "ChuDe"           VARCHAR(255),
+    "FileAudio"       VARCHAR(255)
+);
+CREATE INDEX idx_baihoc_makhoahoc ON "BaiHoc"("MaKhoaHoc");
+CREATE INDEX idx_baihoc_kynang    ON "BaiHoc"("KyNang");
+
+CREATE TABLE "NganHangCauHoi" (
+    "MaCauHoi"  UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    "MaKhoaHoc" UUID        REFERENCES "KhoaHoc"("MaKhoaHoc") ON DELETE SET NULL,
+    "MaBaiHoc"  UUID        REFERENCES "BaiHoc"("MaBaiHoc")   ON DELETE SET NULL,
+    "KyNang"    VARCHAR(50)  NOT NULL,
+    "MucDo"     VARCHAR(50)  DEFAULT 'MEDIUM',
+    "NoiDung"   TEXT         NOT NULL,
+    "DSDapAn"   JSONB        NOT NULL,
+    "DapAnDung" TEXT         NOT NULL,
+    "GiaiThich" TEXT,
+    "NguonPDF"  VARCHAR(200),
+    "FileAudio" VARCHAR(255)
+);
+CREATE INDEX idx_cauhoi_makhoahoc ON "NganHangCauHoi"("MaKhoaHoc");
+CREATE INDEX idx_cauhoi_mabaihoc  ON "NganHangCauHoi"("MaBaiHoc");
+CREATE INDEX idx_cauhoi_kynang    ON "NganHangCauHoi"("KyNang");
+
+-- ============================================================
+-- PHÂN HỆ 3: LỘ TRÌNH HỌC CÁ NHÂN
+-- ============================================================
+CREATE TABLE "LoTrinhCaNhan" (
+    "MaLoTrinh"   UUID      PRIMARY KEY DEFAULT gen_random_uuid(),
+    "MaNguoiDung" UUID      UNIQUE REFERENCES "NguoiDung"("MaNguoiDung") ON DELETE CASCADE,
+    "TrangThai"   VARCHAR(50) DEFAULT 'ACTIVE',     -- ACTIVE | RESET
+    "NgayTao"     TIMESTAMP   DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE "TrangThaiNode" (
+    "MaNode"       UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    "MaLoTrinh"    UUID        REFERENCES "LoTrinhCaNhan"("MaLoTrinh") ON DELETE CASCADE,
+    "MaBaiHoc"     UUID        REFERENCES "BaiHoc"("MaBaiHoc")          ON DELETE SET NULL,
+    "TieuDe"       VARCHAR(255) NOT NULL,
+    "MoTa"         TEXT,
+    "ThuTu"        INTEGER      NOT NULL,
+    "LoaiNode"     VARCHAR(50)  DEFAULT 'CORE',     -- CORE | SKIPPED | BOOSTED | TEST_80 | REVIEW | FINAL_TEST
+    "TrangThai"    VARCHAR(50)  DEFAULT 'LOCKED',   -- LOCKED | CURRENT | COMPLETED
+    "NoiDungBoost" JSONB,
+    "DiemOntap"    DOUBLE PRECISION,
+    "SoLanThu"     INTEGER      DEFAULT 0
+);
+CREATE INDEX idx_node_lotrinh ON "TrangThaiNode"("MaLoTrinh");
+CREATE INDEX idx_node_thutu   ON "TrangThaiNode"("MaLoTrinh","ThuTu");
+
+-- ============================================================
+-- PHÂN HỆ 4: FLASHCARD + SPACED REPETITION
+-- ============================================================
+CREATE TABLE bo_the_flashcard (
+    "MaBoDe"      UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    "MaNguoiDung" UUID        NOT NULL REFERENCES "NguoiDung"("MaNguoiDung") ON DELETE CASCADE,
+    "TenBoDe"     VARCHAR(200) NOT NULL,
+    "CapDo"       VARCHAR(10)  NOT NULL,
+    "SoLuongThe"  INTEGER      NOT NULL,
+    "DuLieuThe"   JSON         NOT NULL,
+    "NgayTao"     TIMESTAMP    DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE trang_thai_sr (
+    "MaSR"           UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    "MaBoDe"         UUID        NOT NULL REFERENCES bo_the_flashcard("MaBoDe") ON DELETE CASCADE,
+    "IndexThe"       INTEGER     NOT NULL,
+    "EasinessFactor" DOUBLE PRECISION DEFAULT 2.5,
+    "Interval"       INTEGER     DEFAULT 0,
+    "Repetitions"    INTEGER     DEFAULT 0,
+    "NextDue"        TIMESTAMP   DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_sr_bode ON trang_thai_sr("MaBoDe");
+
+-- ============================================================
+-- PHÂN HỆ 5: RAG + CHAT
+-- ============================================================
+CREATE TABLE tai_lieu_rag (
+    "MaTaiLieu"   UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    "MaNguoiDung" UUID        REFERENCES "NguoiDung"("MaNguoiDung") ON DELETE CASCADE,
+    "TenHienThi"  VARCHAR(200) NOT NULL,
+    "TenFile"     VARCHAR(200) NOT NULL,
+    "Namespace"   VARCHAR(100) NOT NULL,
+    "SoChunk"     INTEGER      DEFAULT 0,
+    "LaAdminDoc"  BOOLEAN      DEFAULT FALSE,
+    "NgayTao"     TIMESTAMP    DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE phien_chat (
+    "MaPhien"     UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    "MaNguoiDung" UUID        NOT NULL REFERENCES "NguoiDung"("MaNguoiDung") ON DELETE CASCADE,
+    "TieuDe"      VARCHAR(200) NOT NULL DEFAULT 'Cuộc trò chuyện mới',
+    "NgayTao"     TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
+    "NgayCapNhat" TIMESTAMP    DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE tai_lieu_chat (
+    "MaTaiLieu"  UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    "MaPhien"    UUID        NOT NULL REFERENCES phien_chat("MaPhien") ON DELETE CASCADE,
+    "TenFile"    VARCHAR(255) NOT NULL,
+    "LoaiNguon"  VARCHAR(20)  NOT NULL,    -- pdf_text | pdf_ocr | image_ocr
+    "NoiDungText" TEXT        NOT NULL,
+    "SoKyTu"     INTEGER      DEFAULT 0,
+    "NgayTao"    TIMESTAMP    DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE tin_nhan_chat (
+    "MaTinNhan" UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    "MaPhien"   UUID        NOT NULL REFERENCES phien_chat("MaPhien") ON DELETE CASCADE,
+    "VaiTro"    VARCHAR(20)  NOT NULL,    -- user | assistant
+    "NoiDung"   TEXT         NOT NULL,
+    "MaTaiLieu" UUID         REFERENCES tai_lieu_chat("MaTaiLieu") ON DELETE SET NULL,
+    "ThuTu"     INTEGER      NOT NULL DEFAULT 0,
+    "NgayTao"   TIMESTAMP    DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_tnchat_phien ON tin_nhan_chat("MaPhien","ThuTu");
+
+-- ============================================================
+-- PHÂN HỆ 6: BÀI KIỂM TRA + AI TEST
+-- ============================================================
+CREATE TABLE "BaiKiemTra" (
+    "MaBaiKiemTra"     UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    "MaNguoiDung"      UUID        NOT NULL REFERENCES "NguoiDung"("MaNguoiDung") ON DELETE CASCADE,
+    "MaKhoaHoc"        UUID,
+    "LoaiBaiKiemTra"   VARCHAR(50)  NOT NULL,
+    "TrangThai"        VARCHAR(50)  DEFAULT 'PENDING',
+    "TongDiem"         DOUBLE PRECISION,
+    "MoTaDanhGiaAI"    TEXT,
+    created_at         TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
+    updated_at         TIMESTAMP    DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE "PhanKiemTra" (
+    "MaPKT"            UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    "MaBaiKiemTra"     UUID        NOT NULL REFERENCES "BaiKiemTra"("MaBaiKiemTra") ON DELETE CASCADE,
+    "KyNang"           VARCHAR(50)  NOT NULL,
+    "PhanTramDiem"     DOUBLE PRECISION,
+    is_the_weak_grade  BOOLEAN      DEFAULT FALSE
+);
+
+CREATE TABLE "ChiTietLamBai" (
+    "MaChiTiet"          UUID    PRIMARY KEY DEFAULT gen_random_uuid(),
+    "MaBaiKiemTra"       UUID    NOT NULL REFERENCES "BaiKiemTra"("MaBaiKiemTra")   ON DELETE CASCADE,
+    "MaCauHoi"           UUID    NOT NULL REFERENCES "NganHangCauHoi"("MaCauHoi")   ON DELETE CASCADE,
+    "LuaChon"            TEXT,
+    "LaCauDung"          BOOLEAN NOT NULL,
+    "ThoiGianLamCauHoi"  INTEGER,
+    created_at           TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_ctlb_baikt ON "ChiTietLamBai"("MaBaiKiemTra");
+
+CREATE TABLE "BaiTestAI" (
+    "MaBaiTestAI" UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    "MaNguoiDung" UUID        NOT NULL REFERENCES "NguoiDung"("MaNguoiDung") ON DELETE CASCADE,
+    "TenBaiTest"  VARCHAR(255) NOT NULL,
+    "ChuDe"       VARCHAR(255),
+    "CapDo"       VARCHAR(10),
+    "SoLuongCau"  INTEGER      DEFAULT 0,
+    "DSCauHoi"    JSONB        NOT NULL,
+    "NgayTao"     TIMESTAMP    DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ============================================================
+-- TÀI KHOẢN ADMIN MẪU (đổi mật khẩu sau khi tạo)
+-- Mật khẩu nên được hash ở backend, đây chỉ là placeholder
+-- ============================================================
+-- INSERT INTO "NguoiDung" ("TenNguoiDung","Email","MatKhau","VaiTro","IsVerified")
+-- VALUES ('Admin','admin@edtech.local','<bcrypt_hash>','ADMIN', TRUE);
+
+-- ============================================================
+-- BIẾN MÔI TRƯỜNG (.env mẫu)
+-- ============================================================
+-- DATABASE_URL=postgresql://postgres:postgres@localhost:5432/edtech_ai
+-- SECRET_KEY=super_secret_key_change_in_production
+-- ALGORITHM=HS256
+-- ACCESS_TOKEN_EXPIRE_MINUTES=10080
+-- ANTHROPIC_API_KEY=
+-- GEMINI_API_KEY=
+-- GROQ_API_KEY=
+-- OLLAMA_BASE_URL=http://localhost:11434
+-- MAIL_USERNAME=
+-- MAIL_PASSWORD=
+-- MAIL_FROM=noreply@edtech-ai.com
+-- MAIL_SERVER=smtp.gmail.com
+-- MAIL_PORT=587
+-- MAIL_TLS=True
+-- GOOGLE_CLIENT_ID=
+-- GOOGLE_CLIENT_SECRET=
+-- GOOGLE_REDIRECT_URI=http://127.0.0.1:8000/auth/google/callback
+-- FRONTEND_URL=http://localhost:5173

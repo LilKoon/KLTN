@@ -8,49 +8,44 @@ const LearningPath = () => {
     const navigate = useNavigate();
     
     const [pathData, setPathData] = useState(null);
-    const [hasPlacement, setHasPlacement] = useState(null); // null = chưa rõ, true/false sau khi check
+    const [nodeList, setNodeList] = useState([]);
+    const [hasPlacement, setHasPlacement] = useState(null);
     const [loading, setLoading] = useState(false);
     const [generating, setGenerating] = useState(false);
 
     const fetchPath = async () => {
-        if (!token) {
-            setLoading(false);
-            return;
-        }
+        if (!token) { setLoading(false); return; }
         setLoading(true);
         try {
             const headers = { Authorization: `Bearer ${token}` };
+            // Fetch path metadata
             const res = await fetch('http://127.0.0.1:8000/path/current', { headers });
             if (res.ok) {
                 const data = await res.json();
                 setPathData(data);
+                // Fetch enriched nodes with real topic names
+                const nRes = await fetch('http://127.0.0.1:8000/path/current/nodes', { headers });
+                if (nRes.ok) {
+                    const nData = await nRes.json();
+                    setNodeList(nData.nodes || []);
+                }
                 return;
             }
-            // Không có path → check user đã làm placement test chưa
             setPathData(null);
             try {
                 const sRes = await fetch('http://127.0.0.1:8000/exam/placement-test/status', { headers });
                 if (sRes.ok) {
                     const sData = await sRes.json();
                     setHasPlacement(!!sData.has_completed);
-                } else {
-                    setHasPlacement(false);
-                }
-            } catch {
-                setHasPlacement(false);
-            }
+                } else setHasPlacement(false);
+            } catch { setHasPlacement(false); }
         } catch (err) {
             console.error('Network error fetching path:', err);
-            setPathData(null);
-            setHasPlacement(false);
-        } finally {
-            setLoading(false);
-        }
+            setPathData(null); setHasPlacement(false);
+        } finally { setLoading(false); }
     };
 
-    useEffect(() => {
-        fetchPath();
-    }, [token]);
+    useEffect(() => { fetchPath(); }, [token]);
 
     const handleGenerate = async () => {
         setGenerating(true);
@@ -125,10 +120,17 @@ const LearningPath = () => {
         );
     }
 
-    const nodes = pathData.cac_node || [];
+    const nodes = nodeList.length > 0 ? nodeList : (pathData.cac_node || []);
     const completedNodes = nodes.filter(n => n.TrangThai === 'COMPLETED');
     const currentNode = nodes.find(n => n.TrangThai === 'CURRENT') || nodes[nodes.length-1];
-    const progress = Math.round((completedNodes.length / nodes.length) * 100);
+    const progress = nodes.length > 0 ? Math.round((completedNodes.length / nodes.length) * 100) : 0;
+
+    // Skill badge colors
+    const skillColor = {
+        GRAMMAR:    { bg: 'bg-rose-50',    text: 'text-rose-600',    icon: '📝' },
+        VOCABULARY: { bg: 'bg-emerald-50', text: 'text-emerald-600', icon: '📚' },
+        LISTENING:  { bg: 'bg-sky-50',     text: 'text-sky-600',     icon: '🎧' },
+    };
 
     return (
         <div className="flex-1 flex h-[calc(100vh-80px)] bg-slate-50 overflow-hidden">
@@ -157,13 +159,17 @@ const LearningPath = () => {
                                         className={`relative pl-16 group transition-all duration-300 ${isLocked ? 'opacity-60' : 'opacity-100'}`}
                                     >
                                         {/* Icon Node */}
-                                        <div className={`absolute left-0 w-12 h-12 rounded-full border-4 border-white shadow-sm flex items-center justify-center z-10 transition-all duration-500 ${
-                                            isCompleted ? 'bg-emerald-500 text-white scale-110' : 
-                                            isCurrent ? 'bg-slate-900 text-white ring-4 ring-slate-100 scale-125 shadow-lg shadow-slate-200' : 
+                                        <div className={`absolute left-0 w-12 h-12 rounded-full border-4 border-white shadow-sm flex items-center justify-center z-10 transition-all duration-500 text-lg ${
+                                            isCompleted ? 'bg-emerald-500 text-white scale-110' :
+                                            isCurrent && node.LoaiNode === 'REVIEW' ? 'bg-amber-500 text-white ring-4 ring-amber-100 scale-125 shadow-lg' :
+                                            isCurrent && node.LoaiNode === 'FINAL_TEST' ? 'bg-slate-900 text-white ring-4 ring-slate-100 scale-125 shadow-xl' :
+                                            isCurrent ? 'bg-slate-900 text-white ring-4 ring-slate-100 scale-125 shadow-lg shadow-slate-200' :
                                             'bg-slate-100 text-slate-400'
                                         }`}>
-                                            {isCompleted ? <CheckCircle2 className="w-6 h-6" /> : 
-                                             isCurrent ? <PlayCircle className="w-7 h-7" /> : 
+                                            {isCompleted ? <CheckCircle2 className="w-6 h-6" /> :
+                                             node.LoaiNode === 'FINAL_TEST' ? '🏆' :
+                                             node.LoaiNode === 'REVIEW' ? '🔄' :
+                                             isCurrent ? <PlayCircle className="w-7 h-7" /> :
                                              <Lock className="w-5 h-5" />}
                                         </div>
 
@@ -171,31 +177,69 @@ const LearningPath = () => {
                                         <div 
                                             onClick={() => !isLocked && navigate(`/client/lesson/${node.MaNode}`)}
                                             className={`p-6 rounded-2xl border transition-all duration-300 ${
-                                                isCurrent ? 'bg-white border-slate-900 shadow-xl shadow-slate-100 -translate-y-1 cursor-pointer' : 
-                                                isCompleted ? 'bg-white border-slate-100 hover:border-emerald-200 cursor-pointer' : 
-                                                'bg-slate-50 border-transparent cursor-not-allowed'
+                                                isCurrent && node.LoaiNode === 'REVIEW'
+                                                    ? 'bg-amber-50 border-amber-400 shadow-xl shadow-amber-100 -translate-y-1 cursor-pointer' :
+                                                isCurrent && node.LoaiNode === 'FINAL_TEST'
+                                                    ? 'bg-slate-900 border-slate-900 shadow-2xl -translate-y-1 cursor-pointer text-white' :
+                                                isCurrent
+                                                    ? 'bg-white border-slate-900 shadow-xl shadow-slate-100 -translate-y-1 cursor-pointer' :
+                                                isCompleted
+                                                    ? 'bg-white border-slate-100 hover:border-emerald-200 cursor-pointer' :
+                                                    'bg-slate-50 border-transparent cursor-not-allowed'
                                             }`}
                                         >
-                                            <div className="flex justify-between items-start mb-2">
-                                                <span className={`text-[11px] font-bold uppercase tracking-widest px-2 py-0.5 rounded ${
-                                                    node.LoaiNode === 'BOOSTED' ? 'bg-rose-50 text-rose-600' : 
-                                                    node.LoaiNode === 'TEST_80' ? 'bg-amber-50 text-amber-600' : 
-                                                    'bg-slate-50 text-slate-500'
-                                                }`}>
-                                                    {node.LoaiNode === 'BOOSTED' ? 'Củng cố AI' : node.LoaiNode === 'TEST_80' ? 'Kiểm tra' : 'Bài học'}
-                                                </span>
+                                            <div className="flex justify-between items-start mb-3">
+                                                <div className="flex items-center gap-2 flex-wrap">
+                                                    {/* Special badges for REVIEW/FINAL_TEST */}
+                                                    {node.LoaiNode === 'REVIEW' && (
+                                                        <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-amber-100 text-amber-700">
+                                                            🔄 Ôn tập
+                                                        </span>
+                                                    )}
+                                                    {node.LoaiNode === 'FINAL_TEST' && (
+                                                        <span className={`text-[11px] font-bold px-2 py-0.5 rounded-md ${
+                                                            isCurrent ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-700'
+                                                        }`}>
+                                                            🏆 Kiểm tra cuối
+                                                        </span>
+                                                    )}
+                                                    {/* Skill badge (only for CORE) */}
+                                                    {node.skill && node.LoaiNode === 'CORE' && (
+                                                        <span className={`text-[11px] font-bold px-2 py-0.5 rounded-md ${
+                                                            skillColor[node.skill]?.bg || 'bg-slate-50'
+                                                        } ${skillColor[node.skill]?.text || 'text-slate-500'}`}>
+                                                            {skillColor[node.skill]?.icon} {node.skill_vi || node.skill}
+                                                        </span>
+                                                    )}
+                                                    {/* Level badge */}
+                                                    {node.level && node.LoaiNode === 'CORE' && (
+                                                        <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-500">
+                                                            Cấp {node.level}
+                                                        </span>
+                                                    )}
+                                                </div>
                                                 {isCompleted && <span className="text-[11px] font-bold text-emerald-600">ĐÃ XONG</span>}
                                             </div>
-                                            <h3 className={`text-lg font-bold mb-1 ${isLocked ? 'text-slate-400' : 'text-slate-900'}`}>
-                                                {node.TieuDe}
+                                            {/* Topic name */}
+                                            <h3 className={`text-lg font-bold mb-1 ${
+                                                isCurrent && node.LoaiNode === 'FINAL_TEST' ? 'text-white' :
+                                                isLocked ? 'text-slate-400' : 'text-slate-900'
+                                            }`}>
+                                                {node.bai_hoc_title || node.TieuDe}
                                             </h3>
-                                            <p className="text-sm text-slate-500 line-clamp-2 leading-relaxed">
-                                                {node.MoTa || "Bắt đầu bài học này để tiến gần hơn đến mục tiêu của bạn."}
-                                            </p>
-                                            
+                                            {(node.LoaiNode === 'REVIEW') && isCurrent && (
+                                                <p className="text-amber-700 text-sm font-medium">Đạt 80% để mở trạm tiếp theo</p>
+                                            )}
+                                            {(node.LoaiNode === 'FINAL_TEST') && isCurrent && (
+                                                <p className="text-slate-300 text-sm">15 câu · Grammar · Vocabulary · Listening</p>
+                                            )}
                                             {isCurrent && (
-                                                <div className="mt-4 flex items-center gap-2 text-slate-900 font-bold text-sm">
-                                                    Học ngay <ChevronRight className="w-4 h-4" />
+                                                <div className={`mt-4 flex items-center gap-2 font-bold text-sm ${
+                                                    node.LoaiNode === 'FINAL_TEST' ? 'text-white' : 'text-slate-900'
+                                                }`}>
+                                                    {node.LoaiNode === 'REVIEW' ? 'Bắt đầu ôn tập' :
+                                                     node.LoaiNode === 'FINAL_TEST' ? 'Làm bài kiểm tra' : 'Học ngay'}
+                                                    <ChevronRight className="w-4 h-4" />
                                                 </div>
                                             )}
                                         </div>
@@ -236,7 +280,7 @@ const LearningPath = () => {
                             <span className="font-bold text-slate-800 text-sm">Mục tiêu hiện tại</span>
                         </div>
                         <p className="text-sm text-slate-600 font-medium leading-relaxed">
-                            {currentNode?.TieuDe || "Hoàn thành toàn bộ lộ trình"}
+                            {currentNode?.bai_hoc_title || currentNode?.skill_vi || "Hoàn thành toàn bộ lộ trình"}
                         </p>
                     </div>
 

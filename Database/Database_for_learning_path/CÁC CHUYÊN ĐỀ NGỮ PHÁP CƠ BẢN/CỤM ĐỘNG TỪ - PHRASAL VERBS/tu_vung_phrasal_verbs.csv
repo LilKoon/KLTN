@@ -1,0 +1,329 @@
+﻿id,nhom,tu_vung,nghia
+1,Account,Account for = explain,giải thích
+2,Ask,Ask about,hỏi về
+3,Ask,Ask after,hỏi thăm
+4,Ask,Ask for,xin
+5,Ask,Ask sb out,mời ai đó đi ăn/đi chơi
+6,Break,Break away,"trốn thoát, thoát khỏi"
+7,Break,Break down,"hỏng hóc, sụp đổ, ngất xỉu"
+8,Break,Break in,"xông vào, ngắt lời, cắt ngang câu chuyện"
+9,Break,Break off with sb,"cắt đứt quan hệ với ai, tuyệt giao với ai"
+10,Break,Break out,"bùng nổ, bùng phát"
+11,Break,Break up,"chia lìa, chia li, chia tay"
+12,Break,Break into,đột nhập vào
+13,Bring,Bring about,"làm xảy ra, dẫn đến, gây ra"
+14,Bring,Bring back,"đem trả lại, mang trả lại, gợi nhớ"
+15,Bring,Bring down,"hạ xuống, làm tụt xuống"
+16,Bring,Bring forward,"đưa ra, nêu ra, đề ra"
+17,Bring,Bring in,"đưa vào, mang vào"
+18,Bring,Bring off,thành công
+19,Bring,Bring on,"dẫn đến, gây ra, làm cho phải bàn cãi"
+20,Bring,Bring out,"đưa ra, làm nổi bật"
+21,Bring,Bring over,"thuyết phục, làm cho thay đổi suy nghĩ"
+22,Bring,Bring round,làm cho tỉnh lại
+23,Bring,Bring round to,làm cho thay đổi ý kiến theo
+24,Bring,Bring through,"giúp vượt qua khó khăn, hiểm nghèo"
+25,Blow,Blow about,"lan truyền, tung ra"
+26,Blow,Blow down,"thổi ngã, làm đổ rạp xuống"
+27,Blow,Blow in,"thổi vào, đến bất chợt, đến thình lình"
+28,Blow,Blow off,"thổi bay đi, làm xì hơi ra, tiêu phí, phung phí"
+29,Blow,Blow out,thổi tắt
+30,Blow,Blow over,"bỏ qua, quên đi"
+31,Blow,Blow up,bơm căng lên
+32,Catch,Catch on,"nổi tiếng, trở thành mốt, được ưa chuộng, hiểu"
+33,Catch,Catch out,bất chợt bắt được ai đang làm gì
+34,Catch,Catch up (with),"đuổi kịp, bắt kịp"
+35,Call,Call out,gọi to
+36,Call,Call on/upon,"kêu gọi, yêu cầu, tạt qua thăm"
+37,Call,Call for,"gọi, tìm đến ai để lấy cái gì"
+38,Call,Call at,"dừng lại, đỗ lại, ghé thăm"
+39,Call,Call in,"mời đến, triệu đến"
+40,Call,Call off,"hoãn lại, đình lại"
+41,Call,Call up,"gọi tên, gọi điện, gọi dậy, gọi nhập ngũ"
+42,Call,Call on,"đến thăm, đề nghị, yêu cầu"
+43,Come,Come about,"xảy ra, xảy đến"
+44,Come,Come across,tình cờ gặp
+45,Come,Come after,"theo sau, nối dõi, nối nghiệp, kế tục"
+46,Come,Come against,"đụng phải, va phải"
+47,Come,Come apart,"tách lìa ra, bung ra"
+48,Come,Come at,"nắm được, xông vào"
+49,Come,Come away,"đi xa, đi khỏi"
+50,Come,Come back,quay trở lại
+51,Come,Come between,"can thiệp vào, xen vào"
+52,Come,Come by,"đi qua, kiếm được, vớ được"
+53,Come,Come down,"sa sút, xuống dốc"
+54,Come,Come down on/upon,"mắng nhiếc, xỉ vả, trừng phạt"
+55,Come,Come down with,mắc bệnh
+56,Come,Come in,đi vào
+57,Come,Come in for,"có phần, nhận lấy"
+58,Come,Come into,"được hưởng, thừa kế"
+59,Come,Come out,"lộ ra, xuất bản"
+60,Come,Come over,"trùm lên, bao trùm"
+61,Come,Come round,hồi phục
+62,Come,Come up,xảy ra
+63,Come,Come up with,"nảy ra, tìm ra ý tưởng"
+64,Come,Come up to,đạt tới mong đợi
+65,Cut,Cut away,"cắt, chặt đi"
+66,Cut,Cut back,"tỉa bớt, cắt bớt"
+67,Cut,Cut down,"chặt, đốn"
+68,Cut,Cut in,"nói xen vào, chen ngang"
+69,Cut,Cut off,"cắt, cúp, ngừng hoạt động"
+70,Cut,Cut out,"cắt ra, bớt ra"
+71,Cut,Cut up,"chỉ trích gay gắt, phê bình nghiêm khắc"
+72,Cut,Cut down on,cắt giảm
+73,Carry,Carry away,"mang đi, cuốn đi, bị làm cho mê say"
+74,Carry,Carry off,"chiếm đoạt, làm cho chấp nhận được, làm cho thông qua được"
+75,Carry,Carry on,tiếp tục
+76,Carry,Carry out,"thực hiện, tiến hành"
+77,Carry,Carry over,mang sang bên kia
+78,Carry,Carry through,"hoàn thành, vượt qua"
+79,Drop,Drop across,"tình cờ, ngẫu nhiên gặp"
+80,Drop,Drop off,lần lượt bỏ đi
+81,Drop,Drop in,"tạt vào thăm, nhân tiện đi qua ghé vào thăm"
+82,Drop,Drop on,"mắng nhiếc, sỉ vả, trừng phạt"
+83,Drop,Drop out,"bỏ cuộc, bỏ giữa chừng"
+84,Die,Die of,chết vì bệnh gì
+85,Die,Die for,hi sinh cho cái gì
+86,Die,Die down,"chết dần, chết mòn"
+87,Die,Die off,chết lần lượt
+88,Die,Die out,tuyệt chủng
+89,Do,Do away with,"bãi bỏ, thủ tiêu"
+90,Do,Do by,"xử sự, đối xử"
+91,Do,Do over,"làm lại, bắt đầu lại"
+92,Do,Do up,"trang trí, sửa lại"
+93,Fall,Fall out of,rơi ra khỏi
+94,Fall,Fall back,"ngã ngửa, rút lui"
+95,Fall,Fall back on,"phải cần đến, phải dùng đến"
+96,Fall,Fall behind,"thụt lùi, tụt lại"
+97,Fall,Fall down,"rơi xuống, thất bại"
+98,Fall,Fall for,"mê tít, bị bịp, chơi xỏ"
+99,Fall,Fall in with,tán đồng theo quan điểm của ai
+100,Fall,Fall off,"giảm sút, suy đồi"
+101,Fall,Fall on,tấn công
+102,Fall,Fall out,"cãi nhau, bất hoà, xoã tóc"
+103,Fall,Fall over,ngã lộn nhào
+104,Fall,Fall through,"hỏng, dang dở, không đi đến kết quả nào"
+105,Fall,Fall to,bắt đầu
+106,Fall,Fall under,"được liệt vào, chịu ảnh hưởng của"
+107,Fill,Fill in,điền đầy đủ thông tin
+108,Fill,Fill out,"làm căng ra, làm to ra, mập ra"
+109,Fill,Fill up,"đổ đầy, lấp đầy"
+110,Get,Get across,giải thích rõ ràng
+111,Get,Get around,đi vòng qua
+112,Get,Get at,nắm được
+113,Get,Get away,"đi khỏi, đi xa"
+114,Get,Get back,"lùi lại, trở lại"
+115,Get,Get behind with st,chưa hoàn thành một việc gì đó
+116,Get,Get behind,ủng hộ
+117,Get,Get by,xoay sở để sống/làm một việc gì đó
+118,Get,Get down,đi xuống
+119,Get,Get on,"đi lên, tiến bộ, lên xe"
+120,Get,Get off,xuống xe
+121,Get,Get off with sb,"làm thân, ve vãn ai"
+122,Get,Get out,đi ra ngoài
+123,Get,Get over,"vượt qua, khắc phục, khỏi"
+124,Get,Get round,"bình phục, khỏi"
+125,Get,Get through,"hoàn thành, làm xong"
+126,Get,Get up,thức dậy
+127,Get,Get down to V-ing,bắt đầu nghiêm túc làm gì
+128,Give,Give away,"cho, trao, phát"
+129,Give,Give back,"hoàn lại, trả lại"
+130,Give,Give in,"nhượng bộ, chịu thua"
+131,Give,Give off,"toả ra, phát ra"
+132,Give,Give out,"chia, phân phối, cạn kiệt"
+133,Give,Give over,"thôi, chấm dứt, trao tay"
+134,Give,Give up,từ bỏ
+135,Go,Go across,"đi qua, băng qua"
+136,Go,Go after,"theo sau, tán tỉnh"
+137,Go,Go against,làm trái ý muốn của ai
+138,Go,Go ahead,"tiến lên, thăng tiến"
+139,Go,Go along,"tiến triển, tiếp tục"
+140,Go,Go along with,đi cùng
+141,Go,Go away,đi xa
+142,Go,Go back,trở về
+143,Go,Go by,"đi qua, trôi qua"
+144,Go,Go in for,"tham gia, ham, mê"
+145,Go,Go into,"xem xét, nghiên cứu"
+146,Go,Go off,"đổ chuông, nổ tung, thiu thối"
+147,Go,Go on,tiếp tục
+148,Go,Go out,"mất điện, ra ngoài, đi chơi"
+149,Go,Go over,"ôn lại, xem lại, soát lại"
+150,Go,Go through,"xong, thành công, qua"
+151,Go,Go up,tăng lên
+152,Go,Go down,giảm xuống
+153,Go,Go with,đi với
+154,Hold,Hold back,ngăn lại
+155,Hold,Hold down,giữ
+156,Hold,Hold forth,"đưa ra, nêu ra"
+157,Hold,Hold in,"nén lại, kìm lại"
+158,Hold,Hold off,"giữ không cho lại gần, nán lại"
+159,Hold,Hold on,"nắm chặt, giữ chặt"
+160,Hold,Hold out,đưa ra
+161,Hold,Hold over,"đình lại, hoãn lại"
+162,Hold,Hold up,tắc nghẽn
+163,Hang,Hang about,"đi lang thang, đi la cà, sắp đến"
+164,Hang,Hang back,"do dự, lưỡng lự"
+165,Hang,Hang behind,tụt lại đằng sau
+166,Hang,Hang down,"rủ xuống, xoã xuống"
+167,Hang,Hang on,"dựa vào, bám vào"
+168,Hang,Hang out,"đi lang thang, la cà"
+169,Hang,Hang up,treo lên
+170,Keep,Keep away,"để ra xa, cất đi"
+171,Keep,Keep back,"giữ lại, cản lại, cầm lại"
+172,Keep,Keep down,nén lại
+173,Keep,Keep from,"nhịn, kiêng"
+174,Keep,Keep in with,thân thiện với ai
+175,Keep,Keep up with,"theo kịp, đuổi kịp"
+176,Keep,Keep off,tránh ra
+177,Keep,Keep on,tiếp tục
+178,Keep,Keep under,"đè nén, thống trị"
+179,Keep,Keep up,"giữ vững, giữ không cho đổ"
+180,Look,Look about,đợi chờ
+181,Look,Look after,chăm sóc
+182,Look,Look at,ngắm nhìn
+183,Look,Look away,quay đi
+184,Look,Look back,"quay lại, ngoái cổ lại"
+185,Look,Look back upon,nhìn lại cái gì đã qua
+186,Look,Look down,nhìn xuống
+187,Look,Look down on,coi thường
+188,Look,Look up to,kính trọng
+189,Look,Look for,tìm kiếm
+190,Look,Look forward to,mong đợi
+191,Look,Look in,"nhìn vào, ghé qua thăm"
+192,Look,Look into,"xem xét kỹ, nghiên cứu"
+193,Look,Look on,đứng xem
+194,Look,Look out,"để ý, coi chừng"
+195,Look,Look out for st,trông chừng cái gì
+196,Look,Look over,"xem xét, kiểm tra, tha thứ, bỏ qua"
+197,Look,Look round,nhìn quanh
+198,Look,Look through,"lờ đi, xem lướt qua"
+199,Look,Look up,"nhìn lên, tra cứu"
+200,Lay,Lay aside,"gác sang một bên, không nghĩ tới"
+201,Lay,Lay down,"để xuống, xác lập, đề ra"
+202,Lay,Lay for,nằm đợi
+203,Lay,Lay in,"dự trữ, để dành"
+204,Lay,Lay sb off,cho ai nghỉ việc
+205,Lay,Lay on,"đánh, giáng đòn"
+206,Lay,Lay out,"sắp đặt, bố trí, đưa ra"
+207,Lay,Lay over,"trải lên, phủ lên"
+208,Let,Let by,để cho đi qua
+209,Let,Let down,làm cho ai đó thất vọng
+210,Let,Let in,cho vào
+211,Let,Let off,tha thứ
+212,Let,Let on,"để lộ, tiết lộ"
+213,Let,Let out,"để cho đi ra, để cho chạy thoát"
+214,Let,Let up,"dịu, ngót"
+215,Make,Make after,theo đuổi
+216,Make,Make against,"bất lợi, có hại cho"
+217,Make,Make at,"tiến tới, tấn công ai"
+218,Make,Make away,vội vàng ra đi
+219,Make,Make away with,"huỷ hoại, thủ tiêu, giết"
+220,Make,Make off,"chuồn, cuốn gói"
+221,Make,Make off with,ăn cắp
+222,Make,Make out,hiểu
+223,Make,Make over,"chuyển, nhượng"
+224,Make,Make up,"trang điểm, bịa đặt, quyết định, làm hoà"
+225,Make,Make for,tiến về hướng
+226,Make,Make up of,bao gồm
+227,Make,Make use of,lợi dụng
+228,Make,Make up for,bù lại
+229,Pass,Pass away,qua đời
+230,Pass,Pass sb/st by,"lờ đi, làm ngơ"
+231,Pass,Pass for,"được coi là, có tiếng là"
+232,Pass,Pass off,"mất đi, biến mất (cảm giác)"
+233,Pass,Pass on,truyền lại
+234,Pass,Pass out,"mê man, bất tỉnh"
+235,Pass,Pass over,băng qua
+236,Pass,Pass round,"chuyền tay, chuyền theo vòng"
+237,Pass,Pass through,"trải qua, kinh qua"
+238,Pass,Pass up,"từ bỏ, khước từ"
+239,Pick,Pick at,"chế nhạo, chế giễu, rầy la"
+240,Pick,Pick off,nhổ đi
+241,Pick,Pick up,"nhặt, đón"
+242,Put,Put aside,"để dành, gạt sang một bên"
+243,Put,Put back,để lại (chỗ cũ)
+244,Put,Put by,lảng tránh
+245,Put,Put down,đặt xuống
+246,Put,Put in,đệ đơn
+247,Put,Put in for,"đòi, yêu sách"
+248,Put,Put off,hoãn
+249,Put,Put on,"mặc (quần áo), đội (mũ), đi (giày)...."
+250,Put,Put out,dập tắt
+251,Put,Put through,"hoàn thành, xong xuôi"
+252,Put,Put up,dựng lên
+253,Put,Put sb up,cho ai đó ở nhờ
+254,Put,Put up with,chịu đựng
+255,Take,Take after = look like,giống
+256,Take,Take along,"mang theo, đem theo"
+257,Take,Take away,"mang đi, lấy đi"
+258,Take,Take back,"lấy lại, mang về"
+259,Take,Take down,"tháo xuống, hạ xuống"
+260,Take,Take in,"hiểu, lừa gạt"
+261,Take,Take off,"cởi, cất cánh"
+262,Take,Take on,"đảm nhiệm, thuê mướn"
+263,Take,Take out,"nhổ (cây, răng), đổ (rác)"
+264,Take,Take over,"tiếp quản, kế tục"
+265,Take,Take to,thích
+266,Take,Take up,tiếp tục một công việc bỏ dở
+267,Turn,Turn away,ngoảnh mặt đi
+268,Turn,Turn back,quay lại
+269,Turn,Turn down,"vặn nhỏ, từ chối"
+270,Turn,Turn into,biến thành
+271,Turn,Turn off,tắt đi
+272,Turn,Turn on,bật lên
+273,Turn,Turn out,hoá ra
+274,Turn,Turn over,"lật, dở"
+275,Turn,Turn up = show up = arrive,"đến, xuất hiện"
+276,Try,Try on,thử đồ
+277,Try,Try out = test,kiểm tra xem có hoạt động được hay không
+278,Tell,Tell against,nói điều chống lại
+279,Tell,Tell off,"rầy, la mắng"
+280,Tell,Tell on,mách
+281,Tell,Tell over,đếm
+282,Tell,Tell sb/st apart,phân biệt ai/cái gì
+283,See,See about,đảm đương
+284,See,See after,"săn sóc, để ý tới"
+285,See,See off,tiễn
+286,Set,Set against,"so sánh, đối chiếu"
+287,Set,Set apart,dành riêng ra
+288,Set,Set back,vặn chậm lại
+289,Set,Set down,"ghi lại, chép lại"
+290,Set,Set off/out,khởi hành
+291,Set,Set up,thành lập
+292,Stay,Stay away,"không đến, vắng mặt"
+293,Stay,Stay in,không ra ngoài
+294,Stay,Stay out,"ở ngoài, không về nhà"
+295,Stay,Stay on,ở lâu hơn dự định
+296,Stay,Stay up,thức
+297,Stand,Stand by,đứng cạnh
+298,Stand,Stand for,"viết tắt, tượng trưng cho"
+299,Stand,Stand in,đại diện cho
+300,Stand,Stand in with,"vào hùa, cấu kết với"
+301,Stand,Stand off,"tránh xa, lảng xa"
+302,Stand,Stand on,"giữ đúng, khăng khăng đòi"
+303,Stand,Stand out,nổi bật
+304,Stand,Stand over,bị hoãn lại
+305,Stand,Stand up,đứng dậy
+306,Stand,Stand up for,"về phe, ủng hộ"
+307,Stand,Stand up to,dũng cảm đương đầu
+308,Stand,Stand in for,thay thế chỗ của ai
+309,Run,Run after,theo đuổi ai
+310,Run,Run against,"đi ngược lại, chống đối, phản đối"
+311,Run,Run along,"rời đi, tránh ra xa"
+312,Run,Run down,"hao mòn, tiều tuỵ"
+313,Run,Run out,cạn kiệt
+314,Run,Run out of,hết sạch cái gì
+315,Run,Run on,chạy bằng cái gì
+316,Run,Run over,"cán lên, đè lên"
+317,Run,Run through,tiêu xài phung phí
+318,Watch,Watch after,"dõi theo, nhìn theo"
+319,Watch,Watch for,"chờ, đợi"
+320,Watch,Watch out,"đề phòng, coi chừng"
+321,Watch,Watch over,"trông nom, canh gác"
+322,Wear,Wear away,"làm mòn dần, làm mất dần"
+323,Wear,Wear down,làm kiệt sức dần
+324,Wear,Wear off,làm mòn mất
+325,Wear,Wear out,"làm rách, làm sờn, làm mệt lử"
+326,Wipe,Wipe at,"quật, giáng cho một đòn"
+327,Wipe,Wipe away,"tẩy, lau sạch"
+328,Wipe,Wipe out,xoá sạch

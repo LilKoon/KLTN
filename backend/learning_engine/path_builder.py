@@ -29,12 +29,19 @@ from __future__ import annotations
 
 from typing import List, Dict
 
-LEVEL_ORDER = ["A1", "A2", "B1", "B2", "C1", "C2"]
+LEVEL_ORDER = ["A", "B", "C"]
+LEVEL_LABEL_VI = {"A": "Sơ cấp (A)", "B": "Trung cấp (B)", "C": "Nâng cao (C)"}
 
 SKILL_VI = {"grammar": "Ngữ pháp", "listening": "Kỹ năng nghe", "vocab": "Từ vựng"}
 SKILL_DB = {"grammar": "GRAMMAR", "listening": "LISTENING", "vocab": "VOCABULARY"}
 
-SEVERITY_NODE_TOTAL = {0: 6, 1: 9, 2: 12}
+
+# Số CORE nodes theo severity → tổng trạm thực tế sau khi chèn REVIEW + FINAL:
+#   low  (0): 12 CORE + 3 REVIEW + 1 FINAL = 16 trạm
+#   med  (1): 15 CORE + 4 REVIEW + 1 FINAL = 20 trạm  ← ~20 trạm mỗi level
+#   high (2): 18 CORE + 5 REVIEW + 1 FINAL = 24 trạm
+SEVERITY_NODE_TOTAL = {0: 12, 1: 15, 2: 18}
+
 
 CORE_TEMPLATES = {
     "grammar": [
@@ -74,7 +81,7 @@ def _shift_level(current: str, delta: int) -> str:
     try:
         idx = LEVEL_ORDER.index(current.upper())
     except ValueError:
-        idx = 2  # default B1
+        idx = 1  # default B (trung cấp)
     new_idx = max(0, min(len(LEVEL_ORDER) - 1, idx + delta))
     return LEVEL_ORDER[new_idx]
 
@@ -113,30 +120,20 @@ def build_learning_path(
     scores: Dict[str, float] | None = None,
 ) -> List[dict]:
     """
-    inference: kết quả từ EnglishLearningEngine.predict()
-    current_level: CEFR hiện tại của học viên (vd 'B1')
-    scores: dict {grammar, listening, vocab} điểm 0-10 (để ghi nhận vào node nếu cần)
+    Template mới: cứ 3 bài CORE → 1 trạm REVIEW ôn tập.
+    Cuối lộ trình: 1 FINAL_TEST đánh giá tất cả skills.
 
-    Trả về list node dict, mỗi node:
-      {
-        "thu_tu": int,
-        "skill": "GRAMMAR" | "LISTENING" | "VOCABULARY",
-        "kind": "CORE" | "PRACTICE",
-        "title": str,
-        "description": str,
-        "target_level": "A1".."C2",
-        "exercises_count": int,
-        "weight": float,
-        "is_weak": bool,
-      }
+    inference: kết quả từ EnglishLearningEngine.predict()
+    current_level: CEFR hiện tại (vd 'B1')
+    scores: {grammar, listening, vocab} 0-10
     """
     severity = inference.get("severity", 1)
     weights = inference.get("weights", {"grammar": 1/3, "listening": 1/3, "vocab": 1/3})
     weak_skills = inference.get("weak_skills", [])
 
-    total_nodes = SEVERITY_NODE_TOTAL.get(severity, 9)
+    total_core = SEVERITY_NODE_TOTAL.get(severity, 9)
 
-    # CEFR target shift theo severity
+    # CEFR target
     if severity == 0:
         target_level = _shift_level(current_level, +1)
     elif severity == 2:
@@ -144,9 +141,9 @@ def build_learning_path(
     else:
         target_level = current_level.upper() if current_level else "B1"
 
-    counts = _allocate_counts(total_nodes, weights, must_include=weak_skills)
+    counts = _allocate_counts(total_core, weights, must_include=weak_skills)
 
-    # Tạo nodes cho từng skill
+    # Tạo CORE nodes cho từng skill
     nodes_by_skill: Dict[str, List[dict]] = {}
     for skill, n in counts.items():
         if n <= 0:
@@ -155,58 +152,84 @@ def build_learning_path(
         skill_nodes = []
         for i in range(n):
             tmpl_title, tmpl_desc = templates[i % len(templates)]
-            # Cứ mỗi 2 node lý thuyết xen 1 node luyện tập
-            if i > 0 and i % 2 == 0:
-                kind = "PRACTICE"
-                title = PRACTICE_TEMPLATES[skill].format(topic=tmpl_title.lower())
-                desc = f"Luyện tập kết hợp ôn lại '{tmpl_title}'."
-                ex_count = {"grammar": 10, "listening": 5, "vocab": 15}[skill]
-            else:
-                kind = "CORE"
-                title = tmpl_title
-                desc = tmpl_desc
-                ex_count = {"grammar": 6, "listening": 4, "vocab": 10}[skill]
             skill_nodes.append({
                 "skill": SKILL_DB[skill],
                 "skill_vi": SKILL_VI[skill],
-                "kind": kind,
-                "title": title,
-                "description": desc,
+                "kind": "CORE",
+                "title": tmpl_title,
+                "description": tmpl_desc,
                 "target_level": target_level,
-                "exercises_count": ex_count,
+                "exercises_count": {"grammar": 6, "listening": 4, "vocab": 10}[skill],
                 "weight": weights.get(skill, 0.0),
                 "is_weak": skill in weak_skills,
             })
         nodes_by_skill[skill] = skill_nodes
 
-    # Sắp xếp xen kẽ — bắt đầu từ skill weight cao nhất
+    # Xen kẽ skills (skill weight cao nhất trước)
     skills_ordered = sorted(nodes_by_skill.keys(), key=lambda k: weights.get(k, 0), reverse=True)
-    interleaved: List[dict] = []
+    core_nodes: List[dict] = []
     cursors = {k: 0 for k in skills_ordered}
     while any(cursors[k] < len(nodes_by_skill[k]) for k in skills_ordered):
         for k in skills_ordered:
             if cursors[k] < len(nodes_by_skill[k]):
-                interleaved.append(nodes_by_skill[k][cursors[k]])
+                core_nodes.append(nodes_by_skill[k][cursors[k]])
                 cursors[k] += 1
 
+    # Chèn REVIEW sau mỗi 3 CORE nodes
+    final_nodes: List[dict] = []
+    for i, node in enumerate(core_nodes):
+        final_nodes.append(node)
+        # Sau node thứ 3, 6, 9... → chèn REVIEW
+        if (i + 1) % 3 == 0 and (i + 1) < len(core_nodes):
+            final_nodes.append({
+                "skill": "MIXED",
+                "skill_vi": "Ôn tập",
+                "kind": "REVIEW",
+                "title": f"Ôn tập Trạm {i-1}–{i+1}",
+                "description": "Kiểm tra lại kiến thức 3 bài học vừa rồi. Cần đạt 80% để tiếp tục.",
+                "target_level": target_level,
+                "exercises_count": 10,
+                "weight": 1.0,
+                "is_weak": False,
+                "review_group": list(range(len(final_nodes) - 3, len(final_nodes))),  # index 3 bài trước
+            })
+
+    # Cuối lộ trình: FINAL_TEST
+    final_nodes.append({
+        "skill": "MIXED",
+        "skill_vi": "Kiểm tra cuối",
+        "kind": "FINAL_TEST",
+        "title": "Kiểm tra cuối lộ trình",
+        "description": "Đánh giá toàn diện Grammar, Vocabulary và Listening. Kết quả sẽ sinh lộ trình giai đoạn tiếp theo.",
+        "target_level": target_level,
+        "exercises_count": 15,
+        "weight": 1.0,
+        "is_weak": False,
+    })
+
     # Gán thứ tự
-    for idx, node in enumerate(interleaved, start=1):
+    for idx, node in enumerate(final_nodes, start=1):
         node["thu_tu"] = idx
 
-    return interleaved
+    return final_nodes
 
 
-def overall_to_cefr(overall_0_10: float) -> str:
-    """Map overall score (0-10) → CEFR. Theo LEVEL_RANGES trong notebook."""
+
+def overall_to_level(overall_0_10: float) -> str:
+    """Map điểm tổng (0-10) → 3 mức A/B/C.
+
+    A < 5  : Sơ cấp
+    B 5-8  : Trung cấp
+    C ≥ 8  : Nâng cao
+    """
     s = max(0.0, min(10.0, overall_0_10))
-    if s < 3.0:
-        return "A1"
     if s < 5.0:
-        return "A2"
-    if s < 7.0:
-        return "B1"
-    if s < 8.5:
-        return "B2"
-    if s < 9.5:
-        return "C1"
-    return "C2"
+        return "A"
+    if s < 8.0:
+        return "B"
+    return "C"
+
+
+# Backwards-compat alias để code cũ không vỡ ngay
+def overall_to_cefr(overall_0_10: float) -> str:  # pragma: no cover
+    return overall_to_level(overall_0_10)

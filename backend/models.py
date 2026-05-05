@@ -49,6 +49,10 @@ class BaiHoc(Base):
     ThuTu = Column(Integer, nullable=False)
     NoiDungLyThuyet = Column(JSONB, nullable=True)
     TrangThai = Column(String(50), default='ACTIVE')
+    # Phân loại bài học theo kỹ năng và chủ đề
+    KyNang = Column(String(50), nullable=True)   # GRAMMAR | LISTENING | VOCABULARY
+    ChuDe = Column(String(255), nullable=True)   # Tên chủ đề gốc từ dataset
+    FileAudio = Column(String(255), nullable=True)  # Đường dẫn mp3 (chỉ dùng cho LISTENING)
 
     khoa_hoc = relationship("KhoaHoc", back_populates="bai_hocs")
 
@@ -57,6 +61,7 @@ class NganHangCauHoi(Base):
 
     MaCauHoi = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     MaKhoaHoc = Column(UUID(as_uuid=True), ForeignKey("KhoaHoc.MaKhoaHoc", ondelete="SET NULL"))
+    MaBaiHoc = Column(UUID(as_uuid=True), ForeignKey("BaiHoc.MaBaiHoc", ondelete="SET NULL"), nullable=True)
     KyNang = Column(String(50), nullable=False)
     MucDo = Column(String(50), default='MEDIUM')
     NoiDung = Column(Text, nullable=False)
@@ -68,6 +73,8 @@ class NganHangCauHoi(Base):
     FileAudio = Column(String(255), nullable=True)
 
     khoa_hoc = relationship("KhoaHoc", back_populates="cau_hois")
+    bai_hoc = relationship("BaiHoc")
+
 
 class LoTrinhCaNhan(Base):
     __tablename__ = "LoTrinhCaNhan"
@@ -93,7 +100,7 @@ class TrangThaiNode(Base):
     MoTa = Column(Text, nullable=True)
     ThuTu = Column(Integer, nullable=False)
     
-    # CORE / SKIPPED / BOOSTED / TEST_80
+    # CORE / SKIPPED / BOOSTED / TEST_80 / REVIEW / FINAL_TEST
     LoaiNode = Column(String(50), default='CORE') 
     
     # LOCKED / CURRENT / COMPLETED
@@ -102,8 +109,13 @@ class TrangThaiNode(Base):
     # Cho cơ chế BOOST (bài tập riêng lẻ lưu JSON)
     NoiDungBoost = Column(JSONB, nullable=True)
 
+    # REVIEW & FINAL_TEST tracking
+    DiemOntap = Column(Float, nullable=True)   # điểm lần gần nhất (0.0 - 1.0)
+    SoLanThu = Column(Integer, default=0)       # đếm số lần đã thử
+
     lo_trinh = relationship("LoTrinhCaNhan", back_populates="cac_node")
     bai_hoc = relationship("BaiHoc")
+
 
 
 class BoDTheFlashcard(Base):

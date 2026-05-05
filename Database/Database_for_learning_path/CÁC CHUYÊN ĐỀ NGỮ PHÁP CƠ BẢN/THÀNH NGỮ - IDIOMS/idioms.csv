@@ -1,0 +1,224 @@
+﻿id,loai,idiom,nghia
+1,color,The black sheep,"nghịch tử, phá gia chi tử"
+2,color,Blue in the face,"mãi mãi, lâu đến vô vọng"
+3,color,Red-letter day,"ngày đáng nhớ vì có chuyện tốt lành, ngày vui"
+4,color,White as a ghost/sheet,"trắng bệch, nhợt nhạt"
+5,color,With flying colors,xuất sắc
+6,color,Once in a blue moon,"năm thì mười hoạ, hiếm khi"
+7,color,Black and white,rõ ràng
+8,color,Catch sb red-handed,bắt tại trận
+9,color,Have a yellow streak,có tính nhát gan
+10,color,Get/give the green light,bật đèn xanh
+11,color,Out of the blue,hoàn toàn bất ngờ
+12,color,Paint the town red,ăn mừng
+13,color,Red tape,nạn quan liêu
+14,color,In the pink = in good health,sức khoẻ tốt
+15,color,Lend color to st,chứng minh cái gì
+16,body,Break a leg,Good luck! (thường dùng để chúc may mắn)
+17,body,Scratch someone's back = Help someone out with the assumption that they will return the favor in the future,giúp đỡ người khác với hi vọng họ sẽ giúp lại mình
+18,body,Hit the nail on the head = Do or say something exactly right,"nói chính xác, làm chính xác"
+19,body,Splitting headache = A severe headache,đau đầu như búa bổ
+20,body,Make someone's blood boil,"làm ai sôi máu, giận dữ"
+21,body,Pay through the nose = To pay too much for something,trả giá quá đắt
+22,body,By the skin of one's teeth,"sát sao, rất sát"
+23,body,Pull someone's leg,chọc ai
+24,body,Fight tooth and claw/nail,"đánh nhau dữ dội, cấu xé nhau"
+25,body,Not bat an eye = To not show any shock or surprise,không tỏ ra ngạc nhiên hay sốc
+26,body,Cost an arm and a leg,rất là đắt đỏ
+27,body,Go to one's head,khiến ai kiêu ngạo
+28,body,Get/have cold feet,"mất hết can đảm, chùn bước"
+29,body,Led somebody by the nose = To control someone and make them do exactly what you want them to do,"nắm đầu, dắt mũi ai"
+30,body,Off one's head,"điên, loạn trí"
+31,body,Put one's foot in it,"gây nhầm lẫn, bối rối, phạm một sai lầm gây bối rối"
+32,body,Stay/keep/be on one's toe,"cảnh giác, thận trọng"
+33,body,Have in mind,"đang suy tính, cân nhắc"
+34,body,At heart,"thực chất, cơ bản (basically, fundamentally)"
+35,body,Face the music,chịu trận
+36,body,Like the back of one's hand,rõ như lòng bàn tay
+37,body,The twinkling of an eye,trong nháy mắt
+38,body,On the tip of tongue,dùng khi muốn diễn tả ai đó không thể nhớ ra được điều gì mặc dù đã chắc chắn biết về nó
+39,body,Put one's foot in one's mouth,nói một điều ngu ngốc làm xúc phạm đến người khác
+40,body,Stick one's nose into one's business,chúi mũi vào việc của người khác
+41,body,Feel st in one's bones,cảm nhận rõ rệt
+42,body,A real pain in the neck,"sốc, nghiêm trọng"
+43,body,Face to face,trực tiếp
+44,body,See eye to eye with sb = totally agree,đồng tình
+45,body,Keep one's head above the water,xoay xở
+46,body,Have egg on one's face,xấu hổ
+47,body,Word of mouth,"đồn đại, truyền miệng"
+48,body,Heart to heart,chân thành
+49,body,Body and soul,"hết lòng, hết dạ"
+50,body,Flesh and blood,người có máu mủ ruột thịt
+51,body,Skin and bones,"tiều tụy thảm thương, chỉ còn da bọc xương"
+52,body,Lend an ear to sb/st,lắng nghe một cách chân thành
+53,body,Trip over one's big feet,tự vấp ngã
+54,body,In one's capable hands,trong quyền giải quyết
+55,body,Up to your eyes,rất bận
+56,body,Have a head for st,giỏi về cái gì
+57,body,A sweet tooth,người thích ăn đồ ăn ngọt
+58,body,"Have st at one's fingertips = To have the information, knowledge, etc. That is needed in a particular situation and be able to find it easily and use it quickly",nhận được thông tin/ kiến thức cần thiết một cách dễ dàng và nhanh chóng
+59,animal,Take the mickey out of sb = make fun of sb,"chế nhạo, châm chọc ai"
+60,animal,Get butterflies in one's stomach,cảm thấy bồn chồn
+61,animal,Have a bee in one's bonnet about st,ám ảnh về điều gì
+62,animal,When pigs fly = something will never happen,"điều vô tưởng, không thể xảy ra"
+63,animal,Teacher's pets,học sinh cưng
+64,animal,Let the cat out of the bag,tiết lộ bí mật
+65,animal,Huddle into a pen,"lại gần nhau, túm tụm lại"
+66,animal,Kill two birds with one stone,một mũi tên trúng hai đích
+67,animal,A big fish in a small pond,thằng chột làm vua xứ mù
+68,animal,Rain cats and dogs,mưa rất to
+69,animal,Like a fish out of water,"như cá ra khỏi nước (bơ vơ, xa lạ, ngớ ngẩn)"
+70,animal,Like water off a duck's back,nước đổ đầu vịt
+71,animal,Don't count yours the chicken before they hatch,đừng vội làm gì khi chưa chắc chắn
+72,animal,Catch the worms,nắm bắt cơ hội
+73,animal,Be in the doghouse,"nếu bạn đang ""in the doghouse"", tức là ai đó đang khó chịu với bạn vì điều bạn đã làm"
+74,animal,Don't look a gift horse in the mouth,đừng đòi hỏi về giá trị khi nhận được một món quà
+75,animal,Cock- and -bull,"bịa đặt, vẽ vời ra"
+76,animal,Change horse in midstream,thay ngựa giữa dòng (ý nói thay đổi giữa chừng)
+77,life,To be in deep water,rơi vào tình huống khó khăn
+78,life,To be in hot water,gặp rắc rối
+79,life,Better safe than sorry,cẩn tắc vô áy náy
+80,life,Money is the good servant but a bad master,"khôn lấy của che thân, dại lấy thân che của"
+81,life,The grass are always green on the other side of the fence,đứng núi này trông núi nọ
+82,life,"One bitten, twice shy",chim phải đạn sợ cành cong
+83,life,In Rome do as the Romans do,nhập gia tuỳ tục
+84,life,Honesty is the best policy,thật thà là thượng sách
+85,life,"A woman gives and forgives, a man gets and forgets","đàn bà cho và tha thứ, đàn ông nhận và quên"
+86,life,No roses without a thorn,"hồng nào mà chẳng có gai, việc nào mà chẳng có vài khó khăn!"
+87,life,Save for the rainy day,làm khi lành để dành khi đau
+88,life,It's an ill bird that fouls its own nest,vạch áo cho người xem lưng / Tốt đẹp phô ra xấu xa đậy lại
+89,life,Don't trouble trouble till trouble troubles you,sinh sự sự sinh
+90,life,Still water run deep,tằm ngấm tằm ngấm mà đấm chết voi
+91,life,"Men make house, women make home","đàn ông xây nhà, đàn bà xây tổ ấm"
+92,life,Penny wise pound foolish,tham bát bỏ mâm
+93,life,Make the mare go,có tiền mua tiên cũng được
+94,life,"Like father, like son",con nhà tông không giống lông thì cũng giống cánh
+95,life,The die is cast,bút sa gà chết
+96,life,Two can play that game,ăn miếng trả miếng
+97,life,Practice makes perfect,có công mài sắt có ngày nên kim
+98,life,Ignorance is bliss,không biết thì dựa cột mà nghe
+99,life,"No pain, no gain",có làm thì mới có ăn
+100,life,A bad beginning makes a bad ending,đầu xuôi đuôi lọt
+101,life,A clean fast is better than a dirty breakfast,giấy rách phải giữ lấy lề
+102,life,Beauty is but skin-deep,cái nết đánh chết cái đẹp
+103,life,Calamity is man's true touchstone,"lửa thử vàng, gian nan thử sức."
+104,life,Diamond cut diamond,vỏ quýt dày có móng tay nhọn
+105,life,Diligence is the mother of success,có công mài sắt có ngày nên kim
+106,life,Don't put off until tomorrow what you can do today,việc hôm nay chớ để ngày mai
+107,life,A hot potato = something that is difficult or dangerous to deal with,vấn đề nan giải
+108,life,A lost cause,"hết hi vọng, không thay đổi được gì"
+109,life,"It never rains but it pours = good or bad things do not just happen a few at a time, but in large numbers all at once",hoạ vô đơn chí
+110,noun,A blind date,cuộc hẹn giữa hai người chưa hề quen biết
+111,noun,Golden handshake,món tiền hậu hĩnh dành cho người sắp nghỉ việc
+112,noun,One's cup of tea,thứ mà ai đó thích
+113,noun,Odds and ends,"linh tinh, vụn vặt"
+114,noun,Leaps and bounds,"nhảy vọt, vượt trội"
+115,noun,Between two stools = on the horns of a dilemma = when someone finds it difficult to choose between two alternatives,tiến thoái lưỡng nan
+116,noun,On the house,không phải trả tiền
+117,noun,Off the peg,hàng may sẵn
+118,noun,Off the record,"không chính thức, không được công bố"
+119,noun,Part and parcel,"thiết yếu, quan trọng"
+120,noun,A shadow of a doubt,sự nghi ngờ
+121,noun,Beyond the shadow of a doubt,không hề nghi ngờ
+122,noun,The last straw = a nail in one's coffin,giọt nước tràn ly
+123,noun,The apple of one's eye,bảo bối của ai
+124,noun,Good egg,"người có nhân cách, đáng tin cậy"
+125,noun,Close shave = narrow escape,thoát chết trong gang tấc
+126,noun,Wet blanket,người phá đám
+127,noun,A kick in the pants,một bài học để ứng xử tốt hơn
+128,noun,An open-and-shut case,vấn đề dễ giải quyết
+129,noun,A shot in the dark,một câu đố
+130,noun,A big cheese,"nhân vật tai to mặt lớn, người có vai vế, quyền lực"
+131,noun,Ups and downs,lúc thăng lúc trầm
+132,noun,Ins and outs,những đặc tính và sự phức tạp
+133,noun,The tip of the iceberg,phần nhìn thấy
+134,noun,Compulsive liar,kẻ nói dối chuyên nghiệp
+135,verb,To pour cold water on something,dội nước lạnh vào...
+136,verb,To blow something out of the water,"đánh bại, vượt"
+137,verb,To sell/go like hot cakes,"đắt đỏ, đắt như tôm tươi"
+138,verb,To get in hot water = be in trouble/ have difficulty,gặp khó khăn
+139,verb,To hit the books = to study,học
+140,verb,To hit the roof = to hit the ceiling = to suddenly become angry,giận dữ
+141,verb,To hit it off,tâm đầu ý hợp
+142,verb,To make good time,"di chuyển nhanh, đi nhanh"
+143,verb,To chip in,góp tiền
+144,verb,To run an errand,làm việc vặt
+145,verb,To fly off the handle,"dễ nổi giận, phát cáu"
+146,verb,To cut it fine,đến sát giờ
+147,verb,To jump the traffic lights,vượt đèn đỏ
+148,verb,To put on an act,"giả bộ, làm bộ"
+149,verb,To come to light,"được biết đến, được phát hiện, được đưa ra ánh sáng."
+150,verb,To pull one's weight,"nỗ lực, làm tròn trách nhiệm"
+151,verb,To make ends meet,xoay xở để kiếm sống
+152,verb,To get the hold of the wrong end of the stick,hiểu nhầm ai đó
+153,verb,To cut and dried,"cuối cùng, không thể thay đổi, rõ ràng, dễ hiểu"
+154,verb,To know by sight,nhận ra
+155,verb,To take pains,làm việc cẩn thận và tận tâm
+156,verb,To drop sb a line/note,viết thư cho ai
+157,verb,To turn over a new leaf,bắt đầu thay đổi hành vi của mình
+158,verb,To weigh up the pros and cons,cân nhắc điều hay lẽ thiệt
+159,verb,"To burn the midnight oil = to stay up working, especially studying late at night","thức khuya làm việc, học bài"
+160,verb,To put sb/st at one's disposal,cho ai tuỳ ý sử dụng
+161,verb,To bring down the house,làm cho cả khán phòng vỗ tay nhiệt liệt
+162,verb,To beat about the bush,vòng vo tam quốc
+163,verb,To find fault with,"chỉ trích, kiếm chuyện, bắt lỗi"
+164,verb,"To take it amiss = to understand as wrong or insulting, or misunderstand",hiểu lầm
+165,verb,To break the news,thông báo
+166,verb,To drop a brick,"lỡ lời, lỡ miệng"
+167,verb,To take st for granted,coi là hiển nhiên
+168,verb,To break the ice,"Thành ngữ này thường dùng để diễn tả làm một việc gì đó để giúp mọi người thư giãn và thoải mái, đặc biệt khi mới gặp"
+169,verb,To blow one's own trumpet,"khoe khoang, khoác lác"
+170,verb,To miss the boat,lỡ mất cơ hội
+171,verb,To put one's card on the table,thẳng thắn
+172,verb,To call it a day = stop working,"nghỉ, giải lao"
+173,verb,To hear a pin drop,"im lặng, tĩnh lặng"
+174,verb,To blow hot and cold,"hay thay đổi ý kiến, dao động"
+175,verb,To call the shots,"chỉ huy, quyết định về những việc cần làm"
+176,verb,To draws the line,đặt giới hạn cho việc gì; phân biệt giữa hai thứ tương tự nhau
+177,verb,To foot the bill,thanh toán tiền
+178,verb,To carry the can,"chịu trách nhiệm, chịu sự chỉ trích"
+179,verb,To throw the baby out with the bathwater,vứt bỏ những thứ đáng giá cùng lúc với rũ bỏ với thứ gì không còn cần
+180,verb,To go with the flow,làm theo mọi người
+181,verb,To keep his shirt on,bình tĩnh
+182,verb,To let off steam,xả hơi
+183,adj/adv,"At the drop of a hat = immediately, instantly",ngay lập tức
+184,adj/adv,Off and on/ on and off,"không đều đặn, thỉnh thoảng"
+185,adj/adv,High and low = here and there = everywhere = far and wide,"đó đây, khắp mọi nơi"
+186,adj/adv,Spick and span,"ngăn nắp, gọn gàng"
+187,adj/adv,On the spot = immediately,ngay lập tức
+188,adj/adv,At the eleventh hour,vào phút chót
+189,adj/adv,On the top of the world = walking on the air = over the moon = like a dog with two tails = happy,"vui sướng, hạnh phúc"
+190,adj/adv,In vain,vô ích
+191,adj/adv,A piece of cake,dễ như ăn cháo
+192,adj/adv,Down the drain,"công cốc, đổ ra sông ra biển"
+193,adj/adv,Under the weather = off color,không được khoẻ
+194,adj/adv,The end of the world,đáng để bận tâm
+195,adj/adv,As fit as a fiddle,khoẻ như vâm
+196,adj/adv,On probation,"trong thời gian quản chế, tập sự (công việc)"
+197,adj/adv,Home and dry = with flying colors,thành công
+198,adj/adv,Apples and oranges = chalk and cheese,"rất khác nhau, khác một trời một vực"
+199,adj/adv,As long as your arm,rất dài
+200,adj/adv,As high as a kite,"quá phấn khích, thường là do bị ảnh hưởng bởi đồ uống có cồn hoặc ma tuý"
+201,adj/adv,In the same boat,ở trong cùng một hoàn cảnh
+202,adj/adv,Hot under the collar,"điên tiết, cáu tiết"
+203,adj/adv,As red as a beetroot,đỏ như củ cải đường/ngượng
+204,adj/adv,For good = permanently = forever,mãi mãi
+205,adj/adv,Now and then = once in a while = sometimes = every so often = occasionally,thỉnh thoảng
+206,adj/adv,Full of beans,"hăng hái, sôi nổi, đầy năng lượng"
+207,adj/adv,At a loose end = free,rảnh rỗi
+208,adj/adv,A tall story = unbelievable,khó tin
+209,adj/adv,As cool as cucumber,"bình tĩnh, không nao núng"
+210,adj/adv,Peace and quiet,bình yên và tĩnh lặng
+211,adj/adv,Behind closed doors,"kín, không công khai"
+212,adj/adv,"High and dry = in a difficult situation, without help or money",trong tình huống khó khăn
+213,adj/adv,"Prim and proper = always behaving in a careful and formal way, and easily shocked by anything that is rude","kĩ lưỡng (quá mức), có chút bảo thủ"
+214,adj/adv,Rough and ready = simple and prepared quickly but good enough for a particular situation,"đơn giản, nhanh chóng nhưng vẫn đảm bảo chất lượng"
+215,adj/adv,Sick and tired,vô cùng mệt mỏi
+216,adj/adv,Safe and sound,bình an vô sự
+217,adj/adv,White-collar,"công chức, lao động bằng trí óc"
+218,adj/adv,Blue-collar,lao động tay chân
+219,adj/adv,Nowhere near,"còn lâu, chắc là không"
+220,adj/adv,Out of sorts,"ốm, yếu, buồn chán"
+221,adj/adv,On the mend,hồi phục
+222,adj/adv,Over the worst,vượt qua điều tồi tệ nhất
+223,adj/adv,On pins and needles = nervous,lo lắng

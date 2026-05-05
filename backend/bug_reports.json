@@ -154,5 +154,18 @@
     "source": "backend",
     "url": "/auth/register",
     "ip": "127.0.0.1"
+  },
+  {
+    "report_id": "5f70d4a20c66",
+    "timestamp": "2026-05-05T03:39:36+00:00",
+    "id": "AUTH_002",
+    "title": "Sai email hoặc mật khẩu",
+    "message": "Thông tin đăng nhập không chính xác. Hãy thử lại.",
+    "category": "auth",
+    "location": "backend/api/auth.py:login:200",
+    "detail": null,
+    "source": "backend",
+    "url": "/auth/login",
+    "ip": "127.0.0.1"
   }
 ]

@@ -8,7 +8,9 @@ export default function Profile() {
     const [isLoading, setIsLoading] = useState(false);
     const [alertMsg, setAlertMsg] = useState(null);
     const [alertType, setAlertType] = useState('success');
-    
+    const [stats, setStats] = useState(null);
+    const [statsLoading, setStatsLoading] = useState(false);
+
     // Personal Info State
     const [profile, setProfile] = useState({
         TenNguoiDung: '',
@@ -33,8 +35,19 @@ export default function Profile() {
     useEffect(() => {
         if (token) {
             fetchProfile();
+            fetchStats();
         }
     }, [token]);
+
+    const fetchStats = async () => {
+        setStatsLoading(true);
+        try {
+            const res = await fetch('http://127.0.0.1:8000/path/stats', {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (res.ok) setStats(await res.json());
+        } finally { setStatsLoading(false); }
+    };
 
     const fetchProfile = async () => {
         try {
@@ -113,6 +126,7 @@ export default function Profile() {
 
     const menuItems = [
         { id: 'personal', label: 'Thông tin cá nhân', icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg> },
+        { id: 'progress', label: 'Tiến độ học tập', icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg> },
         { id: 'security', label: 'Bảo mật & Mật khẩu', icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg> },
         { id: 'notifications', label: 'Cài đặt thông báo', icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg> },
         { id: 'billing', label: 'Gói thành viên', icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg> },
@@ -255,8 +269,158 @@ export default function Profile() {
                             </div>
                         )}
 
+                        {activeTab === 'progress' && (
+                            <div className="p-8 sm:p-10 animate-fade-in">
+                                <h2 className="text-xl font-bold text-slate-800 mb-2">Tiến độ học tập</h2>
+                                <p className="text-slate-400 text-sm mb-8">Theo dõi hành trình chinh phục tiếng Anh của bạn</p>
+
+                                {statsLoading ? (
+                                    <div className="flex items-center justify-center h-48">
+                                        <div className="w-10 h-10 border-4 border-slate-100 border-t-teal-500 rounded-full animate-spin" />
+                                    </div>
+                                ) : !stats ? (
+                                    <div className="text-center py-16 text-slate-400">
+                                        <p className="text-4xl mb-3">📊</p>
+                                        <p className="font-medium">Chưa có dữ liệu. Hãy tạo lộ trình học tập!</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-8">
+
+                                        {/* KPI Cards */}
+                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                                            {[
+                                                { label: 'Trạm hoàn thành', value: stats.path.completed, total: stats.path.total, icon: '✅', color: 'text-emerald-600', bg: 'bg-emerald-50' },
+                                                { label: 'Tiến độ', value: `${stats.path.progress_pct}%`, icon: '🎯', color: 'text-sky-600', bg: 'bg-sky-50' },
+                                                { label: 'Cấp độ', value: stats.path.level || '—', icon: '📈', color: 'text-amber-600', bg: 'bg-amber-50' },
+                                                { label: 'Bài test đã làm', value: stats.total_quiz_attempts, icon: '📝', color: 'text-rose-600', bg: 'bg-rose-50' },
+                                            ].map((kpi, i) => (
+                                                <div key={i} className={`${kpi.bg} rounded-2xl p-5 flex flex-col gap-2`}>
+                                                    <span className="text-2xl">{kpi.icon}</span>
+                                                    <span className={`text-2xl font-black ${kpi.color}`}>{kpi.value}</span>
+                                                    {kpi.total && <span className="text-xs text-slate-400 font-medium">/ {kpi.total} trạm</span>}
+                                                    <span className="text-xs font-bold text-slate-500">{kpi.label}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        {/* Overall Progress Bar */}
+                                        <div className="bg-slate-50 rounded-2xl p-6 border border-slate-100">
+                                            <div className="flex justify-between items-center mb-3">
+                                                <h3 className="font-bold text-slate-700">Tiến độ tổng thể lộ trình</h3>
+                                                <span className="text-sm font-bold text-slate-500">{stats.path.completed}/{stats.path.total} trạm</span>
+                                            </div>
+                                            <div className="w-full bg-white rounded-full h-4 border border-slate-200 overflow-hidden">
+                                                <div
+                                                    className="h-4 rounded-full bg-gradient-to-r from-teal-400 to-emerald-500 transition-all duration-1000"
+                                                    style={{ width: `${stats.path.progress_pct}%` }}
+                                                />
+                                            </div>
+                                            <div className="flex gap-6 mt-4 text-xs font-medium text-slate-500">
+                                                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" />Hoàn thành: {stats.path.completed}</span>
+                                                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-sky-400 inline-block" />Đang học: {stats.path.current}</span>
+                                                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-slate-200 inline-block" />Chưa mở: {stats.path.locked}</span>
+                                            </div>
+                                        </div>
+
+                                        {/* Skill Breakdown */}
+                                        <div className="bg-slate-50 rounded-2xl p-6 border border-slate-100">
+                                            <h3 className="font-bold text-slate-700 mb-5">Phân tích từng kỹ năng</h3>
+                                            <div className="space-y-5">
+                                                {[
+                                                    { key: 'GRAMMAR',    label: 'Ngữ pháp',   icon: '📝', bar: 'bg-rose-500',    light: 'bg-rose-100' },
+                                                    { key: 'VOCABULARY', label: 'Từ vựng',    icon: '📚', bar: 'bg-emerald-500', light: 'bg-emerald-100' },
+                                                    { key: 'LISTENING',  label: 'Kỹ năng nghe', icon: '🎧', bar: 'bg-sky-500',   light: 'bg-sky-100' },
+                                                ].map(({ key, label, icon, bar, light }) => {
+                                                    const d = stats.skill_breakdown[key] || { completed: 0, total: 0 };
+                                                    const pct = d.total > 0 ? Math.round(d.completed / d.total * 100) : 0;
+                                                    return (
+                                                        <div key={key}>
+                                                            <div className="flex items-center justify-between mb-2">
+                                                                <div className="flex items-center gap-2">
+                                                                    <span className="text-base">{icon}</span>
+                                                                    <span className="font-semibold text-slate-700 text-sm">{label}</span>
+                                                                </div>
+                                                                <span className="text-xs font-bold text-slate-500">{d.completed}/{d.total} bài</span>
+                                                            </div>
+                                                            <div className={`w-full ${light} rounded-full h-3 overflow-hidden`}>
+                                                                <div className={`h-3 ${bar} rounded-full transition-all duration-1000`} style={{ width: `${pct}%` }} />
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+
+                                        {/* Placement Scores */}
+                                        {Object.keys(stats.placement_scores).length > 0 && (
+                                            <div className="bg-slate-50 rounded-2xl p-6 border border-slate-100">
+                                                <h3 className="font-bold text-slate-700 mb-5">Điểm Test Đầu Vào</h3>
+                                                <div className="grid grid-cols-3 gap-4">
+                                                    {[
+                                                        { key: 'GRAMMAR',    label: 'Ngữ pháp',   icon: '📝', color: 'text-rose-600',    bg: 'bg-rose-50',    bar: 'bg-rose-500' },
+                                                        { key: 'VOCABULARY', label: 'Từ vựng',    icon: '📚', color: 'text-emerald-600', bg: 'bg-emerald-50', bar: 'bg-emerald-500' },
+                                                        { key: 'LISTENING',  label: 'Nghe',       icon: '🎧', color: 'text-sky-600',     bg: 'bg-sky-50',     bar: 'bg-sky-500' },
+                                                    ].map(({ key, label, icon, color, bg, bar }) => {
+                                                        const score = stats.placement_scores[key] ?? null;
+                                                        if (score === null) return null;
+                                                        return (
+                                                            <div key={key} className={`${bg} rounded-2xl p-4 text-center`}>
+                                                                <p className="text-2xl mb-1">{icon}</p>
+                                                                <p className={`text-3xl font-black ${color}`}>{score}<span className="text-sm text-slate-400">/10</span></p>
+                                                                <p className="text-xs font-bold text-slate-500 mt-1">{label}</p>
+                                                                <div className="mt-2 w-full bg-white rounded-full h-1.5">
+                                                                    <div className={`h-1.5 rounded-full ${bar}`} style={{ width: `${score * 10}%` }} />
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Review History */}
+                                        {stats.review_history.length > 0 && (
+                                            <div className="bg-slate-50 rounded-2xl p-6 border border-slate-100">
+                                                <h3 className="font-bold text-slate-700 mb-5">Lịch sử Ôn tập & Kiểm tra</h3>
+                                                <div className="space-y-3">
+                                                    {stats.review_history.map((r, i) => (
+                                                        <div key={i} className="flex items-center gap-4 bg-white rounded-xl p-4 border border-slate-100">
+                                                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0 ${
+                                                                r.loai === 'FINAL_TEST' ? 'bg-slate-900' : 'bg-amber-100'
+                                                            }`}>
+                                                                {r.loai === 'FINAL_TEST' ? '🏆' : '🔄'}
+                                                            </div>
+                                                            <div className="flex-1 min-w-0">
+                                                                <p className="font-bold text-slate-800 text-sm truncate">{r.tieu_de}</p>
+                                                                <p className="text-xs text-slate-400">Số lần thử: {r.so_lan_thu}</p>
+                                                            </div>
+                                                            <div className="flex items-center gap-3 flex-shrink-0">
+                                                                <div className="text-right">
+                                                                    <span className={`text-lg font-black ${
+                                                                        r.diem >= 80 ? 'text-emerald-600' : 'text-amber-600'
+                                                                    }`}>{r.diem}%</span>
+                                                                </div>
+                                                                <div className={`px-3 py-1 rounded-lg text-xs font-bold ${
+                                                                    r.trang_thai === 'COMPLETED'
+                                                                        ? 'bg-emerald-100 text-emerald-700'
+                                                                        : 'bg-amber-100 text-amber-700'
+                                                                }`}>
+                                                                    {r.trang_thai === 'COMPLETED' ? 'Đạt' : 'Đang học'}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
                         {/* Other tabs placeholder */}
-                        {activeTab !== 'personal' && activeTab !== 'security' && (
+                        {activeTab !== 'personal' && activeTab !== 'security' && activeTab !== 'progress' && (
                             <div className="p-8 sm:p-10 h-64 flex flex-col items-center justify-center text-center animate-fade-in">
                                 <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center text-slate-300 mb-4">
                                     <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
