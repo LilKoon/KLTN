@@ -31,7 +31,6 @@ import FlashcardDetail from './components/views/flashcard/FlashcardDetail';
 import FlashcardPlay from './components/views/flashcard/FlashcardPlay';
 
 // Admin Auth & Layout & Views
-import AdminLogin from './components/views/admin/AdminLogin';
 import AdminSidebar from './components/layout/admin/Sidebar';
 import AdminNavbar from './components/layout/admin/Navbar';
 import AdminDashboard from './components/views/admin/Dashboard';
@@ -49,7 +48,7 @@ import ExportReports from './components/views/admin/ExportReports';
 const ProtectedRoute = ({ children, allowedRole }) => {
     const { userRole } = useAuth();
     if (userRole !== allowedRole) {
-        return <Navigate to={allowedRole === 'admin' ? '/admin-login' : '/login'} replace />;
+        return <Navigate to="/login" replace />;
     }
     return children;
 };
@@ -112,9 +111,9 @@ const AdminLayout = () => {
     const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
     
     return (
-        <div className="flex bg-slate-100 h-screen font-inter relative overflow-hidden">
+        <div className="bg-slate-100 h-screen font-inter relative overflow-hidden">
             <AdminSidebar isSidebarOpen={isSidebarOpen} toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
-            <div className="flex-1 flex flex-col h-screen w-full transition-all duration-300 min-w-0">
+            <div className="flex flex-col h-screen w-full lg:pl-64 transition-all duration-300 min-w-0">
                 <AdminNavbar toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
                 <main className="flex-1 w-full p-6 overflow-x-hidden overflow-y-auto no-scrollbar">
                     <Routes>
@@ -148,7 +147,6 @@ export default function App() {
                 <Route path="/oauth-callback" element={<OAuthCallback />} />
                 <Route path="/verify-email" element={<VerifyEmail />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
-                <Route path="/admin-login" element={<AdminLogin />} />
 
                 {/* Restricted Systems */}
                 <Route path="/client/*" element={<ProtectedRoute allowedRole="client"><ClientLayout /></ProtectedRoute>} />

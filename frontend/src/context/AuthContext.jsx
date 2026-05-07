@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { apiLogin, apiRegister, apiLogout } from '../api.js';
+import { apiLogin, apiRegister, apiLogout, apiGetProfile } from '../api.js';
 
 const AuthContext = createContext();
 
@@ -24,16 +24,45 @@ export const AuthProvider = ({ children }) => {
         const data = await apiLogin(email, password);
         // data = { access_token, token_type, user_name }
 
-        const userData = { user_name: data.user_name, email };
+        const profile = await apiGetProfile(data.access_token);
+        const role = (profile?.VaiTro || '').toUpperCase() === 'ADMIN' ? 'admin' : 'client';
+
+        const userData = { user_name: data.user_name || profile?.TenNguoiDung, email };
         setToken(data.access_token);
         setUser(userData);
-        setUserRole('client');
+        setUserRole(role);
 
         localStorage.setItem('access_token', data.access_token);
-        localStorage.setItem('user_role', 'client');
+        localStorage.setItem('user_role', role);
         localStorage.setItem('user_data', JSON.stringify(userData));
 
-        navigate('/client');
+        if (role === 'admin') {
+            navigate('/admin');
+        } else {
+            navigate('/client');
+        }
+    };
+
+    // Đăng nhập admin qua API + kiểm tra VaiTro=ADMIN
+    const loginAdmin = async (email, password) => {
+        try {
+            const data = await apiLogin(email, password);
+            const profile = await apiGetProfile(data.access_token);
+            if ((profile?.VaiTro || '').toUpperCase() !== 'ADMIN') {
+                return { success: false, error: 'Tài khoản không có quyền quản trị' };
+            }
+            const userData = { user_name: data.user_name || profile.TenNguoiDung, email };
+            setToken(data.access_token);
+            setUser(userData);
+            setUserRole('admin');
+            localStorage.setItem('access_token', data.access_token);
+            localStorage.setItem('user_role', 'admin');
+            localStorage.setItem('user_data', JSON.stringify(userData));
+            navigate('/admin');
+            return { success: true };
+        } catch (err) {
+            return { success: false, error: err?.message || 'Đăng nhập thất bại' };
+        }
     };
 
     // Lưu phiên đăng nhập sau khi backend chuyển hướng về với token (Google OAuth code flow)
@@ -58,15 +87,25 @@ export const AuthProvider = ({ children }) => {
         return data;
     };
 
-    // Login dạng cũ (dùng cho admin hoặc mock)
-    const login = (role) => {
+    // Login đa mục đích: dùng cho cả client (gọi API) và admin (kiểm tra role).
+    // Signature mới: login(role, email?, password?)
+    const login = async (role, email, password) => {
+        if (role === 'admin') {
+            return await loginAdmin(email, password);
+        }
+        if (email && password) {
+            try {
+                await loginWithAPI(email, password);
+                return { success: true };
+            } catch (err) {
+                return { success: false, error: err?.message || 'Đăng nhập thất bại' };
+            }
+        }
+        // Fallback (mock) khi không có credentials
         setUserRole(role);
         localStorage.setItem('user_role', role);
-        if (role === 'admin') {
-            navigate('/admin');
-        } else {
-            navigate('/client');
-        }
+        navigate(role === 'admin' ? '/admin' : '/client');
+        return { success: true };
     };
 
     const logout = async () => {
@@ -87,7 +126,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ userRole, token, user, login, loginWithAPI, setSessionFromOAuth, registerWithAPI, logout }}>
+        <AuthContext.Provider value={{ userRole, token, user, login, loginAdmin, loginWithAPI, setSessionFromOAuth, registerWithAPI, logout }}>
             {children}
         </AuthContext.Provider>
     );

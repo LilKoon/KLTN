@@ -268,3 +268,119 @@ class ProfileUpdate(BaseModel):
 class ChangePassword(BaseModel):
     current_password: str
     new_password: str
+
+
+# ============================================================
+# ADMIN SCHEMAS
+# ============================================================
+
+class AdminUserListItem(BaseModel):
+    MaNguoiDung: UUID
+    TenNguoiDung: str
+    Email: EmailStr
+    VaiTro: str
+    TrangThai: str
+    DiemNangLuc: float
+    IsVerified: bool
+    NgayTao: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class AdminUserUpdate(BaseModel):
+    TenNguoiDung: Optional[str] = None
+    VaiTro: Optional[str] = None        # USER | ADMIN
+    TrangThai: Optional[str] = None     # ACTIVE | BANNED
+
+
+class AdminDashboardStats(BaseModel):
+    total_users: int
+    total_admins: int
+    active_users: int
+    banned_users: int
+    total_courses: int
+    total_lessons: int
+    total_questions: int
+    total_flashcard_decks: int
+    pending_reviews: int
+    new_users_today: int = 0
+    online_users: int = 0
+    activity_count: int = 0
+
+
+class DanhGiaCreate(BaseModel):
+    LoaiDoiTuong: Optional[str] = None
+    MaDoiTuong: Optional[UUID] = None
+    DiemDanhGia: Optional[int] = None
+    NoiDung: str
+
+
+class DanhGiaResponse(BaseModel):
+    MaDanhGia: UUID
+    MaNguoiDung: UUID
+    LoaiDoiTuong: Optional[str] = None
+    MaDoiTuong: Optional[UUID] = None
+    DiemDanhGia: Optional[int] = None
+    NoiDung: str
+    TrangThai: str
+    NgayTao: datetime
+    NgayDuyet: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
+class DanhGiaModerate(BaseModel):
+    TrangThai: str  # APPROVED | REJECTED
+
+
+class ThongBaoCreate(BaseModel):
+    TieuDe: str
+    NoiDung: str
+    DoiTuongNhan: Optional[str] = 'ALL'
+
+
+class ThongBaoResponse(BaseModel):
+    MaThongBao: UUID
+    TieuDe: str
+    NoiDung: str
+    DoiTuongNhan: str
+    TrangThai: str
+    NgayTao: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class NhatKyResponse(BaseModel):
+    MaNhatKy: UUID
+    MaLog: Optional[UUID] = None      # alias = MaNhatKy (FE đang dùng)
+    MaNguoiDung: Optional[UUID] = None
+    TenNguoiDung: Optional[str] = None  # join từ NguoiDung
+    HanhDong: str
+    NoiDung: Optional[str] = None     # alias = HanhDong + DoiTuong cho FE hiển thị
+    DoiTuong: Optional[str] = None
+    ChiTiet: Optional[Any] = None
+    DiaChiIP: Optional[str] = None
+    NgayTao: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class CauHinhItem(BaseModel):
+    Khoa: str
+    GiaTri: Optional[str] = None
+    MoTa: Optional[str] = None
+
+
+class CauHinhUpdate(BaseModel):
+    GiaTri: Optional[str] = None
+    MoTa: Optional[str] = None
+
+
+class SystemDeckCreate(BaseModel):
+    TenBoDe: str
+    CapDo: str
+    cards: List[FlashcardItem]

@@ -92,7 +92,14 @@
       "Bash(/home/nghiatran/miniconda3/envs/KLTN/bin/python train_engine.py --artifacts /home/nghiatran/KLTN2/KLTN/backend/learning_engine/artifacts)",
       "Bash(psql \"postgresql://nghiatran@localhost/edtech_ai?host=/var/run/postgresql\" -c '\\\\d \"TrangThaiSR\"')",
       "Bash(psql \"postgresql://nghiatran@localhost/edtech_ai?host=/var/run/postgresql\" -c '\\\\dt')",
-      "Bash(psql \"postgresql://nghiatran@localhost/edtech_ai?host=/var/run/postgresql\" -c '\\\\d trang_thai_sr')"
+      "Bash(psql \"postgresql://nghiatran@localhost/edtech_ai?host=/var/run/postgresql\" -c '\\\\d trang_thai_sr')",
+      "Bash(git *)",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('models.py',encoding='utf-8'\\).read\\(\\)\\); ast.parse\\(open\\('schemas.py',encoding='utf-8'\\).read\\(\\)\\); ast.parse\\(open\\('main.py',encoding='utf-8'\\).read\\(\\)\\); ast.parse\\(open\\('api/admin.py',encoding='utf-8'\\).read\\(\\)\\); print\\('OK syntax'\\)\")",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('scripts/migrate_admin_tables.py',encoding='utf-8'\\).read\\(\\)\\); print\\('OK migrate'\\)\")",
+      "Bash(python -m scripts.migrate_admin_tables)",
+      "Bash(node --check src/api.js)",
+      "Bash(npx --no-install --yes esbuild --bundle=false --loader:.jsx=jsx --loader:.js=jsx src/context/AuthContext.jsx src/components/views/admin/Accounts.jsx src/api.js)",
+      "Bash(python create_admin.py)"
     ]
   }
 }

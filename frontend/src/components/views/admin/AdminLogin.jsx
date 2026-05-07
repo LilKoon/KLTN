@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../../../context/AuthContext';
 
 export default function AdminLogin() {
-    const { login } = useAuth();
+    const { loginWithAPI } = useAuth();
     const [isLoading, setIsLoading] = useState(false);
     const [email, setEmail] = useState('admin@edtech.ai');
     const [password, setPassword] = useState('admin123');
@@ -13,11 +13,19 @@ export default function AdminLogin() {
         setIsLoading(true);
         setError('');
         
-        const res = await login('admin', email, password);
-        if (!res?.success) {
-            setError(res?.error || 'Lỗi kết nối máy chủ');
+        try {
+            const res = await loginWithAPI(email, password);
+            if (res.role !== 'admin') {
+                setError('Tài khoản này không có quyền truy cập hệ thống quản trị');
+                // Lưu ý: loginWithAPI đã chuyển hướng nếu thành công, 
+                // nhưng nếu role không phải admin thì AuthContext vẫn lưu session.
+                // Chúng ta có thể cần logout nếu sai role.
+            }
+        } catch (err) {
+            setError(err.message || 'Đăng nhập thất bại');
+        } finally {
+            setIsLoading(false);
         }
-        setIsLoading(false);
     };
 
     return (

@@ -70,7 +70,9 @@ CREATE TABLE "NganHangCauHoi" (
     "DapAnDung" TEXT         NOT NULL,
     "GiaiThich" TEXT,
     "NguonPDF"  VARCHAR(200),
-    "FileAudio" VARCHAR(255)
+    "FileAudio" VARCHAR(255),
+    "TrangThai" VARCHAR(50) DEFAULT 'ACTIVE',
+    "DoKho"     DOUBLE PRECISION DEFAULT 0.5
 );
 CREATE INDEX idx_cauhoi_makhoahoc ON "NganHangCauHoi"("MaKhoaHoc");
 CREATE INDEX idx_cauhoi_mabaihoc  ON "NganHangCauHoi"("MaBaiHoc");
@@ -112,6 +114,7 @@ CREATE TABLE bo_the_flashcard (
     "CapDo"       VARCHAR(10)  NOT NULL,
     "SoLuongThe"  INTEGER      NOT NULL,
     "DuLieuThe"   JSON         NOT NULL,
+    "LaHeThong"   BOOLEAN      DEFAULT FALSE,   -- Bộ thẻ admin tạo, dùng chung
     "NgayTao"     TIMESTAMP    DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -213,6 +216,61 @@ CREATE TABLE "BaiTestAI" (
     "DSCauHoi"    JSONB        NOT NULL,
     "NgayTao"     TIMESTAMP    DEFAULT CURRENT_TIMESTAMP
 );
+
+-- ============================================================
+-- PHÂN HỆ 7: ADMIN MODULE
+-- ============================================================
+CREATE TABLE "DanhGia" (
+    "MaDanhGia"     UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    "MaNguoiDung"   UUID        NOT NULL REFERENCES "NguoiDung"("MaNguoiDung") ON DELETE CASCADE,
+    "LoaiDoiTuong"  VARCHAR(50),                 -- COURSE | LESSON | SYSTEM
+    "MaDoiTuong"    UUID,
+    "DiemDanhGia"   INTEGER,                      -- 1-5
+    "NoiDung"       TEXT         NOT NULL,
+    "TrangThai"     VARCHAR(20)  DEFAULT 'PENDING',  -- PENDING | APPROVED | REJECTED
+    "NgayTao"       TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
+    "NgayDuyet"     TIMESTAMP,
+    "MaAdminDuyet"  UUID         REFERENCES "NguoiDung"("MaNguoiDung") ON DELETE SET NULL
+);
+CREATE INDEX idx_danhgia_trangthai ON "DanhGia"("TrangThai");
+CREATE INDEX idx_danhgia_nguoidung ON "DanhGia"("MaNguoiDung");
+
+CREATE TABLE "ThongBao" (
+    "MaThongBao"   UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    "TieuDe"       VARCHAR(255) NOT NULL,
+    "NoiDung"      TEXT         NOT NULL,
+    "DoiTuongNhan" VARCHAR(20)  DEFAULT 'ALL',     -- ALL | USER | ADMIN
+    "MaNguoiTao"   UUID         REFERENCES "NguoiDung"("MaNguoiDung") ON DELETE SET NULL,
+    "TrangThai"    VARCHAR(20)  DEFAULT 'ACTIVE', -- ACTIVE | ARCHIVED
+    "NgayTao"      TIMESTAMP    DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE "NhatKyHoatDong" (
+    "MaNhatKy"    UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    "MaNguoiDung" UUID        REFERENCES "NguoiDung"("MaNguoiDung") ON DELETE SET NULL,
+    "HanhDong"    VARCHAR(100) NOT NULL,
+    "DoiTuong"    VARCHAR(100),
+    "ChiTiet"     JSONB,
+    "DiaChiIP"    VARCHAR(45),
+    "UserAgent"   VARCHAR(500),
+    "NgayTao"     TIMESTAMP    DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_nhatky_nguoidung ON "NhatKyHoatDong"("MaNguoiDung");
+CREATE INDEX idx_nhatky_ngaytao   ON "NhatKyHoatDong"("NgayTao" DESC);
+
+CREATE TABLE "CauHinhHeThong" (
+    "Khoa"        VARCHAR(100) PRIMARY KEY,
+    "GiaTri"      TEXT,
+    "MoTa"        VARCHAR(255),
+    "NgayCapNhat" TIMESTAMP   DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Cấu hình mặc định
+INSERT INTO "CauHinhHeThong" ("Khoa","GiaTri","MoTa") VALUES
+    ('maintenance_mode','false','Bật/tắt chế độ bảo trì'),
+    ('allow_signup','true','Cho phép đăng ký mới'),
+    ('default_language','vi','Ngôn ngữ mặc định')
+ON CONFLICT ("Khoa") DO NOTHING;
 
 -- ============================================================
 -- TÀI KHOẢN ADMIN MẪU (đổi mật khẩu sau khi tạo)

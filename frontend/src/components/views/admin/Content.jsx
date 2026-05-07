@@ -1,19 +1,77 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import axios from 'axios';
+import { useAuth } from '../../../context/AuthContext';
+import { apiUploadLessonFile } from '../../../api';
+import { Book, FileText, Upload, CheckCircle2, ChevronRight, Layout, Plus, Search, MoreVertical, ExternalLink } from 'lucide-react';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 export default function Content() {
     const [activeTab, setActiveTab] = useState('courses');
+    const [courses, setCourses] = useState([]);
+    const [selectedCourse, setSelectedCourse] = useState(null);
+    const [lessons, setLessons] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [uploadingId, setUploadingId] = useState(null);
+    
+    const fileInputRef = useRef(null);
+    const { token } = useAuth();
 
-    const courses = [
-        { id: 1, title: 'IELTS Mastery 7.0+', type: 'Khóa học', students: 1250, status: 'Đã xuất bản', rating: 4.8, img: 'https://images.unsplash.com/photo-1546410531-dd4cbac24b25?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80' },
-        { id: 2, title: 'Tiếng Anh Giao Tiếp Căn Bản', type: 'Khóa học', students: 840, status: 'Đã xuất bản', rating: 4.5, img: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80' },
-        { id: 3, title: 'Ngữ Pháp Chuyên Sâu', type: 'Khóa học', students: 320, status: 'Bản nháp', rating: 0, img: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80' },
-    ];
+    useEffect(() => {
+        fetchCourses();
+    }, []);
 
-    const documents = [
-        { id: 1, title: '500 Từ Vựng TOEIC Thường Gặp', type: 'PDF', downloads: 3500, size: '2.4 MB', date: '10/03/2026' },
-        { id: 2, title: 'Cẩm Nang Phát Âm Chuẩn Mỹ', type: 'PDF', downloads: 1200, size: '5.1 MB', date: '12/03/2026' },
-        { id: 3, title: 'Bài Tập Câu Điều Kiện', type: 'Docx', downloads: 840, size: '1.2 MB', date: '15/03/2026' },
-    ];
+    useEffect(() => {
+        if (selectedCourse) {
+            fetchLessons(selectedCourse.MaKhoaHoc);
+        }
+    }, [selectedCourse]);
+
+    const fetchCourses = async () => {
+        try {
+            setLoading(true);
+            const res = await axios.get(`${API_BASE_URL}/cms/courses`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            setCourses(res.data);
+        } catch (err) {
+            console.error('Failed to fetch courses:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchLessons = async (courseId) => {
+        try {
+            const res = await axios.get(`${API_BASE_URL}/cms/courses/${courseId}/lessons`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            setLessons(res.data);
+        } catch (err) {
+            console.error('Failed to fetch lessons:', err);
+        }
+    };
+
+    const handleUploadClick = (lessonId) => {
+        setUploadingId(lessonId);
+        fileInputRef.current.click();
+    };
+
+    const handleFileChange = async (e) => {
+        const file = e.target.files[0];
+        if (!file || !uploadingId) return;
+
+        try {
+            await apiUploadLessonFile(token, uploadingId, file);
+            alert('Đã tải lên tài liệu thành công!');
+            if (selectedCourse) fetchLessons(selectedCourse.MaKhoaHoc);
+        } catch (err) {
+            alert('Lỗi khi tải lên: ' + err.message);
+        } finally {
+            setUploadingId(null);
+            e.target.value = null;
+        }
+    };
 
     return (
         <div className="space-y-6">
@@ -22,110 +80,157 @@ export default function Content() {
                 .animate-slide-in { animation: slideIn 0.4s ease-out forwards; }
             `}</style>
 
+            <input 
+                type="file" 
+                ref={fileInputRef} 
+                onChange={handleFileChange} 
+                className="hidden" 
+                accept=".pdf,.doc,.docx,.ppt,.pptx,.txt"
+            />
+
             {/* Header & Actions */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-slide-in" style={{ opacity: 0 }}>
                 <div>
+                    <div className="flex items-center gap-2 text-teal-600 mb-1">
+                        <Layout className="w-5 h-5" />
+                        <span className="text-xs font-black uppercase tracking-widest">Management</span>
+                    </div>
                     <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Quản lý Nội dung</h1>
-                    <p className="text-slate-500 font-medium text-sm mt-1">Đăng tải khóa học, tài liệu và các bài giảng</p>
+                    <p className="text-slate-500 font-medium text-sm">Đăng tải khóa học, bài học và tài liệu học tập</p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <button className="flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2.5 rounded-xl font-bold text-sm transition-all focus:outline-none focus:ring-2 focus:ring-slate-300">
-                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
-                        Thư mục
-                    </button>
-                    <button className="flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-lg shadow-teal-600/30 transition-all focus:ring-2 focus:ring-teal-500 focus:outline-none focus:ring-offset-2">
-                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4"/></svg>
-                        Tạo nội dung
+                    {selectedCourse && (
+                        <button 
+                            onClick={() => setSelectedCourse(null)}
+                            className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2.5 rounded-xl font-bold text-sm transition-all"
+                        >
+                            Quay lại danh sách
+                        </button>
+                    )}
+                    <button className="flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-lg shadow-teal-600/30 transition-all active:scale-95">
+                        <Plus className="w-5 h-5" strokeWidth={2.5} />
+                        Tạo mới
                     </button>
                 </div>
             </div>
 
-            {/* Quick Filters */}
-            <div className="flex items-center gap-6 border-b border-slate-200 animate-slide-in" style={{ opacity: 0, animationDelay: '0.1s' }}>
-                <button 
-                    onClick={() => setActiveTab('courses')}
-                    className={`pb-3 text-sm font-bold border-b-2 transition-all ${activeTab === 'courses' ? 'border-teal-500 text-teal-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
-                >
-                    Danh sách Khóa học
-                </button>
-                <button 
-                    onClick={() => setActiveTab('documents')}
-                    className={`pb-3 text-sm font-bold border-b-2 transition-all ${activeTab === 'documents' ? 'border-sky-500 text-sky-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
-                >
-                    Tài liệu Hệ thống
-                </button>
-            </div>
-
-            {/* Courses Grid */}
-            {activeTab === 'courses' && (
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 animate-slide-in" style={{ opacity: 0, animationDelay: '0.2s' }}>
-                    {courses.map((course) => (
-                        <div key={course.id} className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 hover:border-teal-200 transition-all group flex flex-col">
-                            <div className="h-48 relative overflow-hidden bg-slate-100">
-                                <img src={course.img} alt={course.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                                <div className="absolute top-4 left-4">
-                                    <span className={`px-3 py-1 text-xs font-bold uppercase tracking-wider rounded-lg backdrop-blur-md ${course.status === 'Đã xuất bản' ? 'bg-emerald-500/90 text-white' : 'bg-amber-500/90 text-white'}`}>
-                                        {course.status}
-                                    </span>
+            {!selectedCourse ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-slide-in" style={{ opacity: 0, animationDelay: '0.1s' }}>
+                    {loading ? (
+                        <div className="col-span-full py-20 flex justify-center">
+                            <div className="w-10 h-10 border-4 border-teal-500 border-t-transparent rounded-full animate-spin"></div>
+                        </div>
+                    ) : (
+                        courses.map(course => (
+                            <div 
+                                key={course.MaKhoaHoc} 
+                                onClick={() => setSelectedCourse(course)}
+                                className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 hover:border-teal-200 transition-all group flex flex-col cursor-pointer"
+                            >
+                                <div className="h-40 bg-slate-100 relative">
+                                    <div className="absolute inset-0 bg-gradient-to-br from-teal-500/20 to-indigo-500/20 group-hover:opacity-100 transition-opacity"></div>
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                        <Book className="w-16 h-16 text-slate-300 group-hover:text-teal-500 transition-colors" />
+                                    </div>
+                                    <div className="absolute top-4 left-4">
+                                        <span className={`px-3 py-1 text-[10px] font-black uppercase tracking-wider rounded-lg backdrop-blur-md bg-emerald-500/90 text-white`}>
+                                            {course.TrangThai || 'ACTIVE'}
+                                        </span>
+                                    </div>
                                 </div>
-                                <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <button className="w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm text-slate-700 flex items-center justify-center hover:text-teal-600 shadow-sm"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg></button>
-                                    <button className="w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm text-slate-700 flex items-center justify-center hover:text-rose-600 shadow-sm"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
+                                <div className="p-6">
+                                    <h3 className="text-lg font-bold text-slate-800 mb-2 group-hover:text-teal-600 transition-colors line-clamp-1">{course.TenKhoaHoc}</h3>
+                                    <p className="text-slate-500 text-sm line-clamp-2 mb-4">{course.MoTa || 'Chưa có mô tả cho khóa học này.'}</p>
+                                    <div className="flex items-center justify-between pt-4 border-t border-slate-100 font-medium text-xs text-slate-400">
+                                        <span className="flex items-center gap-1.5 uppercase font-black">{course.MucDo || 'Cơ bản'}</span>
+                                        <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                                    </div>
                                 </div>
                             </div>
-                            <div className="p-6 flex-1 flex flex-col">
-                                <h3 className="text-lg font-bold text-slate-800 mb-2 group-hover:text-teal-600 transition-colors line-clamp-2">{course.title}</h3>
-                                <div className="flex items-center gap-4 mt-auto pt-4 border-t border-slate-100 font-medium text-sm text-slate-500">
-                                    <span className="flex items-center gap-1.5"><svg className="w-4 h-4 text-slate-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd"/></svg> {course.students}</span>
-                                    {course.rating > 0 ? (
-                                        <span className="flex items-center gap-1.5"><svg className="w-4 h-4 text-amber-500" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg> {course.rating}</span>
-                                    ) : (
-                                        <span className="flex items-center gap-1.5 text-slate-400">Chưa có đánh giá</span>
-                                    )}
-                                </div>
+                        ))
+                    )}
+                </div>
+            ) : (
+                <div className="space-y-6 animate-slide-in" style={{ opacity: 0, animationDelay: '0.1s' }}>
+                    <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 bg-teal-50 rounded-2xl flex items-center justify-center text-teal-600">
+                                <Book className="w-6 h-6" />
+                            </div>
+                            <div>
+                                <h2 className="text-xl font-bold text-slate-800">{selectedCourse.TenKhoaHoc}</h2>
+                                <p className="text-slate-500 text-sm">Danh sách bài học trong khóa học</p>
                             </div>
                         </div>
-                    ))}
-                </div>
-            )}
-
-            {/* Documents List */}
-            {activeTab === 'documents' && (
-                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden animate-slide-in" style={{ opacity: 0, animationDelay: '0.2s' }}>
-                    <div className="p-4 bg-slate-50 border-b border-slate-200 font-bold text-sm text-slate-700 grid grid-cols-12 gap-4">
-                        <div className="col-span-6">Tên tài liệu</div>
-                        <div className="col-span-2 text-center">Định dạng</div>
-                        <div className="col-span-2 text-right">Dung lượng</div>
-                        <div className="col-span-2 text-right">Hành động</div>
                     </div>
-                    <div className="divide-y divide-slate-100">
-                        {documents.map((doc) => (
-                            <div key={doc.id} className="p-4 grid grid-cols-12 gap-4 items-center hover:bg-slate-50/80 transition-colors group">
-                                <div className="col-span-6 flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-500 flex items-center justify-center shrink-0">
-                                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
-                                    </div>
-                                    <div>
-                                        <p className="text-sm font-bold text-slate-800 group-hover:text-blue-600 transition-colors cursor-pointer">{doc.title}</p>
-                                        <p className="text-xs font-semibold text-slate-400">Tải lên: {doc.date} &bull; {doc.downloads} lượt tải</p>
-                                    </div>
-                                </div>
-                                <div className="col-span-2 text-center">
-                                    <span className="px-2.5 py-1 bg-slate-100 text-slate-600 text-xs font-bold rounded-lg border border-slate-200">{doc.type}</span>
-                                </div>
-                                <div className="col-span-2 text-right text-sm font-medium text-slate-500">
-                                    {doc.size}
-                                </div>
-                                <div className="col-span-2 flex justify-end gap-2">
-                                     <button className="p-2 text-slate-400 hover:text-sky-600 hover:bg-sky-50 rounded-lg transition-colors">
-                                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-                                    </button>
-                                    <button className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors">
-                                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                                    </button>
-                                </div>
+
+                    <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="bg-slate-50 border-b border-slate-200">
+                                    <th className="px-6 py-4 text-xs font-black text-slate-500 uppercase tracking-widest w-16">STT</th>
+                                    <th className="px-6 py-4 text-xs font-black text-slate-500 uppercase tracking-widest">Tên bài học</th>
+                                    <th className="px-6 py-4 text-xs font-black text-slate-500 uppercase tracking-widest text-center">Tài liệu</th>
+                                    <th className="px-6 py-4 text-xs font-black text-slate-500 uppercase tracking-widest text-right">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100">
+                                {lessons.map((lesson, idx) => (
+                                    <tr key={lesson.MaBaiHoc} className="hover:bg-slate-50/50 transition-colors group">
+                                        <td className="px-6 py-4 font-bold text-slate-400">{idx + 1}</td>
+                                        <td className="px-6 py-4">
+                                            <div className="font-bold text-slate-800">{lesson.TenBaiHoc}</div>
+                                            <div className="text-[10px] text-slate-400 uppercase font-bold mt-0.5">{lesson.TrangThai}</div>
+                                        </td>
+                                        <td className="px-6 py-4 text-center">
+                                            {lesson.FileDinhKem ? (
+                                                <div className="flex flex-col items-center gap-1">
+                                                    <a 
+                                                        href={`${API_BASE_URL}${lesson.FileDinhKem}`} 
+                                                        target="_blank" 
+                                                        rel="noopener noreferrer"
+                                                        className="inline-flex items-center gap-1.5 text-teal-600 font-bold text-xs hover:underline"
+                                                    >
+                                                        <FileText className="w-3.5 h-3.5" />
+                                                        Xem tài liệu
+                                                    </a>
+                                                    <button 
+                                                        onClick={() => handleUploadClick(lesson.MaBaiHoc)}
+                                                        className="text-[10px] text-slate-400 hover:text-teal-600 font-bold"
+                                                    >
+                                                        (Thay đổi)
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <button 
+                                                    onClick={() => handleUploadClick(lesson.MaBaiHoc)}
+                                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 text-slate-500 font-bold text-xs hover:border-teal-500 hover:text-teal-600 transition-all"
+                                                >
+                                                    <Upload className="w-3.5 h-3.5" />
+                                                    Tải lên
+                                                </button>
+                                            )}
+                                        </td>
+                                        <td className="px-6 py-4 text-right">
+                                            <div className="flex items-center justify-end gap-2">
+                                                <button className="p-2 text-slate-400 hover:text-teal-600 hover:bg-teal-50 rounded-xl transition-all">
+                                                    <ExternalLink className="w-5 h-5" />
+                                                </button>
+                                                <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-all">
+                                                    <MoreVertical className="w-5 h-5" />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                        {lessons.length === 0 && (
+                            <div className="p-20 text-center text-slate-400">
+                                <Book className="w-12 h-12 mx-auto mb-4 opacity-20" />
+                                <p className="font-medium">Khóa học này chưa có bài học nào.</p>
                             </div>
-                        ))}
+                        )}
                     </div>
                 </div>
             )}

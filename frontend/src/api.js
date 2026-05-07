@@ -353,3 +353,147 @@ export async function apiSubmitSectionTest(token, type, answers) {
   if (!res.ok) throw new Error("Lỗi khi nộp bài test");
   return res.json();
 }
+
+// ─── Admin API ─────────────────────────────────────────────────────────
+
+export const apiAdminGetStats = (token) =>
+  _authedFetch(token, "/admin/dashboard/stats");
+
+export const apiAdminListUsers = (token, params = {}) => {
+  const qs = new URLSearchParams();
+  if (params.search) qs.append("search", params.search);
+  if (params.role) qs.append("role", params.role);
+  if (params.status) qs.append("status_filter", params.status);
+  if (params.skip != null) qs.append("skip", params.skip);
+  if (params.limit != null) qs.append("limit", params.limit);
+  const q = qs.toString();
+  return _authedFetch(token, `/admin/users${q ? `?${q}` : ""}`);
+};
+
+export const apiAdminUpdateUser = (token, userId, payload) =>
+  _authedFetch(token, `/admin/users/${userId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+export const apiAdminDeleteUser = (token, userId) =>
+  _authedFetch(token, `/admin/users/${userId}`, { method: "DELETE" });
+
+export const apiAdminListReviews = (token, statusFilter) => {
+  const q = statusFilter ? `?status_filter=${statusFilter}` : "";
+  return _authedFetch(token, `/admin/reviews${q}`);
+};
+
+export const apiAdminModerateReview = (token, reviewId, status) =>
+  _authedFetch(token, `/admin/reviews/${reviewId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ TrangThai: status }),
+  });
+
+export const apiAdminDeleteReview = (token, reviewId) =>
+  _authedFetch(token, `/admin/reviews/${reviewId}`, { method: "DELETE" });
+
+export const apiAdminListNotifications = (token) =>
+  _authedFetch(token, "/admin/notifications");
+
+export const apiAdminCreateNotification = (token, payload) =>
+  _authedFetch(token, "/admin/notifications", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+export const apiAdminDeleteNotification = (token, notifId) =>
+  _authedFetch(token, `/admin/notifications/${notifId}`, { method: "DELETE" });
+
+export const apiAdminListActivity = (token, params = {}) => {
+  const qs = new URLSearchParams();
+  if (params.user_id) qs.append("user_id", params.user_id);
+  if (params.skip != null) qs.append("skip", params.skip);
+  if (params.limit != null) qs.append("limit", params.limit);
+  const q = qs.toString();
+  return _authedFetch(token, `/admin/activity${q ? `?${q}` : ""}`);
+};
+
+export const apiAdminListSettings = (token) =>
+  _authedFetch(token, "/admin/settings");
+
+export const apiAdminUpdateSetting = (token, khoa, payload) =>
+  _authedFetch(token, `/admin/settings/${encodeURIComponent(khoa)}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+export const apiAdminListSystemDecks = (token) =>
+  _authedFetch(token, "/admin/system-flashcards");
+
+export const apiAdminCreateSystemDeck = (token, payload) =>
+  _authedFetch(token, "/admin/system-flashcards", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+export const apiAdminUpdateSystemDeck = (token, deckId, payload) =>
+  _authedFetch(token, `/admin/system-flashcards/${deckId}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+export const apiAdminDeleteSystemDeck = (token, deckId) =>
+  _authedFetch(token, `/admin/system-flashcards/${deckId}`, { method: "DELETE" });
+
+export const apiUploadLessonFile = async (token, lessonId, file) => {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const res = await fetch(`${API_BASE_URL}/cms/lessons/${lessonId}/upload`, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${token}`
+    },
+    body: formData,
+  });
+
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.detail || "Tải lên file bài học thất bại");
+  }
+  return data;
+};
+
+// ─── CMS API (Content management - khoá học/bài học/câu hỏi) ───────────
+
+export const apiCmsListCourses = (token) =>
+  _authedFetch(token, "/cms/courses?limit=200");
+
+export const apiCmsCreateCourse = (token, payload) =>
+  _authedFetch(token, "/cms/courses", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+export const apiCmsListLessons = (token, courseId) =>
+  _authedFetch(token, `/cms/courses/${courseId}/lessons`);
+
+export const apiCmsCreateLesson = (token, payload) =>
+  _authedFetch(token, "/cms/lessons", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+export const apiCmsListQuestions = (token) =>
+  _authedFetch(token, "/cms/questions?limit=200");
+
+export const apiCmsCreateQuestion = (token, payload) =>
+  _authedFetch(token, "/cms/questions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });

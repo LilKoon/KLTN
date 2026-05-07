@@ -1,68 +1,136 @@
-import React from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
+import { useAuth } from '../../../context/AuthContext';
+import {
+    apiAdminListReviews,
+    apiAdminModerateReview,
+    apiAdminDeleteReview,
+} from '../../../api';
+
+const STATUS_FILTERS = [
+    { value: '', label: 'Tất cả' },
+    { value: 'PENDING', label: 'Chờ duyệt' },
+    { value: 'APPROVED', label: 'Đã duyệt' },
+    { value: 'REJECTED', label: 'Đã từ chối' },
+];
+
+const badgeStyle = (s) => {
+    switch (s) {
+        case 'APPROVED': return 'bg-emerald-100 text-emerald-700 border-emerald-200';
+        case 'REJECTED': return 'bg-rose-100 text-rose-700 border-rose-200';
+        default: return 'bg-amber-100 text-amber-700 border-amber-200';
+    }
+};
 
 export default function ManageReviews() {
-    const reviews = [
-        { id: 1, user: 'Hoàng Lan', course: 'Tiếng Anh Giao Tiếp Căn Bản', rating: 5, comment: 'Khóa học tuyệt vời, giảng viên siêu dễ hiểu!', time: 'Hôm qua' },
-        { id: 2, user: 'Tuấn Kiệt', course: 'IELTS Mastery 7.0+', rating: 4, comment: 'Tài liệu rất sát với đề thi thật. Tuy nhiên phần Speaking cần thêm video.', time: '2 ngày trước' },
-        { id: 3, user: 'Minh Thư', course: 'Ngữ Pháp Chuyên Sâu', rating: 2, comment: 'Video bị lỗi đoạn giữa không xem được admin ơi!', time: '1 tuần trước' },
-    ];
+    const { token } = useAuth();
+    const [filter, setFilter] = useState('');
+    const [reviews, setReviews] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+
+    const load = useCallback(async () => {
+        if (!token) return;
+        setLoading(true);
+        setError('');
+        try {
+            const data = await apiAdminListReviews(token, filter || undefined);
+            setReviews(Array.isArray(data) ? data : []);
+        } catch (err) {
+            setError(err?.message || 'Không tải được đánh giá');
+        } finally {
+            setLoading(false);
+        }
+    }, [token, filter]);
+
+    useEffect(() => { load(); }, [load]);
+
+    const moderate = async (id, status) => {
+        try {
+            const updated = await apiAdminModerateReview(token, id, status);
+            setReviews((prev) => prev.map((r) => (r.MaDanhGia === id ? updated : r)));
+        } catch (err) { alert(err?.message || 'Lỗi'); }
+    };
+
+    const remove = async (id) => {
+        if (!window.confirm('Xoá đánh giá này?')) return;
+        try {
+            await apiAdminDeleteReview(token, id);
+            setReviews((prev) => prev.filter((r) => r.MaDanhGia !== id));
+        } catch (err) { alert(err?.message || 'Lỗi'); }
+    };
 
     return (
         <div className="space-y-6">
-            <style>{`
-                @keyframes slideIn { from { transform: translateY(15px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-                .animate-slide-in { animation: slideIn 0.4s ease-out forwards; }
-            `}</style>
-
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-slide-in" style={{ opacity: 0 }}>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Quản lý Đánh giá</h1>
-                    <p className="text-slate-500 font-medium text-sm mt-1">Theo dõi Feedbacks từ học viên cho các Khóa học</p>
+                    <p className="text-slate-500 font-medium text-sm mt-1">Duyệt phản hồi từ người dùng</p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                    {STATUS_FILTERS.map((f) => (
+                        <button
+                            key={f.value}
+                            onClick={() => setFilter(f.value)}
+                            className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+                                filter === f.value
+                                    ? 'bg-teal-600 text-white shadow-md'
+                                    : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+                            }`}
+                        >
+                            {f.label}
+                        </button>
+                    ))}
                 </div>
             </div>
 
-            <div className="bg-white rounded-[2rem] p-6 shadow-sm border border-slate-200 animate-slide-in" style={{ opacity: 0, animationDelay: '0.1s' }}>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                     <div className="p-6 bg-teal-50 border border-teal-100 rounded-2xl flex items-center justify-between">
-                         <div>
-                             <p className="text-sm font-bold text-teal-700">Điểm trung bình</p>
-                             <h3 className="text-3xl font-bold text-teal-900 mt-1">4.8 <span className="text-lg text-teal-600">/ 5</span></h3>
-                         </div>
-                         <div className="text-amber-400 flex"><svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg></div>
-                     </div>
-                     <div className="p-6 bg-sky-50 border border-sky-100 rounded-2xl flex items-center justify-between">
-                         <div>
-                             <p className="text-sm font-bold text-sky-700">Tổng đánh giá</p>
-                             <h3 className="text-3xl font-bold text-sky-900 mt-1">1,245</h3>
-                         </div>
-                         <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-sky-500 shadow-sm"><svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg></div>
-                     </div>
-                </div>
+            {error && (
+                <div className="bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-xl text-sm font-semibold">{error}</div>
+            )}
 
-                <div className="divide-y divide-slate-100">
-                    {reviews.map(review => (
-                        <div key={review.id} className="py-6 flex gap-4 first:pt-0">
-                            <div className="w-12 h-12 rounded-full bg-slate-200 shrink-0 font-bold text-slate-500 flex items-center justify-center border-2 border-white shadow-sm">{review.user.charAt(0)}</div>
-                            <div className="flex-1">
-                                <div className="flex justify-between items-start mb-2">
-                                    <div>
-                                        <h4 className="font-bold text-slate-800">{review.user} <span className="text-sm font-semibold text-slate-400 block sm:inline sm:ml-2">({review.time})</span></h4>
-                                        <p className="text-xs font-semibold text-teal-600 bg-teal-50 px-2 py-1 rounded inline-block mt-1">{review.course}</p>
-                                    </div>
-                                    <div className="flex gap-1 text-amber-400">
-                                        {[1,2,3,4,5].map(star => (
-                                            <svg key={star} className={`w-4 h-4 ${star <= review.rating ? 'fill-current' : 'text-slate-200 fill-current'}`} viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
-                                        ))}
-                                    </div>
-                                </div>
-                                <p className="text-sm font-medium text-slate-600 mb-3">{review.comment}</p>
-                                <div className="flex gap-3">
-                                    <button className="text-xs font-bold text-teal-600 hover:text-teal-700 bg-teal-50 hover:bg-teal-100 px-3 py-1.5 rounded-lg transition-colors">Phản hồi</button>
-                                    {review.rating <= 3 && <button className="text-xs font-bold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 px-3 py-1.5 rounded-lg transition-colors">Ẩn đánh giá</button>}
-                                </div>
-                            </div>
-                        </div>
-                    ))}
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left">
+                        <thead className="bg-slate-50 border-b border-slate-200">
+                            <tr>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase">Người gửi</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase">Đối tượng</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase">Điểm</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase">Nội dung</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase">Trạng thái</th>
+                                <th className="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase">Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                            {loading ? (
+                                <tr><td colSpan={6} className="px-6 py-10 text-center text-slate-500 font-medium">Đang tải...</td></tr>
+                            ) : reviews.length === 0 ? (
+                                <tr><td colSpan={6} className="px-6 py-10 text-center text-slate-500 font-medium">Không có đánh giá</td></tr>
+                            ) : reviews.map((r) => (
+                                <tr key={r.MaDanhGia} className="hover:bg-slate-50/80 transition-colors">
+                                    <td className="px-6 py-4 text-xs font-mono text-slate-500">{r.MaNguoiDung?.slice(0, 8)}</td>
+                                    <td className="px-6 py-4 text-sm text-slate-700">{r.LoaiDoiTuong || '-'}</td>
+                                    <td className="px-6 py-4 text-sm font-bold text-amber-600">{r.DiemDanhGia ?? '-'} / 5</td>
+                                    <td className="px-6 py-4 text-sm text-slate-700 max-w-md truncate">{r.NoiDung}</td>
+                                    <td className="px-6 py-4">
+                                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border ${badgeStyle(r.TrangThai)}`}>
+                                            {r.TrangThai}
+                                        </span>
+                                    </td>
+                                    <td className="px-6 py-4 text-right">
+                                        <div className="flex items-center justify-end gap-2">
+                                            {r.TrangThai !== 'APPROVED' && (
+                                                <button onClick={() => moderate(r.MaDanhGia, 'APPROVED')} className="px-3 py-1.5 text-xs font-bold rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700">Duyệt</button>
+                                            )}
+                                            {r.TrangThai !== 'REJECTED' && (
+                                                <button onClick={() => moderate(r.MaDanhGia, 'REJECTED')} className="px-3 py-1.5 text-xs font-bold rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-700">Từ chối</button>
+                                            )}
+                                            <button onClick={() => remove(r.MaDanhGia)} className="px-3 py-1.5 text-xs font-bold rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700">Xoá</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>

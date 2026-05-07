@@ -129,6 +129,7 @@ class BoDTheFlashcard(Base):
     CapDo = Column(String(10), nullable=False)
     SoLuongThe = Column(Integer, nullable=False)
     DuLieuThe = Column(JSON, nullable=False)
+    LaHeThong = Column(Boolean, default=False)  # True: bộ thẻ admin tạo, dùng chung
     NgayTao = Column(DateTime, default=datetime.utcnow)
 
     trang_thai_sr = relationship("TrangThaiSR", back_populates="bo_the", cascade="all, delete-orphan")
@@ -227,6 +228,7 @@ class BaiKiemTra(Base):
     TrangThai = Column(String(50), default='PENDING')
     TongDiem = Column(Float, nullable=True)
     MoTaDanhGiaAI = Column(Text, nullable=True)
+    KetQuaLevel = Column(Integer, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -237,6 +239,7 @@ class PhanKiemTra(Base):
     MaBaiKiemTra = Column(UUID(as_uuid=True), ForeignKey("BaiKiemTra.MaBaiKiemTra", ondelete="CASCADE"), nullable=False)
     KyNang = Column(String(50), nullable=False)
     PhanTramDiem = Column(Float, nullable=True)
+    KetQuaLevel = Column(Integer, nullable=True)
     is_the_weak_grade = Column(Boolean, default=False)
 
 class ChiTietLamBai(Base):
@@ -262,3 +265,60 @@ class BaiTestAI(Base):
     SoLuongCau = Column(Integer, default=0)
     DSCauHoi = Column(JSONB, nullable=False)
     NgayTao = Column(DateTime, default=datetime.utcnow)
+
+
+# ============================================================
+# ADMIN MODULE
+# ============================================================
+
+class DanhGia(Base):
+    """Đánh giá / phản hồi của người dùng - admin duyệt qua trang ManageReviews."""
+    __tablename__ = "DanhGia"
+
+    MaDanhGia = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    MaNguoiDung = Column(UUID(as_uuid=True), ForeignKey("NguoiDung.MaNguoiDung", ondelete="CASCADE"), nullable=False)
+    LoaiDoiTuong = Column(String(50), nullable=True)   # COURSE | LESSON | SYSTEM
+    MaDoiTuong = Column(UUID(as_uuid=True), nullable=True)
+    DiemDanhGia = Column(Integer, nullable=True)        # 1-5
+    NoiDung = Column(Text, nullable=False)
+    TrangThai = Column(String(20), default='PENDING')   # PENDING | APPROVED | REJECTED
+    NgayTao = Column(DateTime, default=datetime.utcnow)
+    NgayDuyet = Column(DateTime, nullable=True)
+    MaAdminDuyet = Column(UUID(as_uuid=True), ForeignKey("NguoiDung.MaNguoiDung", ondelete="SET NULL"), nullable=True)
+
+
+class ThongBao(Base):
+    """Thông báo admin gửi tới nhóm người dùng."""
+    __tablename__ = "ThongBao"
+
+    MaThongBao = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    TieuDe = Column(String(255), nullable=False)
+    NoiDung = Column(Text, nullable=False)
+    DoiTuongNhan = Column(String(20), default='ALL')   # ALL | USER | ADMIN
+    MaNguoiTao = Column(UUID(as_uuid=True), ForeignKey("NguoiDung.MaNguoiDung", ondelete="SET NULL"), nullable=True)
+    TrangThai = Column(String(20), default='ACTIVE')   # ACTIVE | ARCHIVED
+    NgayTao = Column(DateTime, default=datetime.utcnow)
+
+
+class NhatKyHoatDong(Base):
+    """Activity log - admin xem ai làm gì."""
+    __tablename__ = "NhatKyHoatDong"
+
+    MaNhatKy = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    MaNguoiDung = Column(UUID(as_uuid=True), ForeignKey("NguoiDung.MaNguoiDung", ondelete="SET NULL"), nullable=True)
+    HanhDong = Column(String(100), nullable=False)
+    DoiTuong = Column(String(100), nullable=True)
+    ChiTiet = Column(JSONB, nullable=True)
+    DiaChiIP = Column(String(45), nullable=True)
+    UserAgent = Column(String(500), nullable=True)
+    NgayTao = Column(DateTime, default=datetime.utcnow)
+
+
+class CauHinhHeThong(Base):
+    """Key-value cấu hình hệ thống admin chỉnh được."""
+    __tablename__ = "CauHinhHeThong"
+
+    Khoa = Column(String(100), primary_key=True)
+    GiaTri = Column(Text, nullable=True)
+    MoTa = Column(String(255), nullable=True)
+    NgayCapNhat = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
