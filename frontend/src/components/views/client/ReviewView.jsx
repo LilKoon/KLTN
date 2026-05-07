@@ -47,15 +47,17 @@ export default function ReviewView({ maNode }) {
     if (!allAnswered || submitting) return;
     setSubmitting(true);
     let correct = 0;
-    data.questions.forEach(q => {
-      if ((answers[q.MaCauHoi] || '').trim() === (q.DapAnDung || '').trim()) correct++;
+    const details = data.questions.map(q => {
+      const isCorrect = (answers[q.MaCauHoi] || '').trim() === (q.DapAnDung || '').trim();
+      if (isCorrect) correct++;
+      return { MaCauHoi: q.MaCauHoi, isCorrect };
     });
     const total = data.questions.length;
     try {
       const res = await fetch(`http://127.0.0.1:8000/path/node/${maNode}/review/submit`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ score: correct, total }),
+        body: JSON.stringify({ score: correct, total, details }),
       });
       if (res.ok) setResult(await res.json());
     } finally {
@@ -110,40 +112,49 @@ export default function ReviewView({ maNode }) {
 
         {/* Result Banner */}
         {result && (
-          <div className={`mb-8 p-6 rounded-2xl border-2 flex items-center gap-6 ${
-            result.passed
-              ? 'bg-emerald-50 border-emerald-200'
-              : 'bg-red-50 border-red-200'
-          }`}>
-            <div className={`w-16 h-16 rounded-full flex items-center justify-center text-2xl font-black flex-shrink-0 ${
-              result.passed ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'
+          <>
+            <div className={`mb-4 p-6 rounded-2xl border-2 flex items-center gap-6 ${
+              result.passed
+                ? 'bg-emerald-50 border-emerald-200'
+                : 'bg-red-50 border-red-200'
             }`}>
-              {result.ratio}%
-            </div>
-            <div className="flex-1">
-              <p className={`font-bold text-lg ${result.passed ? 'text-emerald-700' : 'text-red-700'}`}>
-                {result.passed ? '🎉 Xuất sắc! Trạm ôn tập hoàn thành!' : '⚠️ Chưa đủ 80% — Hãy thử lại!'}
-              </p>
-              <p className="text-slate-500 text-sm mt-1">{result.message}</p>
-            </div>
-            <div className="flex gap-3">
-              {result.passed ? (
+              <div className={`w-16 h-16 rounded-full flex items-center justify-center text-2xl font-black flex-shrink-0 ${
+                result.passed ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'
+              }`}>
+                {result.ratio}%
+              </div>
+              <div className="flex-1">
+                <p className={`font-bold text-lg ${result.passed ? 'text-emerald-700' : 'text-red-700'}`}>
+                  {result.passed ? '🎉 Xuất sắc! Trạm ôn tập hoàn thành!' : '⚠️ Chưa đủ 80% — Hãy thử lại!'}
+                </p>
+                <p className="text-slate-500 text-sm mt-1">{result.message}</p>
+              </div>
+              <div className="flex gap-3">
                 <button
                   onClick={() => navigate('/client/learning-path')}
-                  className="px-5 py-2.5 bg-emerald-500 text-white rounded-xl font-bold hover:bg-emerald-600 transition-all flex items-center gap-2"
+                  className={`px-5 py-2.5 ${result.passed ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-slate-600 hover:bg-slate-700'} text-white rounded-xl font-bold transition-all flex items-center gap-2`}
                 >
-                  <Trophy className="w-4 h-4" /> Tiếp tục
+                  {result.passed ? <Trophy className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
+                  {result.passed ? 'Tiếp tục' : 'Về lộ trình'}
                 </button>
-              ) : (
-                <button
-                  onClick={fetchQuestions}
-                  className="px-5 py-2.5 bg-amber-500 text-white rounded-xl font-bold hover:bg-amber-600 transition-all flex items-center gap-2"
-                >
-                  <RotateCcw className="w-4 h-4" /> Làm lại
-                </button>
-              )}
+              </div>
             </div>
-          </div>
+
+            {/* Revision banner — khi fail, hệ thống đã chèn trạm ôn tập tổng hợp */}
+            {!result.passed && result.revision_inserted && (
+              <div className="mb-8 p-5 rounded-2xl border-2 border-amber-300 bg-amber-50">
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-amber-200 text-amber-800 flex items-center justify-center text-xl flex-shrink-0">📖</div>
+                  <div className="flex-1">
+                    <p className="font-bold text-amber-900 mb-1">Đã thêm trạm ôn tập tổng hợp</p>
+                    <p className="text-amber-800 text-sm">
+                      Hệ thống đã chèn 1 trạm ôn tập gồm lý thuyết 3 bài trước + bài tập củng cố. Hoàn thành rồi làm trạm kiểm tra mới.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
         )}
 
         {/* Questions */}

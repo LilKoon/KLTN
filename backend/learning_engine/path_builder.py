@@ -118,6 +118,7 @@ def build_learning_path(
     inference: dict,
     current_level: str,
     scores: Dict[str, float] | None = None,
+    weak_topics: Dict[str, List[str]] | None = None,
 ) -> List[dict]:
     """
     Template mới: cứ 3 bài CORE → 1 trạm REVIEW ôn tập.
@@ -126,6 +127,7 @@ def build_learning_path(
     inference: kết quả từ EnglishLearningEngine.predict()
     current_level: CEFR hiện tại (vd 'B1')
     scores: {grammar, listening, vocab} 0-10
+    weak_topics: {GRAMMAR: [chude...], LISTENING: [...], VOCABULARY: [...]} — chủ đề user yếu (acc < 60%)
     """
     severity = inference.get("severity", 1)
     weights = inference.get("weights", {"grammar": 1/3, "listening": 1/3, "vocab": 1/3})
@@ -145,23 +147,34 @@ def build_learning_path(
 
     # Tạo CORE nodes cho từng skill
     nodes_by_skill: Dict[str, List[dict]] = {}
+    weak_topics = weak_topics or {}
     for skill, n in counts.items():
         if n <= 0:
             continue
         templates = CORE_TEMPLATES[skill]
+        topics = weak_topics.get(SKILL_DB[skill], [])
         skill_nodes = []
         for i in range(n):
-            tmpl_title, tmpl_desc = templates[i % len(templates)]
+            if topics:
+                # Round-robin qua các chủ đề yếu
+                chude = topics[i % len(topics)]
+                title = f"Củng cố: {chude}"
+                description = f"Bạn cần luyện thêm chủ đề '{chude}' để nâng accuracy lên ≥ 80%."
+                preferred_chude = chude
+            else:
+                title, description = templates[i % len(templates)]
+                preferred_chude = None
             skill_nodes.append({
                 "skill": SKILL_DB[skill],
                 "skill_vi": SKILL_VI[skill],
                 "kind": "CORE",
-                "title": tmpl_title,
-                "description": tmpl_desc,
+                "title": title,
+                "description": description,
                 "target_level": target_level,
                 "exercises_count": {"grammar": 6, "listening": 4, "vocab": 10}[skill],
                 "weight": weights.get(skill, 0.0),
                 "is_weak": skill in weak_skills,
+                "preferred_chude": preferred_chude,
             })
         nodes_by_skill[skill] = skill_nodes
 
@@ -213,6 +226,40 @@ def build_learning_path(
 
     return final_nodes
 
+
+
+def build_checkpoint_only_path(target_level: str = "C") -> List[dict]:
+    """Sinh path 'toàn trạm kiểm tra' cho học viên đã master cấp C.
+    10 REVIEW (mixed Grammar/Vocab/Listening) + 1 FINAL_TEST."""
+    nodes: List[dict] = []
+    for i in range(10):
+        nodes.append({
+            "skill": "MIXED",
+            "skill_vi": "Trạm kiểm tra",
+            "kind": "REVIEW",
+            "title": f"Trạm kiểm tra {i + 1}",
+            "description": "10 câu hỏi tổng hợp Grammar, Vocab, Listening cấp C. Đạt 80% để tiếp tục.",
+            "target_level": target_level,
+            "exercises_count": 10,
+            "weight": 1.0,
+            "is_weak": False,
+            "checkpoint_loop": True,
+        })
+    nodes.append({
+        "skill": "MIXED",
+        "skill_vi": "Kiểm tra cuối",
+        "kind": "FINAL_TEST",
+        "title": "Kiểm tra cuối lộ trình",
+        "description": "Đánh giá toàn diện cấp C. Hoàn thành để mở loop kiểm tra mới.",
+        "target_level": target_level,
+        "exercises_count": 15,
+        "weight": 1.0,
+        "is_weak": False,
+        "checkpoint_loop": True,
+    })
+    for idx, n in enumerate(nodes, start=1):
+        n["thu_tu"] = idx
+    return nodes
 
 
 def overall_to_level(overall_0_10: float) -> str:

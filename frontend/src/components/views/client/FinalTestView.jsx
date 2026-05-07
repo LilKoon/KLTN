@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
-import { Trophy, ArrowLeft, RefreshCw, Sparkles } from 'lucide-react';
+import { Trophy, ArrowLeft, RefreshCw, Sparkles, XCircle } from 'lucide-react';
 
 const SKILL_META = {
   GRAMMAR:    { label: 'Ngữ pháp',  icon: '📝', color: 'text-rose-600',    bg: 'bg-rose-50',    bar: 'bg-rose-500' },
@@ -42,19 +42,19 @@ export default function FinalTestView({ maNode }) {
     if (!allAnswered || submitting) return;
     setSubmitting(true);
 
-    // Tính điểm theo từng skill
+    // Tính điểm theo từng skill + chi tiết per câu (cho SR)
     const skillScores = { GRAMMAR: 0, VOCABULARY: 0, LISTENING: 0 };
-    data.questions.forEach(q => {
-      if ((answers[q.MaCauHoi] || '').trim() === (q.DapAnDung || '').trim()) {
-        skillScores[q.KyNang] = (skillScores[q.KyNang] || 0) + 1;
-      }
+    const details = data.questions.map(q => {
+      const isCorrect = (answers[q.MaCauHoi] || '').trim() === (q.DapAnDung || '').trim();
+      if (isCorrect) skillScores[q.KyNang] = (skillScores[q.KyNang] || 0) + 1;
+      return { MaCauHoi: q.MaCauHoi, isCorrect };
     });
 
     try {
       const res = await fetch(`http://127.0.0.1:8000/path/node/${maNode}/final-test/submit`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ scores: skillScores }),
+        body: JSON.stringify({ scores: skillScores, details }),
       });
       if (res.ok) setResult(await res.json());
     } finally { setSubmitting(false); }
@@ -96,10 +96,15 @@ export default function FinalTestView({ maNode }) {
         {/* Result screen */}
         {result ? (
           <div className="bg-white rounded-[2rem] shadow-xl border border-slate-100 p-12 text-center">
-            <div className="w-24 h-24 bg-amber-400 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl shadow-amber-100">
-              <Trophy className="w-12 h-12 text-white" />
+            <div className={`w-24 h-24 ${result.passed ? 'bg-amber-400' : 'bg-red-400'} rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl ${result.passed ? 'shadow-amber-100' : 'shadow-red-100'}`}>
+              {result.passed
+                ? <Trophy className="w-12 h-12 text-white" />
+                : <XCircle className="w-12 h-12 text-white" />
+              }
             </div>
-            <h1 className="text-3xl font-extrabold text-slate-900 mb-2">Hoàn thành!</h1>
+            <h1 className="text-3xl font-extrabold text-slate-900 mb-2">
+              {result.passed ? 'Hoàn thành!' : 'Chưa đạt yêu cầu'}
+            </h1>
             <p className="text-slate-500 mb-8">{result.message}</p>
 
             {/* Score breakdown */}
@@ -127,9 +132,13 @@ export default function FinalTestView({ maNode }) {
             </div>
 
             {result.next_path_generated && (
-              <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 mb-6">
-                <p className="text-emerald-700 font-bold flex items-center justify-center gap-2">
-                  <Sparkles className="w-4 h-4" /> Lộ trình giai đoạn mới đã sẵn sàng!
+              <div className={`p-4 ${result.passed ? 'bg-emerald-50 border-emerald-200' : 'bg-amber-50 border-amber-200'} rounded-2xl border mb-6`}>
+                <p className={`${result.passed ? 'text-emerald-700' : 'text-amber-700'} font-bold flex items-center justify-center gap-2`}>
+                  <Sparkles className="w-4 h-4" />
+                  {result.passed
+                    ? 'Lộ trình giai đoạn mới đã sẵn sàng!'
+                    : `Hệ thống đã đánh giá lại và tạo lộ trình cấp ${result.new_level} để củng cố.`
+                  }
                 </p>
               </div>
             )}

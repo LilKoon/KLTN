@@ -167,5 +167,44 @@
     "source": "backend",
     "url": "/auth/login",
     "ip": "127.0.0.1"
+  },
+  {
+    "report_id": "eb3d0ae4887e",
+    "timestamp": "2026-05-06T03:19:30+00:00",
+    "id": "AUTH_002",
+    "title": "Sai email hoặc mật khẩu",
+    "message": "Thông tin đăng nhập không chính xác. Hãy thử lại.",
+    "category": "auth",
+    "location": "backend/api/auth.py:login:200",
+    "detail": null,
+    "source": "backend",
+    "url": "/auth/login",
+    "ip": "127.0.0.1"
+  },
+  {
+    "report_id": "2060bb18acc1",
+    "timestamp": "2026-05-06T03:19:35+00:00",
+    "id": "AUTH_002",
+    "title": "Sai email hoặc mật khẩu",
+    "message": "Thông tin đăng nhập không chính xác. Hãy thử lại.",
+    "category": "auth",
+    "location": "backend/api/auth.py:login:200",
+    "detail": null,
+    "source": "backend",
+    "url": "/auth/login",
+    "ip": "127.0.0.1"
+  },
+  {
+    "report_id": "657ec48c4018",
+    "timestamp": "2026-05-06T03:19:43+00:00",
+    "id": "AUTH_004",
+    "title": "Email không tồn tại",
+    "message": "Không tìm thấy tài khoản với email này.",
+    "category": "auth",
+    "location": "backend/api/auth.py:forgot_password:147",
+    "detail": null,
+    "source": "backend",
+    "url": "/auth/forgot-password",
+    "ip": "127.0.0.1"
   }
 ]

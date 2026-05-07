@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
+import AdaptiveExerciseBlock from './AdaptiveExerciseBlock';
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 /** Grammar: Hiển thị lý thuyết từ JSON sections + bài tập MCQ */
-function GrammarLesson({ theory, exercises, onExercisesResult, topicName, level }) {
+function GrammarLesson({ theory, exercises, onExercisesResult, topicName, level, maNode, token }) {
   const [showAll, setShowAll] = useState(false);
   const allSections = (theory?.sections || []).filter(
     s => (s.heading || '').trim() || (s.content || '').trim()
@@ -78,13 +79,13 @@ function GrammarLesson({ theory, exercises, onExercisesResult, topicName, level 
         )}
       </div>
 
-      <ExerciseBlock exercises={exercises} onResult={onExercisesResult} skill="GRAMMAR" />
+      <AdaptiveExerciseBlock maNode={maNode} token={token} skill="GRAMMAR" onResult={onExercisesResult} />
     </div>
   );
 }
 
 /** Listening: Audio player + transcript accordion + MCQ */
-function ListeningLesson({ baiHoc, exercises, onExercisesResult }) {
+function ListeningLesson({ baiHoc, exercises, onExercisesResult, maNode, token }) {
   const [showTranscript, setShowTranscript] = useState(false);
   const audioRef = useRef(null);
 
@@ -162,13 +163,13 @@ function ListeningLesson({ baiHoc, exercises, onExercisesResult }) {
         </div>
       )}
 
-      <ExerciseBlock exercises={exercises} onResult={onExercisesResult} skill="LISTENING" />
+      <AdaptiveExerciseBlock maNode={maNode} token={token} skill="LISTENING" onResult={onExercisesResult} />
     </div>
   );
 }
 
 /** Vocabulary: Word cards grid + quiz MCQ */
-function VocabularyLesson({ theory, exercises, onExercisesResult, level }) {
+function VocabularyLesson({ theory, exercises, onExercisesResult, level, maNode, token }) {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(0);
   const PAGE_SIZE = 20;
@@ -270,7 +271,7 @@ function VocabularyLesson({ theory, exercises, onExercisesResult, level }) {
         )}
       </div>
 
-      <ExerciseBlock exercises={exercises} onResult={onExercisesResult} skill="VOCABULARY" />
+      <AdaptiveExerciseBlock maNode={maNode} token={token} skill="VOCABULARY" onResult={onExercisesResult} />
     </div>
 
   );
@@ -415,6 +416,7 @@ function ExerciseBlock({ exercises, onResult, skill }) {
 
 import ReviewView from './ReviewView';
 import FinalTestView from './FinalTestView';
+import RevisionView from './RevisionView';
 
 // ─── Main LessonView ─────────────────────────────────────────────────────────
 
@@ -501,6 +503,7 @@ export default function LessonView() {
   // Route to specialized views based on node type
   if (nodeType === 'REVIEW') return <ReviewView maNode={maNode} />;
   if (nodeType === 'FINAL_TEST') return <FinalTestView maNode={maNode} />;
+  if (nodeType === 'REVISION') return <RevisionView maNode={maNode} />;
 
   if (error || !data) {
     return (
@@ -592,6 +595,8 @@ export default function LessonView() {
               onExercisesResult={setExercisePassed}
               topicName={topicName}
               level={level}
+              maNode={maNode}
+              token={token}
             />
           )}
           {skill === 'LISTENING' && (
@@ -599,6 +604,8 @@ export default function LessonView() {
               baiHoc={bai_hoc}
               exercises={exercises}
               onExercisesResult={setExercisePassed}
+              maNode={maNode}
+              token={token}
             />
           )}
           {skill === 'VOCABULARY' && (
@@ -607,6 +614,8 @@ export default function LessonView() {
               exercises={exercises}
               onExercisesResult={setExercisePassed}
               level={level}
+              maNode={maNode}
+              token={token}
             />
           )}
           {/* Fallback */}

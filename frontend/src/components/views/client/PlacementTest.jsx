@@ -14,6 +14,9 @@ export default function PlacementTest() {
     const [questions, setQuestions] = useState([]);
     const [currentQuestion, setCurrentQuestion] = useState(0);
     const [answers, setAnswers] = useState({});
+    // Track per-question elapsed seconds (set on first interaction with each question)
+    const [questionTimes, setQuestionTimes] = useState({}); // {MaCauHoi: seconds}
+    const [questionShownAt, setQuestionShownAt] = useState({}); // {MaCauHoi: timestamp ms}
 
     // Filter state for Results
     const [filter, setFilter] = useState('ALL');
@@ -92,7 +95,21 @@ export default function PlacementTest() {
     // Answer Selection
     const handleSelectAnswer = (qId, optionText) => {
         setAnswers(prev => ({ ...prev, [qId]: optionText }));
+        // Lock in elapsed time at first selection (in seconds)
+        const now = Date.now();
+        const shownAt = questionShownAt[qId];
+        if (shownAt && questionTimes[qId] == null) {
+            setQuestionTimes(prev => ({ ...prev, [qId]: Math.max(1, Math.round((now - shownAt) / 1000)) }));
+        }
     };
+
+    // Mark question shown timestamp on first render of each question
+    useEffect(() => {
+        const q = questions[currentQuestion];
+        if (q && !questionShownAt[q.MaCauHoi]) {
+            setQuestionShownAt(prev => ({ ...prev, [q.MaCauHoi]: Date.now() }));
+        }
+    }, [currentQuestion, questions]);
 
     // Submit Test
     const handleSubmit = async () => {
@@ -100,10 +117,11 @@ export default function PlacementTest() {
             setSubmitting(true);
             setError(null);
 
-            // map answers state to array
+            // map answers state to array, kèm thời gian làm câu (giây)
             const answersArray = Object.entries(answers).map(([qId, ans]) => ({
                 MaCauHoi: qId,
-                CauTraLoi: ans
+                CauTraLoi: ans,
+                ThoiGianGiay: questionTimes[qId] ?? null,
             }));
 
             const result = await apiSubmitExamPlacementTest(token, answersArray);

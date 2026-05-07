@@ -120,9 +120,10 @@ def get_placement_test(
                 
             query = db.query(models.NganHangCauHoi).filter(
                 func.upper(models.NganHangCauHoi.KyNang) == skill.upper(),
-                models.NganHangCauHoi.MucDo == str(level)
+                models.NganHangCauHoi.MucDo == str(level),
+                models.NganHangCauHoi.TrangThai == 'ACTIVE',
             )
-            
+
             # Nếu là Listening thì đảm bảo có Audio
             if skill.upper() == "LISTENING":
                 query = query.filter(
@@ -130,15 +131,16 @@ def get_placement_test(
                     models.NganHangCauHoi.FileAudio != "",
                     models.NganHangCauHoi.FileAudio != "null"
                 )
-                
+
             qs = query.order_by(func.random()).limit(count).all()
-            
+
             # Nếu thiếu câu hỏi ở level này, lấy bù từ level khác của cùng kỹ năng
             if len(qs) < count:
                 missing = count - len(qs)
                 fallback_query = db.query(models.NganHangCauHoi).filter(
                     func.upper(models.NganHangCauHoi.KyNang) == skill.upper(),
-                    models.NganHangCauHoi.MucDo != str(level)
+                    models.NganHangCauHoi.MucDo != str(level),
+                    models.NganHangCauHoi.TrangThai == 'ACTIVE',
                 )
                 if skill.upper() == "LISTENING":
                     fallback_query = fallback_query.filter(
@@ -148,9 +150,9 @@ def get_placement_test(
                     )
                 fallback_qs = fallback_query.order_by(func.random()).limit(missing).all()
                 qs.extend(fallback_qs)
-                
+
             questions.extend(qs)
-            
+
     # Process return data to hide exact correct answer
     results = []
     for q in questions:
@@ -255,7 +257,23 @@ def submit_placement_test(
     percentages = {}
     for k, v in stats.items():
         percentages[k] = round((v["correct"] / v["total"]) * 100, 1) if v["total"] > 0 else 0
-        
+
+    # Phase B: detect guessing — avg time per question < 3s AND accuracy < 50%
+    skill_times = {"GRAMMAR": [], "VOCABULARY": [], "LISTENING": []}
+    for a in answers:
+        qid = str(a.get("MaCauHoi"))
+        t = a.get("ThoiGianGiay") or 0
+        if qid in q_map and t > 0:
+            kn = q_map[qid].KyNang.upper()
+            if kn in skill_times:
+                skill_times[kn].append(int(t))
+    guess_flags = {}
+    for skill, times in skill_times.items():
+        avg = (sum(times) / len(times)) if times else 0
+        guess_flags[skill] = bool(times and avg < 3.0 and percentages.get(skill, 0) < 50)
+        if guess_flags[skill]:
+            percentages[skill] = max(0.0, percentages[skill] - 10.0)
+
     overall_score = round((total_correct / len(answers)) * 100, 1) if answers else 0
     
     # Save to database
@@ -276,15 +294,24 @@ def submit_placement_test(
         )
         db.add(pkt)
         
+    from api.sr_engine import update_sr, refresh_question_difficulty
+    timing_by_qid = {str(a.get("MaCauHoi")): int(a.get("ThoiGianGiay") or 0) for a in answers}
+    answered_ids = []
     for detail in detailed_results:
+        t = timing_by_qid.get(str(detail["MaCauHoi"]), 0)
         chi_tiet = models.ChiTietLamBai(
             MaBaiKiemTra=exam.MaBaiKiemTra,
             MaCauHoi=detail["MaCauHoi"],
             LuaChon=detail["UserAnswer"],
             LaCauDung=detail["IsCorrect"],
-            ThoiGianLamCauHoi=0 # optional
+            ThoiGianLamCauHoi=t,
         )
         db.add(chi_tiet)
+        update_sr(db, current_user.MaNguoiDung, detail["MaCauHoi"],
+                  bool(detail["IsCorrect"]), t or None)
+        answered_ids.append(detail["MaCauHoi"])
+    db.flush()
+    refresh_question_difficulty(db, answered_ids)
         
     # Also update user overall score
     current_user.DiemNangLuc = overall_score / 10 # Map to 10 point scale maybe
@@ -294,19 +321,23 @@ def submit_placement_test(
     try:
         from learning_engine import get_engine, build_learning_path
         from learning_engine.path_builder import overall_to_level
+        from api.path_engine import compute_user_trends, compute_weak_topics
 
         g = (percentages.get("GRAMMAR", 0) or 0) / 10.0
         l = (percentages.get("LISTENING", 0) or 0) / 10.0
         v = (percentages.get("VOCABULARY", 0) or 0) / 10.0
         level = overall_to_level((g + l + v) / 3.0)
 
+        trends = compute_user_trends(db, current_user.MaNguoiDung)
+        weak_topics = compute_weak_topics(db, current_user.MaNguoiDung)
         pred = get_engine().predict({
             "level": level,
             "grammar": g,
             "listening": l,
             "vocab": v,
+            **trends,
         })
-        path_nodes = build_learning_path(pred, level)
+        path_nodes = build_learning_path(pred, level, weak_topics=weak_topics)
 
         # Xoá lộ trình cũ (unique constraint trên MaNguoiDung) → cascade xoá nodes
         db.query(models.LoTrinhCaNhan).filter(
@@ -360,6 +391,7 @@ def submit_placement_test(
         "total_correct": total_correct,
         "total_questions": len(answers),
         "percentages": percentages,
+        "guess_flags": guess_flags,
         "stats": stats,
         "details": detailed_results,
         "learning_path": learning_path_summary,
@@ -506,23 +538,25 @@ def get_section_test(
             
             query = db.query(models.NganHangCauHoi).filter(
                 func.upper(models.NganHangCauHoi.KyNang) == skill.upper(),
-                models.NganHangCauHoi.MucDo == str(level)
+                models.NganHangCauHoi.MucDo == str(level),
+                models.NganHangCauHoi.TrangThai == 'ACTIVE',
             )
-            
+
             if skill.upper() == "LISTENING":
                 query = query.filter(
                     models.NganHangCauHoi.FileAudio.isnot(None),
                     models.NganHangCauHoi.FileAudio != "",
                     models.NganHangCauHoi.FileAudio != "null"
                 )
-                
+
             qs = query.order_by(func.random()).limit(count).all()
-            
+
             if len(qs) < count:
                 missing = count - len(qs)
                 fallback_query = db.query(models.NganHangCauHoi).filter(
                     func.upper(models.NganHangCauHoi.KyNang) == skill.upper(),
-                    models.NganHangCauHoi.MucDo != str(level)
+                    models.NganHangCauHoi.MucDo != str(level),
+                    models.NganHangCauHoi.TrangThai == 'ACTIVE',
                 )
                 if skill.upper() == "LISTENING":
                     fallback_query = fallback_query.filter(
@@ -532,7 +566,8 @@ def get_section_test(
                     )
                 fallback_qs = fallback_query.order_by(func.random()).limit(missing).all()
                 qs.extend(fallback_qs)
-                
+
+
             questions.extend(qs)
 
     results = []

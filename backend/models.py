@@ -71,6 +71,8 @@ class NganHangCauHoi(Base):
 
     NguonPDF = Column(String(200), nullable=True)
     FileAudio = Column(String(255), nullable=True)
+    TrangThai = Column(String(50), default='ACTIVE')
+    DoKho = Column(Float, default=0.5)  # 0.0 dễ → 1.0 khó (Adaptive — bootstrapped from p-value)
 
     khoa_hoc = relationship("KhoaHoc", back_populates="cau_hois")
     bai_hoc = relationship("BaiHoc")
@@ -145,6 +147,20 @@ class TrangThaiSR(Base):
     NextDue = Column(DateTime, default=datetime.utcnow)
 
     bo_the = relationship("BoDTheFlashcard", back_populates="trang_thai_sr")
+
+
+class CauHoiSR(Base):
+    """SM-2 spaced repetition state per (user, question)."""
+    __tablename__ = "CauHoiSR"
+
+    MaSR = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    MaNguoiDung = Column(UUID(as_uuid=True), ForeignKey("NguoiDung.MaNguoiDung", ondelete="CASCADE"), nullable=False)
+    MaCauHoi = Column(UUID(as_uuid=True), ForeignKey("NganHangCauHoi.MaCauHoi", ondelete="CASCADE"), nullable=False)
+    EasinessFactor = Column(Float, default=2.5)
+    Interval = Column(Integer, default=0)
+    Repetitions = Column(Integer, default=0)
+    NextDue = Column(DateTime, default=datetime.utcnow)
+    LastSeen = Column(DateTime, default=datetime.utcnow)
 
 
 class TaiLieuRAG(Base):
