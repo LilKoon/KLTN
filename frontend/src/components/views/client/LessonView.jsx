@@ -3,6 +3,42 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import AdaptiveExerciseBlock from './AdaptiveExerciseBlock';
 
+/**
+ * Phát âm tiếng Anh dùng Web Speech API (TTS native browser, không cần API key).
+ * Ưu tiên giọng en-US, fallback bất kỳ giọng en nào có sẵn.
+ */
+function PronounceButton({ word, lang = 'en-US', size = 16, className = '' }) {
+  const speak = (e) => {
+    e?.stopPropagation?.();
+    e?.preventDefault?.();
+    if (!word || typeof window === 'undefined' || !window.speechSynthesis) return;
+    try {
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(word);
+      u.lang = lang;
+      u.rate = 0.9;
+      const voices = window.speechSynthesis.getVoices();
+      const pref = voices.find(v => v.lang === lang) || voices.find(v => v.lang?.startsWith('en'));
+      if (pref) u.voice = pref;
+      window.speechSynthesis.speak(u);
+    } catch {}
+  };
+  return (
+    <button
+      type="button"
+      onClick={speak}
+      title={`Phát âm "${word}"`}
+      className={`p-1.5 rounded-lg text-sky-500 hover:text-white hover:bg-sky-500 active:scale-95 transition-all ${className}`}
+    >
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor" />
+        <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+        <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+      </svg>
+    </button>
+  );
+}
+
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 /** Grammar: Hiển thị lý thuyết từ JSON sections + bài tập MCQ */
@@ -224,12 +260,15 @@ function VocabularyLesson({ theory, exercises, onExercisesResult, level, maNode,
                 key={`${page}-${i}`}
                 className="bg-white border border-slate-100 rounded-xl p-4 hover:border-emerald-200 hover:shadow-sm transition-all group"
               >
-                <div className="flex items-start justify-between mb-1">
-                  <span className="font-bold text-slate-900 text-base group-hover:text-emerald-700 transition-colors">
-                    {w.word}
-                  </span>
+                <div className="flex items-start justify-between mb-1 gap-2">
+                  <div className="flex items-center gap-1 min-w-0">
+                    <span className="font-bold text-slate-900 text-base group-hover:text-emerald-700 transition-colors truncate">
+                      {w.word}
+                    </span>
+                    <PronounceButton word={w.word} />
+                  </div>
                   {w.type && (
-                    <span className="text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full">
+                    <span className="text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full shrink-0">
                       {w.type}
                     </span>
                   )}

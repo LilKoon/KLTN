@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
-import { apiGetExamPlacementTest, apiSubmitExamPlacementTest, apiGetPlacementTestStatus } from '../../../api.js';
+import { apiGetExamPlacementTest, apiSubmitExamPlacementTest, apiGetPlacementTestStatus, API_BASE_URL } from '../../../api.js';
 
 export default function PlacementTest() {
     const { token } = useAuth();
@@ -246,7 +246,7 @@ export default function PlacementTest() {
 
                         {currentQ.KyNang === 'LISTENING' && currentQ.FileAudio && (
                             <div className="mb-6 bg-slate-50 p-4 rounded-xl">
-                                <audio controls src={`http://127.0.0.1:8000/static/audios/${currentQ.FileAudio}`} className="w-full" />
+                                <audio controls src={`${API_BASE_URL}/static/${currentQ.FileAudio}`} className="w-full" />
                             </div>
                         )}
 
@@ -451,7 +451,7 @@ export default function PlacementTest() {
                                             <span className="font-bold text-blue-800 block mb-1">Transcript (Bài Nghe):</span>
                                             <span className="text-blue-700 block mb-3">{item.Transcript}</span>
                                             {item.FileAudio && (
-                                                <audio controls src={`http://127.0.0.1:8000/static/audios/${item.FileAudio}`} className="w-full h-10" />
+                                                <audio controls src={`${API_BASE_URL}/static/${item.FileAudio}`} className="w-full h-10" />
                                             )}
                                         </div>
                                     )}

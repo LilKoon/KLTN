@@ -322,3 +322,19 @@ class CauHinhHeThong(Base):
     GiaTri = Column(Text, nullable=True)
     MoTa = Column(String(255), nullable=True)
     NgayCapNhat = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class TaiLieuHocTap(Base):
+    """Kho tài liệu học tập admin upload, user xem/tải."""
+    __tablename__ = "TaiLieuHocTap"
+
+    MaTaiLieu = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    TenTaiLieu = Column(String(255), nullable=False)
+    MoTa = Column(Text, nullable=True)
+    LoaiTaiLieu = Column(String(50), nullable=False, default='OTHER')   # GRAMMAR | VOCABULARY | LISTENING | READING | WRITING | SPEAKING | OTHER
+    LoaiFile = Column(String(20), nullable=True)                         # pdf | docx | xlsx | ...
+    DungLuong = Column(Integer, default=0)                                # bytes
+    DuongDan = Column(String(500), nullable=False)                        # /static/materials/<file>
+    MaNguoiTaiLen = Column(UUID(as_uuid=True), ForeignKey("NguoiDung.MaNguoiDung", ondelete="SET NULL"), nullable=True)
+    TrangThai = Column(String(20), default='ACTIVE')                      # ACTIVE | ARCHIVED
+    NgayTao = Column(DateTime, default=datetime.utcnow)

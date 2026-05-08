@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
-import { apiGetSectionTest, apiSubmitSectionTest } from '../../../api.js';
+import { apiGetSectionTest, apiSubmitSectionTest, API_BASE_URL } from '../../../api.js';
 import { ChevronRight, TrendingUp, TrendingDown } from 'lucide-react';
 
 export default function SectionTest() {
@@ -206,7 +206,7 @@ export default function SectionTest() {
 
                         {currentQ.KyNang === 'LISTENING' && currentQ.FileAudio && (
                             <div className="mb-6 bg-slate-50 p-4 rounded-xl">
-                                <audio controls src={`http://127.0.0.1:8000/static/audios/${currentQ.FileAudio}`} className="w-full" />
+                                <audio controls src={`${API_BASE_URL}/static/${currentQ.FileAudio}`} className="w-full" />
                             </div>
                         )}
 
@@ -443,7 +443,7 @@ export default function SectionTest() {
                                             <span className="font-bold text-blue-800 block mb-1">Transcript (Bài Nghe):</span>
                                             <span className="text-blue-700 block mb-3">{item.Transcript}</span>
                                             {item.FileAudio && (
-                                                <audio controls src={`http://127.0.0.1:8000/static/audios/${item.FileAudio}`} className="w-full h-10" />
+                                                <audio controls src={`${API_BASE_URL}/static/${item.FileAudio}`} className="w-full h-10" />
                                             )}
                                         </div>
                                     )}

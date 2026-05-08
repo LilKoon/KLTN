@@ -157,12 +157,6 @@ export default function AdaptiveExerciseBlock({ maNode, token, skill, onResult }
       <div className="bg-white border-2 border-slate-100 rounded-2xl p-6 shadow-sm">
         <h3 className="font-bold text-slate-800 text-base mb-4">{currentQ.NoiDung}</h3>
 
-        {currentQ.FileAudio && skill === 'LISTENING' && (
-          <audio controls className="w-full mb-4">
-            <source src={`http://127.0.0.1:8000/static/audios/${currentQ.FileAudio}`} type="audio/mpeg" />
-          </audio>
-        )}
-
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {currentQ.DapAn.map((opt, i) => {
             const isSelected = selected === opt;

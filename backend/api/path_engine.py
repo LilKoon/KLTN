@@ -795,9 +795,9 @@ def get_revision_content(
     boost = node.NoiDungBoost or {}
     bh_ids = boost.get("revision_baihoc_ids", [])
 
-    # Gộp lý thuyết từ 3 BaiHoc
+    # Gộp lý thuyết từ các BaiHoc liên kết
     theories = []
-    all_exercises = []
+    bh_by_skill = {"GRAMMAR": [], "VOCABULARY": [], "LISTENING": []}
     for bh_id in bh_ids:
         bh = db.query(models.BaiHoc).filter(models.BaiHoc.MaBaiHoc == bh_id).first()
         if not bh:
@@ -809,23 +809,43 @@ def get_revision_content(
             "NoiDungLyThuyet": bh.NoiDungLyThuyet,
             "FileAudio": bh.FileAudio,
         })
-        # Lấy bài tập từ BaiHoc này
-        qs = db.query(models.NganHangCauHoi).filter(
-            models.NganHangCauHoi.MaBaiHoc == bh_id,
-            models.NganHangCauHoi.TrangThai == 'ACTIVE',
-        ).all()
-        all_exercises.extend(qs)
+        if bh.KyNang in bh_by_skill:
+            bh_by_skill[bh.KyNang].append(bh_id)
 
-    # Fallback: nếu không link được BaiHoc, pull theo skill + level
-    if not all_exercises:
-        for sk in boost.get("revision_skills", ["GRAMMAR", "VOCABULARY", "LISTENING"]):
-            qs = db.query(models.NganHangCauHoi).filter(
+    # Bài tập: đảm bảo đủ 3 kỹ năng (GRAMMAR + VOCABULARY + LISTENING)
+    PER_SKILL = 4   # mục tiêu mỗi kỹ năng
+    selected = []
+    selected_ids = set()
+
+    for sk in ("GRAMMAR", "VOCABULARY", "LISTENING"):
+        bucket = []
+        # ưu tiên lấy từ BaiHoc của REVISION node có cùng kỹ năng
+        if bh_by_skill[sk]:
+            bucket = db.query(models.NganHangCauHoi).filter(
+                models.NganHangCauHoi.MaBaiHoc.in_(bh_by_skill[sk]),
                 models.NganHangCauHoi.KyNang == sk,
                 models.NganHangCauHoi.TrangThai == 'ACTIVE',
-            ).order_by(models.NganHangCauHoi.MaCauHoi).limit(5).all()
-            all_exercises.extend(qs)
+            ).all()
+        # nếu chưa đủ → bổ sung từ pool toàn hệ thống (cùng kỹ năng)
+        if len(bucket) < PER_SKILL:
+            need = PER_SKILL - len(bucket)
+            existing = {q.MaCauHoi for q in bucket}
+            extra = db.query(models.NganHangCauHoi).filter(
+                models.NganHangCauHoi.KyNang == sk,
+                models.NganHangCauHoi.TrangThai == 'ACTIVE',
+                ~models.NganHangCauHoi.MaCauHoi.in_(existing) if existing else True,
+            ).limit(50).all()
+            random.shuffle(extra)
+            bucket.extend(extra[:need])
 
-    selected = random.sample(all_exercises, min(10, len(all_exercises))) if all_exercises else []
+        random.shuffle(bucket)
+        for q in bucket[:PER_SKILL]:
+            if q.MaCauHoi not in selected_ids:
+                selected.append(q)
+                selected_ids.add(q.MaCauHoi)
+
+    random.shuffle(selected)
+
     exercises = []
     for q in selected:
         ds = q.DSDapAn if isinstance(q.DSDapAn, dict) else {}

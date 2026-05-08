@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { Trophy, ArrowLeft, RefreshCw, Sparkles, XCircle } from 'lucide-react';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
 const SKILL_META = {
   GRAMMAR:    { label: 'Ngữ pháp',  icon: '📝', color: 'text-rose-600',    bg: 'bg-rose-50',    bar: 'bg-rose-500' },
   VOCABULARY: { label: 'Từ vựng',   icon: '📚', color: 'text-emerald-600', bg: 'bg-emerald-50', bar: 'bg-emerald-500' },
@@ -189,7 +191,7 @@ export default function FinalTestView({ maNode }) {
 
                     {q.FileAudio && (
                       <audio controls className="w-full mb-4 h-10 rounded-xl"
-                        src={`http://127.0.0.1:8000/static/${q.FileAudio}`} />
+                        src={`${API_BASE_URL}/static/${q.FileAudio}`} />
                     )}
 
                     <h3 className="font-bold text-slate-800 text-base mb-4">{q.NoiDung}</h3>

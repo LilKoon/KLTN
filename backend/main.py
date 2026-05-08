@@ -8,7 +8,7 @@ warnings.filterwarnings("ignore", message=".*'pin_memory' argument is set as tru
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import database, models
-from api import auth, cms, test_engine, path_engine, user_stats, ai_engine, flashcard_store, rag_api, chat_session, exam_service, admin
+from api import auth, cms, test_engine, path_engine, user_stats, ai_engine, flashcard_store, rag_api, chat_session, exam_service, admin, materials
 from api.quiz_extraction import router as quiz_extract_router
 from api.oauth import router as oauth_router
 from api.bug_report import router as bug_report_router
@@ -69,6 +69,7 @@ api.include_router(oauth_router)
 api.include_router(bug_report_router)
 api.include_router(exam_service.router)
 api.include_router(admin.router)
+api.include_router(materials.router)
 
 api.add_exception_handler(AppError, app_error_handler)
 

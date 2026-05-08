@@ -1,13 +1,20 @@
 """Admin API: quản lý người dùng, đánh giá, thông báo, hoạt động, cấu hình."""
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi import APIRouter, Depends, HTTPException, status, Request, UploadFile, File, Form
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc
-from uuid import UUID
+from uuid import UUID, uuid4
 from datetime import datetime, timedelta
 from typing import Optional, List
+import os
+import re
 
 import database, models, schemas
 from api.auth import get_current_user
+
+ALLOWED_MATERIAL_TYPES = {"GRAMMAR", "VOCABULARY", "LISTENING", "READING", "WRITING", "SPEAKING", "OTHER"}
+MATERIALS_DIR = os.path.join("static", "materials")
+MAX_MATERIAL_SIZE = 30 * 1024 * 1024  # 30MB
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
 
@@ -101,7 +108,7 @@ def list_users(
         q = q.filter((models.NguoiDung.TenNguoiDung.ilike(like)) | (models.NguoiDung.Email.ilike(like)))
     if role and role.upper() in ("USER", "ADMIN"):
         q = q.filter(models.NguoiDung.VaiTro == role.upper())
-    if status_filter and status_filter.upper() in ("ACTIVE", "BANNED"):
+    if status_filter and status_filter.upper() in ("ACTIVE", "BANNED", "BLOCKED"):
         q = q.filter(models.NguoiDung.TrangThai == status_filter.upper())
     return q.order_by(desc(models.NguoiDung.NgayTao)).offset(skip).limit(limit).all()
 
@@ -117,19 +124,37 @@ def update_user(
     user = db.query(models.NguoiDung).filter(models.NguoiDung.MaNguoiDung == user_id).first()
     if not user:
         raise HTTPException(404, "Không tìm thấy người dùng")
-    if payload.TenNguoiDung is not None:
+    if payload.TenNguoiDung:
         user.TenNguoiDung = payload.TenNguoiDung
-    if payload.VaiTro is not None:
-        if payload.VaiTro.upper() not in ("USER", "ADMIN"):
+    if payload.Email and payload.Email != user.Email:
+        existed = db.query(models.NguoiDung).filter(
+            models.NguoiDung.Email == payload.Email,
+            models.NguoiDung.MaNguoiDung != user_id,
+        ).first()
+        if existed:
+            raise HTTPException(400, "Email đã tồn tại")
+        user.Email = payload.Email
+    if payload.MatKhau:
+        if len(payload.MatKhau) < 6:
+            raise HTTPException(400, "Mật khẩu phải ≥ 6 ký tự")
+        from api.auth import get_password_hash
+        user.MatKhau = get_password_hash(payload.MatKhau)
+    if payload.VaiTro:
+        v = payload.VaiTro.upper()
+        if v not in ("USER", "ADMIN"):
             raise HTTPException(400, "Vai trò không hợp lệ")
-        user.VaiTro = payload.VaiTro.upper()
-    if payload.TrangThai is not None:
-        if payload.TrangThai.upper() not in ("ACTIVE", "BANNED"):
+        user.VaiTro = v
+    if payload.TrangThai:
+        s = payload.TrangThai.upper()
+        if s not in ("ACTIVE", "BANNED", "BLOCKED"):
             raise HTTPException(400, "Trạng thái không hợp lệ")
-        user.TrangThai = payload.TrangThai.upper()
+        # Lưu nguyên giá trị FE gửi (ACTIVE/BANNED/BLOCKED) — FE đã handle các giá trị này
+        user.TrangThai = s
     db.commit()
     db.refresh(user)
-    _log(db, admin, request, "UPDATE_USER", str(user_id), payload.model_dump(exclude_none=True))
+    log_payload = payload.model_dump(exclude_none=True)
+    log_payload.pop("MatKhau", None)  # đừng log password
+    _log(db, admin, request, "UPDATE_USER", str(user_id), log_payload)
     return user
 
 
@@ -421,3 +446,91 @@ def delete_system_deck(
     db.commit()
     _log(db, admin, request, "DELETE_SYSTEM_DECK", str(deck_id))
     return {"message": "Đã xoá bộ thẻ hệ thống"}
+
+
+# -------------------- LEARNING MATERIALS (KHO TÀI LIỆU) --------------------
+
+def _safe_filename(name: str) -> str:
+    return re.sub(r"[^A-Za-z0-9._-]+", "_", name)[:120] or "file"
+
+
+@router.get("/materials", response_model=List[schemas.TaiLieuResponse])
+def list_materials_admin(
+    loai: Optional[str] = None,
+    search: Optional[str] = None,
+    db: Session = Depends(database.get_db),
+    _: models.NguoiDung = Depends(require_admin),
+):
+    q = db.query(models.TaiLieuHocTap).filter(models.TaiLieuHocTap.TrangThai == 'ACTIVE')
+    if loai and loai.upper() in ALLOWED_MATERIAL_TYPES:
+        q = q.filter(models.TaiLieuHocTap.LoaiTaiLieu == loai.upper())
+    if search:
+        like = f"%{search}%"
+        q = q.filter((models.TaiLieuHocTap.TenTaiLieu.ilike(like)) | (models.TaiLieuHocTap.MoTa.ilike(like)))
+    return q.order_by(desc(models.TaiLieuHocTap.NgayTao)).all()
+
+
+@router.post("/materials", response_model=schemas.TaiLieuResponse)
+async def upload_material(
+    request: Request,
+    file: UploadFile = File(...),
+    TenTaiLieu: str = Form(...),
+    MoTa: Optional[str] = Form(None),
+    LoaiTaiLieu: str = Form('OTHER'),
+    db: Session = Depends(database.get_db),
+    admin: models.NguoiDung = Depends(require_admin),
+):
+    loai = (LoaiTaiLieu or 'OTHER').upper()
+    if loai not in ALLOWED_MATERIAL_TYPES:
+        raise HTTPException(400, f"Loại tài liệu không hợp lệ. Chấp nhận: {sorted(ALLOWED_MATERIAL_TYPES)}")
+
+    os.makedirs(MATERIALS_DIR, exist_ok=True)
+    raw = await file.read()
+    if len(raw) > MAX_MATERIAL_SIZE:
+        raise HTTPException(400, "File quá lớn (giới hạn 30MB)")
+
+    ext = os.path.splitext(file.filename or '')[1].lower().lstrip('.') or 'bin'
+    saved_name = f"{uuid4().hex}_{_safe_filename(file.filename or 'file')}"
+    saved_path = os.path.join(MATERIALS_DIR, saved_name)
+    with open(saved_path, "wb") as f:
+        f.write(raw)
+
+    item = models.TaiLieuHocTap(
+        TenTaiLieu=TenTaiLieu,
+        MoTa=MoTa,
+        LoaiTaiLieu=loai,
+        LoaiFile=ext,
+        DungLuong=len(raw),
+        DuongDan=f"/static/materials/{saved_name}",
+        MaNguoiTaiLen=admin.MaNguoiDung,
+    )
+    db.add(item)
+    db.commit()
+    db.refresh(item)
+    _log(db, admin, request, "UPLOAD_MATERIAL", str(item.MaTaiLieu), {"loai": loai, "ten": TenTaiLieu})
+    return item
+
+
+@router.delete("/materials/{mat_id}")
+def delete_material(
+    mat_id: UUID,
+    request: Request,
+    db: Session = Depends(database.get_db),
+    admin: models.NguoiDung = Depends(require_admin),
+):
+    item = db.query(models.TaiLieuHocTap).filter(models.TaiLieuHocTap.MaTaiLieu == mat_id).first()
+    if not item:
+        raise HTTPException(404, "Không tìm thấy tài liệu")
+    # xoá file vật lý
+    if item.DuongDan and item.DuongDan.startswith("/static/"):
+        local = item.DuongDan[len("/static/"):]
+        full = os.path.join("static", local)
+        try:
+            if os.path.exists(full):
+                os.remove(full)
+        except OSError:
+            pass
+    db.delete(item)
+    db.commit()
+    _log(db, admin, request, "DELETE_MATERIAL", str(mat_id))
+    return {"message": "Đã xoá tài liệu"}

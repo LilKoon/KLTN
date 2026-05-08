@@ -3,11 +3,129 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { ArrowLeft, BookOpen, CheckCircle2, XCircle, RefreshCw } from 'lucide-react';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
 const SKILL_META = {
   GRAMMAR:    { icon: '📝', label: 'Ngữ pháp',   color: 'text-rose-600',    bg: 'bg-rose-50',    border: 'border-rose-200',   bar: 'bg-rose-500' },
   LISTENING:  { icon: '🎧', label: 'Nghe',        color: 'text-sky-600',     bg: 'bg-sky-50',     border: 'border-sky-200',    bar: 'bg-sky-500' },
   VOCABULARY: { icon: '📚', label: 'Từ vựng',     color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200',bar: 'bg-emerald-500' },
 };
+
+function PronounceButton({ word, lang = 'en-US' }) {
+  const speak = (e) => {
+    e?.stopPropagation?.(); e?.preventDefault?.();
+    if (!word || typeof window === 'undefined' || !window.speechSynthesis) return;
+    try {
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(word);
+      u.lang = lang; u.rate = 0.9;
+      const voices = window.speechSynthesis.getVoices();
+      const pref = voices.find(v => v.lang === lang) || voices.find(v => v.lang?.startsWith('en'));
+      if (pref) u.voice = pref;
+      window.speechSynthesis.speak(u);
+    } catch {}
+  };
+  return (
+    <button type="button" onClick={speak} title={`Phát âm "${word}"`}
+      className="p-1.5 rounded-lg text-sky-500 hover:text-white hover:bg-sky-500 active:scale-95 transition-all">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor" />
+        <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+        <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+      </svg>
+    </button>
+  );
+}
+
+/**
+ * Render theory cho 1 BaiHoc theo shape NoiDungLyThuyet:
+ *  - GRAMMAR:    { sections: [{heading, content}, ...] }
+ *  - VOCABULARY: { topic, words: [{word, type, phonetic, meaning}, ...] }
+ *  - LISTENING:  { transcript: '...' }
+ * Sao chép cách render từ LessonView để hiển thị nhất quán.
+ */
+function TheoryRenderer({ baiHoc }) {
+  const theory = baiHoc?.NoiDungLyThuyet || {};
+  const skill = baiHoc?.KyNang;
+
+  // VOCABULARY: word grid
+  if (skill === 'VOCABULARY' || (Array.isArray(theory.words) && theory.words.length > 0)) {
+    const words = theory.words || [];
+    if (words.length === 0) {
+      return <p className="text-slate-400 italic text-sm">Danh sách từ vựng chưa có.</p>;
+    }
+    return (
+      <div>
+        {theory.topic && (
+          <p className="text-emerald-700 font-bold text-sm mb-3">📚 {theory.topic} · {words.length} từ</p>
+        )}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {words.map((w, i) => (
+            <div key={i} className="bg-white border border-emerald-100 rounded-xl p-4 hover:border-emerald-300 transition-all">
+              <div className="flex items-start justify-between mb-1 gap-2">
+                <div className="flex items-center gap-1 min-w-0">
+                  <span className="font-bold text-slate-900 text-base truncate">{w.word}</span>
+                  <PronounceButton word={w.word} />
+                </div>
+                {w.type && (
+                  <span className="text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full shrink-0">{w.type}</span>
+                )}
+              </div>
+              {w.phonetic && <p className="text-sky-500 text-sm font-mono mb-1">{w.phonetic}</p>}
+              <p className="text-slate-500 text-sm">{w.meaning}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // LISTENING: transcript
+  if (skill === 'LISTENING' || typeof theory.transcript === 'string') {
+    const transcript = theory.transcript || '';
+    if (!transcript.trim()) {
+      return <p className="text-slate-400 italic text-sm">Transcript chưa có.</p>;
+    }
+    return (
+      <div className="bg-sky-50/50 border border-sky-100 rounded-xl p-4">
+        <p className="text-xs font-bold text-sky-700 uppercase tracking-wider mb-2">Transcript</p>
+        <p className="text-slate-700 text-sm leading-relaxed whitespace-pre-line">{transcript}</p>
+      </div>
+    );
+  }
+
+  // GRAMMAR (default): sections
+  const allSections = (theory.sections || []).filter(s => (s.heading || s.title || '').trim() || (s.content || '').trim());
+  if (allSections.length === 0) {
+    return <p className="text-slate-400 italic text-sm">Nội dung lý thuyết chưa có.</p>;
+  }
+  return (
+    <div className="space-y-3">
+      {allSections.map((sec, i) => {
+        const heading = (sec.heading || sec.title || '').trim();
+        const content = (sec.content || '').trim();
+        const standalone = heading && !content;
+        return (
+          <div key={i} className={standalone ? 'pt-2 first:pt-0' : 'bg-slate-50 rounded-xl p-4 border border-slate-100'}>
+            {heading && (
+              <h3 className={`font-bold text-slate-800 ${standalone ? 'text-base border-b-2 border-rose-200 pb-1.5 text-rose-800' : 'text-sm mb-1.5'}`}>
+                {heading}
+              </h3>
+            )}
+            {content && (
+              <p className="text-slate-600 leading-relaxed whitespace-pre-line text-sm">{content}</p>
+            )}
+            {sec.examples?.length > 0 && (
+              <ul className="mt-2 space-y-1 text-sm text-slate-500 list-disc list-inside">
+                {sec.examples.map((ex, ei) => <li key={ei}>{ex}</li>)}
+              </ul>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 export default function RevisionView({ maNode }) {
   const { token } = useAuth();
@@ -126,7 +244,6 @@ export default function RevisionView({ maNode }) {
           <div className="space-y-6">
             {theories.map((th, idx) => {
               const meta = SKILL_META[th.KyNang] || { icon: '📖', label: th.KyNang, bg: 'bg-slate-50', border: 'border-slate-200', color: 'text-slate-600' };
-              const sections = th.NoiDungLyThuyet?.sections || [];
               return (
                 <div key={idx} className={`bg-white rounded-2xl border-2 ${meta.border} overflow-hidden`}>
                   <div className={`${meta.bg} px-6 py-4 flex items-center gap-3`}>
@@ -139,24 +256,12 @@ export default function RevisionView({ maNode }) {
                   {th.FileAudio && th.KyNang === 'LISTENING' && (
                     <div className="px-6 pt-4">
                       <audio controls className="w-full">
-                        <source src={`http://127.0.0.1:8000/static/audios/${th.FileAudio}`} type="audio/mpeg" />
+                        <source src={`${API_BASE_URL}/static/${th.FileAudio}`} type="audio/mpeg" />
                       </audio>
                     </div>
                   )}
-                  <div className="px-6 py-4 space-y-3">
-                    {sections.length > 0 ? sections.map((sec, si) => (
-                      <div key={si}>
-                        {sec.title && <h3 className="font-bold text-slate-800 mb-1">{sec.title}</h3>}
-                        {sec.content && <p className="text-slate-600 text-sm leading-relaxed whitespace-pre-line">{sec.content}</p>}
-                        {sec.examples?.length > 0 && (
-                          <ul className="mt-2 space-y-1 text-sm text-slate-500 list-disc list-inside">
-                            {sec.examples.map((ex, ei) => <li key={ei}>{ex}</li>)}
-                          </ul>
-                        )}
-                      </div>
-                    )) : (
-                      <p className="text-slate-400 italic text-sm">Nội dung lý thuyết chưa có.</p>
-                    )}
+                  <div className="px-6 py-4">
+                    <TheoryRenderer baiHoc={th} />
                   </div>
                 </div>
               );
@@ -196,11 +301,6 @@ export default function RevisionView({ maNode }) {
                       <span className="text-slate-400 text-xs">Câu {idx + 1}</span>
                     </div>
                     <h3 className="font-bold text-slate-800 text-sm mb-4">{ex.NoiDung}</h3>
-                    {ex.FileAudio && ex.KyNang === 'LISTENING' && (
-                      <audio controls className="w-full mb-3">
-                        <source src={`http://127.0.0.1:8000/static/audios/${ex.FileAudio}`} type="audio/mpeg" />
-                      </audio>
-                    )}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {ex.DapAn.map((opt, i) => {
                         const sel = answers[ex.MaCauHoi] === opt;

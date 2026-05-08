@@ -14,6 +14,7 @@ import {
     MessageSquare,
     LogOut,
     ShieldCheck,
+    FolderUp,
 } from 'lucide-react';
 
 const SECTIONS = [
@@ -37,6 +38,7 @@ const SECTIONS = [
         title: 'Tài liệu',
         items: [
             { id: 'system-flashcards', label: 'Flashcards',   Icon: Layers },
+            { id: 'system-materials',  label: 'Kho tài liệu', Icon: FolderUp },
             { id: 'export-reports',    label: 'Xuất báo cáo', Icon: FileBarChart },
         ],
     },

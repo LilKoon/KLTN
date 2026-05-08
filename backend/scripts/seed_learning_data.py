@@ -349,7 +349,7 @@ def seed_listening(db: Session):
     for filename, data in sorted(audio_data.items()):
         level = get_listening_level(filename)
         course = listening_courses[level]
-        audio_path = f"audio/{filename}"  # relative to /static/
+        audio_path = f"audios/{filename}"  # relative to /static/ — pool 258 files
 
         print(f"  [{level}] {filename} → {len(data['questions'])} questions")
 

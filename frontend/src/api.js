@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+export const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 /**
  * Đăng nhập — POST /api/v1/auth/login
@@ -446,6 +446,47 @@ export const apiAdminUpdateSystemDeck = (token, deckId, payload) =>
 
 export const apiAdminDeleteSystemDeck = (token, deckId) =>
   _authedFetch(token, `/admin/system-flashcards/${deckId}`, { method: "DELETE" });
+
+// ─── Kho tài liệu (Learning Materials) ─────────────────────────────────
+
+export const apiGetAdminMaterials = (token, params = {}) => {
+  const qs = new URLSearchParams();
+  if (params.loai) qs.append("loai", params.loai);
+  if (params.search) qs.append("search", params.search);
+  const q = qs.toString();
+  return _authedFetch(token, `/admin/materials${q ? `?${q}` : ""}`);
+};
+
+export async function apiUploadMaterial(token, payload) {
+  const fd = new FormData();
+  fd.append("TenTaiLieu", payload.ten || payload.TenTaiLieu || "");
+  fd.append("MoTa", payload.moTa || payload.MoTa || "");
+  fd.append("LoaiTaiLieu", (payload.loai || payload.LoaiTaiLieu || "OTHER").toUpperCase());
+  fd.append("file", payload.file);
+  const res = await fetch(`${API_BASE_URL}/admin/materials`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+    body: fd,
+  });
+  const data = await res.json().catch(() => null);
+  if (!res.ok) throw new Error(data?.detail || data?.error?.message || "Upload thất bại");
+  return data;
+}
+
+export const apiDeleteMaterial = (token, id) =>
+  _authedFetch(token, `/admin/materials/${id}`, { method: "DELETE" });
+
+// User-facing (không cần token nhưng vẫn cho gửi nếu có)
+export async function apiGetUserMaterials(params = {}) {
+  const qs = new URLSearchParams();
+  if (params.loai) qs.append("loai", params.loai);
+  if (params.search) qs.append("search", params.search);
+  const q = qs.toString();
+  const res = await fetch(`${API_BASE_URL}/materials${q ? `?${q}` : ""}`);
+  const data = await res.json().catch(() => null);
+  if (!res.ok) throw new Error(data?.detail || "Không tải được tài liệu");
+  return data || [];
+}
 
 export const apiUploadLessonFile = async (token, lessonId, file) => {
   const formData = new FormData();

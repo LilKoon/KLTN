@@ -290,8 +290,10 @@ class AdminUserListItem(BaseModel):
 
 class AdminUserUpdate(BaseModel):
     TenNguoiDung: Optional[str] = None
+    Email: Optional[EmailStr] = None
+    MatKhau: Optional[str] = None       # nếu khác rỗng, hash + cập nhật
     VaiTro: Optional[str] = None        # USER | ADMIN
-    TrangThai: Optional[str] = None     # ACTIVE | BANNED
+    TrangThai: Optional[str] = None     # ACTIVE | BANNED | BLOCKED
 
 
 class AdminDashboardStats(BaseModel):
@@ -384,3 +386,17 @@ class SystemDeckCreate(BaseModel):
     TenBoDe: str
     CapDo: str
     cards: List[FlashcardItem]
+
+
+class TaiLieuResponse(BaseModel):
+    MaTaiLieu: UUID
+    TenTaiLieu: str
+    MoTa: Optional[str] = None
+    LoaiTaiLieu: str
+    LoaiFile: Optional[str] = None
+    DungLuong: int = 0
+    DuongDan: str
+    NgayTao: datetime
+
+    class Config:
+        from_attributes = True

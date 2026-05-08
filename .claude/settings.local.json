@@ -99,7 +99,14 @@
       "Bash(python -m scripts.migrate_admin_tables)",
       "Bash(node --check src/api.js)",
       "Bash(npx --no-install --yes esbuild --bundle=false --loader:.jsx=jsx --loader:.js=jsx src/context/AuthContext.jsx src/components/views/admin/Accounts.jsx src/api.js)",
-      "Bash(python create_admin.py)"
+      "Bash(python create_admin.py)",
+      "Bash(curl -sI \"http://127.0.0.1:8000/static/audio/T1_1.mp3\")",
+      "Bash(curl -sI \"http://127.0.0.1:8000/static/audios/T1_1.mp3\")",
+      "Bash(curl -sI \"http://127.0.0.1:8000/static/audios/audio/T1_1.mp3\")",
+      "Bash(npx --no-install --yes esbuild --bundle=false --loader:.jsx=jsx src/components/views/client/RevisionView.jsx)",
+      "Bash(mkdir -p static/materials)",
+      "Bash(python -m scripts.backup_db)",
+      "Bash(python -m scripts.seed_train_listening)"
     ]
   }
 }

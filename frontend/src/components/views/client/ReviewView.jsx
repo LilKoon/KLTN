@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { RefreshCw, CheckCircle2, XCircle, ArrowLeft, Trophy, RotateCcw } from 'lucide-react';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
 const SKILL_COLOR = {
   GRAMMAR:    { bg: 'bg-rose-500',    light: 'bg-rose-50',    text: 'text-rose-600',    border: 'border-rose-300',    icon: '📝' },
   VOCABULARY: { bg: 'bg-emerald-500', light: 'bg-emerald-50', text: 'text-emerald-600', border: 'border-emerald-300', icon: '📚' },
@@ -184,7 +186,7 @@ export default function ReviewView({ maNode }) {
 
                 {/* Audio */}
                 {q.FileAudio && (
-                  <audio controls className="w-full mb-4 h-10 rounded-xl" src={`http://127.0.0.1:8000/static/${q.FileAudio}`} />
+                  <audio controls className="w-full mb-4 h-10 rounded-xl" src={`${API_BASE_URL}/static/${q.FileAudio}`} />
                 )}
 
                 <h3 className="font-bold text-slate-800 text-base mb-4">{q.NoiDung}</h3>

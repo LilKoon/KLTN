@@ -42,6 +42,7 @@ import Settings from './components/views/admin/Settings';
 import Notifications from './components/views/admin/Notifications';
 import ManageReviews from './components/views/admin/ManageReviews';
 import SystemFlashcards from './components/views/admin/SystemFlashcards';
+import SystemMaterials from './components/views/admin/SystemMaterials';
 import ExportReports from './components/views/admin/ExportReports';
 
 // === Protected Route Wrappers ===
@@ -124,6 +125,7 @@ const AdminLayout = () => {
                         <Route path="activity" element={<Activity />} />
                         <Route path="manage-reviews" element={<ManageReviews />} />
                         <Route path="system-flashcards" element={<SystemFlashcards />} />
+                        <Route path="system-materials" element={<SystemMaterials />} />
                         <Route path="export-reports" element={<ExportReports />} />
                         <Route path="profile" element={<Profile />} />
                         <Route path="settings" element={<Settings />} />
