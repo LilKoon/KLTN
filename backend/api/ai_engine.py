@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 import database, models, schemas
 from api.auth import get_current_user, get_optional_user
+from api.subscription import check_rate_limit
 from llm.orchestrator import call_llm, LLMTask
 from rag.chunker import extract_text_from_pdf, extract_chat_attachment, IMAGE_EXTS
 from error_handler import raise_app_error
@@ -37,7 +38,7 @@ def _parse_json(text: str) -> list:
 @router.post("/flashcards/generate", response_model=List[schemas.FlashcardItem])
 async def generate_flashcards(
     req: schemas.FlashcardGenerateRequest,
-    current_user=Depends(get_current_user),
+    current_user=Depends(check_rate_limit("ai_flashcard")),
 ):
     if req.level.upper() not in CEFR_LEVELS:
         raise_app_error("AI_002")
@@ -75,7 +76,7 @@ async def generate_flashcards(
 @router.post("/flashcards/from-text", response_model=List[schemas.FlashcardItem])
 async def flashcards_from_text(
     req: schemas.FlashcardFromTextRequest,
-    current_user=Depends(get_current_user),
+    current_user=Depends(check_rate_limit("ai_flashcard")),
 ):
     count = max(1, min(req.count, 30))
     system = (
@@ -111,7 +112,7 @@ async def flashcards_from_text(
 @router.post("/quiz/generate", response_model=List[schemas.QuizQuestion])
 async def generate_quiz(
     req: schemas.QuizGenerateRequest,
-    current_user=Depends(get_current_user),
+    current_user=Depends(check_rate_limit("ai_test")),
 ):
     if req.level.upper() not in CEFR_LEVELS:
         raise_app_error("AI_002")
@@ -251,7 +252,7 @@ def delete_ai_quiz(
 @router.post("/chat")
 async def ai_chat(
     payload: schemas.ChatRequest,
-    current_user=Depends(get_optional_user),
+    current_user=Depends(check_rate_limit("chatbot")),
 ):
     user_id = str(current_user.MaNguoiDung) if current_user else "anonymous"
     last_query = payload.messages[-1].content if payload.messages else ""

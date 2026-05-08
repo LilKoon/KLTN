@@ -157,6 +157,7 @@ export default function Accounts() {
                             <tr className="bg-slate-50 border-b border-slate-200">
                                 <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Người dùng</th>
                                 <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Vai trò</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Gói</th>
                                 <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Trạng thái</th>
                                 <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Hoạt động cuối</th>
                                 <th className="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">Hành động</th>
@@ -181,7 +182,18 @@ export default function Accounts() {
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 text-sm font-medium text-slate-600">
-                                        {user.VaiTro === 'QuanLy' ? 'Quản trị viên' : 'Học viên'}
+                                        {user.VaiTro === 'QuanLy' || user.VaiTro === 'ADMIN' ? 'Quản trị viên' : 'Học viên'}
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        {(() => {
+                                            const goi = (user.GoiDangKy || 'FREE').toUpperCase();
+                                            const expired = user.GoiHetHan && new Date(user.GoiHetHan) < new Date();
+                                            const eff = expired ? 'FREE' : goi;
+                                            const cls = eff === 'ULTRA' ? 'bg-violet-100 text-violet-700' : eff === 'PRO' ? 'bg-teal-100 text-teal-700' : 'bg-slate-100 text-slate-600';
+                                            return (
+                                                <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-black uppercase ${cls}`}>{eff}</span>
+                                            );
+                                        })()}
                                     </td>
                                     <td className="px-6 py-4">
                                         <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border ${getStatusStyles(user.TrangThai)}`}>

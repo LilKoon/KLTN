@@ -311,7 +311,7 @@ def get_current_path_nodes(
 
 @router.post("/generate", response_model=schemas.LoTrinhCaNhanResponse)
 def generate_personalized_path(
-    current_user: models.NguoiDung = Depends(get_current_user),
+    current_user: models.NguoiDung = Depends(__import__('api.subscription', fromlist=['check_rate_limit']).check_rate_limit("learning_path")),
     db: Session = Depends(database.get_db)
 ):
     """Sinh learning path bằng rules-based engine dựa trên điểm placement test."""

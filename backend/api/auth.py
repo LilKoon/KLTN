@@ -33,6 +33,20 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     user = db.query(models.NguoiDung).filter(models.NguoiDung.Email == email).first()
     if user is None:
         raise credentials_exception
+    # Block tài khoản bị khoá
+    if user.TrangThai and user.TrangThai.upper() in ("BANNED", "BLOCKED"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="ACCOUNT_BANNED",
+        )
+    # Cập nhật LastSeenAt (best-effort)
+    try:
+        from datetime import datetime as _dt
+        if hasattr(user, "LastSeenAt"):
+            user.LastSeenAt = _dt.utcnow()
+            db.commit()
+    except Exception:
+        db.rollback()
     return user
 
 
@@ -70,6 +84,17 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
 
 @router.post("/register", response_model=schemas.RegisterResponse)
 def register(user: schemas.UserCreate, db: Session = Depends(database.get_db)):
+    # Check setting allow_signup
+    setting = db.query(models.CauHinhHeThong).filter(models.CauHinhHeThong.Khoa == "allow_signup").first()
+    allow = (setting.GiaTri or "true").strip().lower() if setting else "true"
+    if allow not in ("true", "1", "yes", "on"):
+        raise HTTPException(status_code=403, detail="SIGNUP_DISABLED")
+
+    # Email blacklist
+    from api.admin import is_email_banned
+    if is_email_banned(db, user.email):
+        raise HTTPException(status_code=403, detail="ACCOUNT_BANNED")
+
     if db.query(models.NguoiDung).filter(models.NguoiDung.Email == user.email).first():
         raise_app_error("AUTH_001")
 
@@ -200,6 +225,22 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
         raise_app_error("AUTH_002")
     if not user.IsVerified:
         raise_app_error("AUTH_003", detail="EMAIL_NOT_VERIFIED")
+    # Email blacklist + TrangThai check (bao quát cả ban-by-email)
+    from api.admin import is_email_banned
+    if is_email_banned(db, user.Email) or (user.TrangThai and user.TrangThai.upper() in ("BANNED", "BLOCKED")):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="ACCOUNT_BANNED",
+        )
+
+    # Cập nhật LastSeenAt khi đăng nhập
+    try:
+        from datetime import datetime as _dt
+        if hasattr(user, "LastSeenAt"):
+            user.LastSeenAt = _dt.utcnow()
+            db.commit()
+    except Exception:
+        db.rollback()
 
     access_token = create_access_token(data={"sub": user.Email, "role": user.VaiTro})
     return {"access_token": access_token, "token_type": "bearer", "user_name": user.TenNguoiDung}

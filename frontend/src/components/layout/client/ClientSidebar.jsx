@@ -133,7 +133,8 @@ const ClientSidebar = ({ isSidebarOpen, toggleSidebar }) => {
                             <Zap className="w-3.5 h-3.5 text-teal-500" /> Pro Plan
                         </h4>
                         <p className="text-[11px] text-slate-500 mb-3 relative z-10 leading-tight">Mở khóa tính năng AI không giới hạn</p>
-                        <button className="w-full bg-teal-600 hover:bg-teal-700 text-white text-[12px] font-semibold py-2 rounded-lg transition-colors relative z-10 cursor-pointer">
+                        <button onClick={() => navigate('/client/subscription')}
+                            className="w-full bg-teal-600 hover:bg-teal-700 text-white text-[12px] font-semibold py-2 rounded-lg transition-colors relative z-10 cursor-pointer">
                             Nâng cấp ngay
                         </button>
                     </div>

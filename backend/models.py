@@ -24,6 +24,9 @@ class NguoiDung(Base):
     OAuthProvider = Column(String(20), nullable=True)
     SoDienThoai = Column(String(20), nullable=True)
     TieuSu = Column(Text, nullable=True)
+    LastSeenAt = Column(DateTime, nullable=True)  # heartbeat: cập nhật mỗi request authenticated
+    GoiDangKy = Column(String(20), default='FREE')   # FREE | PRO | ULTRA
+    GoiHetHan = Column(DateTime, nullable=True)        # null = vĩnh viễn (FREE) hoặc chưa mua
 
     bo_the_flashcard = relationship("BoDTheFlashcard", back_populates="nguoi_dung", cascade="all, delete-orphan")
 
@@ -322,6 +325,34 @@ class CauHinhHeThong(Base):
     GiaTri = Column(Text, nullable=True)
     MoTa = Column(String(255), nullable=True)
     NgayCapNhat = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class GiaoDich(Base):
+    """Giao dịch nâng cấp gói: thẻ, chuyển khoản, momo... admin duyệt manual nếu cần."""
+    __tablename__ = "GiaoDich"
+
+    MaGiaoDich = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    MaNguoiDung = Column(UUID(as_uuid=True), ForeignKey("NguoiDung.MaNguoiDung", ondelete="CASCADE"), nullable=False)
+    Goi = Column(String(20), nullable=False)            # PRO | ULTRA
+    SoThang = Column(Integer, default=1)                  # số tháng
+    SoTien = Column(Integer, nullable=False)              # VNĐ
+    PhuongThuc = Column(String(30), nullable=False)      # CARD | BANK | MOMO | ZALOPAY | TEST
+    TrangThai = Column(String(20), default='PENDING')    # PENDING | COMPLETED | FAILED | CANCELLED
+    MaGiaoDichNgoai = Column(String(100), nullable=True) # mã từ cổng thanh toán nếu có
+    GhiChu = Column(Text, nullable=True)
+    NgayTao = Column(DateTime, default=datetime.utcnow)
+    NgayCapNhat = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class RateLimitCounter(Base):
+    """Đếm request AI mỗi user mỗi ngày, theo từng tính năng."""
+    __tablename__ = "RateLimitCounter"
+
+    MaCounter = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    MaNguoiDung = Column(UUID(as_uuid=True), ForeignKey("NguoiDung.MaNguoiDung", ondelete="CASCADE"), nullable=False)
+    TinhNang = Column(String(50), nullable=False)        # chatbot | ai_test | ai_flashcard | learning_path
+    Ngay = Column(String(10), nullable=False)              # YYYY-MM-DD
+    SoLuong = Column(Integer, default=0)
 
 
 class TaiLieuHocTap(Base):

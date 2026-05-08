@@ -283,6 +283,8 @@ class AdminUserListItem(BaseModel):
     DiemNangLuc: float
     IsVerified: bool
     NgayTao: datetime
+    GoiDangKy: Optional[str] = 'FREE'
+    GoiHetHan: Optional[datetime] = None
 
     class Config:
         from_attributes = True
@@ -309,6 +311,12 @@ class AdminDashboardStats(BaseModel):
     new_users_today: int = 0
     online_users: int = 0
     activity_count: int = 0
+    free_users: int = 0
+    pro_users: int = 0
+    ultra_users: int = 0
+    revenue_total: int = 0
+    revenue_month: int = 0
+    pending_transactions: int = 0
 
 
 class DanhGiaCreate(BaseModel):

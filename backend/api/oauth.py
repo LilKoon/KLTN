@@ -55,7 +55,30 @@ def google_callback(code: str, db: Session = Depends(database.get_db)):
     if not email:
         return RedirectResponse(f"{database.settings.FRONTEND_URL}/login?error=no_email")
 
+    # Chặn email blacklist TRƯỚC khi tạo tài khoản (đề phòng admin chỉ ban theo email,
+    # chưa có row NguoiDung — vd Google login lần đầu với email đã bị cấm)
+    from api.admin import is_email_banned
+    if is_email_banned(db, email):
+        return RedirectResponse(
+            f"{database.settings.FRONTEND_URL}/login?error=account_banned"
+        )
+
     user = _find_or_create_google_user(db, email, name, avatar, google_id)
+
+    # Chặn nếu tài khoản bị khoá (sau khi resolve user, double-check)
+    if user.TrangThai and user.TrangThai.upper() in ("BANNED", "BLOCKED"):
+        return RedirectResponse(
+            f"{database.settings.FRONTEND_URL}/login?error=account_banned"
+        )
+
+    # Cập nhật LastSeenAt khi login Google
+    try:
+        from datetime import datetime as _dt
+        user.LastSeenAt = _dt.utcnow()
+        db.commit()
+    except Exception:
+        db.rollback()
+
     jwt_token = create_access_token(data={"sub": user.Email, "role": user.VaiTro})
     return RedirectResponse(
         f"{database.settings.FRONTEND_URL}/oauth-callback?token={jwt_token}&role={user.VaiTro}"

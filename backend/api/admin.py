@@ -16,6 +16,60 @@ ALLOWED_MATERIAL_TYPES = {"GRAMMAR", "VOCABULARY", "LISTENING", "READING", "WRIT
 MATERIALS_DIR = os.path.join("static", "materials")
 MAX_MATERIAL_SIZE = 30 * 1024 * 1024  # 30MB
 
+
+def get_setting(db: Session, key: str, default: Optional[str] = None) -> Optional[str]:
+    """Đọc 1 cấu hình từ bảng CauHinhHeThong."""
+    item = db.query(models.CauHinhHeThong).filter(models.CauHinhHeThong.Khoa == key).first()
+    return item.GiaTri if item and item.GiaTri is not None else default
+
+
+def setting_is_true(db: Session, key: str, default: bool = False) -> bool:
+    val = get_setting(db, key, "true" if default else "false")
+    return (val or "").strip().lower() in ("true", "1", "yes", "on")
+
+
+# ─── Email blacklist (đồng bộ với TrangThai BLOCKED/BANNED) ───
+def _read_banned_emails(db: Session) -> set:
+    raw = get_setting(db, "banned_emails", "") or ""
+    return {e.strip().lower() for e in raw.split(",") if e.strip()}
+
+
+def _write_banned_emails(db: Session, emails: set) -> None:
+    val = ",".join(sorted(emails))
+    item = db.query(models.CauHinhHeThong).filter(models.CauHinhHeThong.Khoa == "banned_emails").first()
+    if item:
+        item.GiaTri = val
+    else:
+        db.add(models.CauHinhHeThong(Khoa="banned_emails", GiaTri=val, MoTa="Danh sách email bị cấm (cách nhau dấu phẩy)"))
+    db.commit()
+
+
+def is_email_banned(db: Session, email: str) -> bool:
+    if not email:
+        return False
+    e = email.strip().lower()
+    if e in _read_banned_emails(db):
+        return True
+    user = db.query(models.NguoiDung).filter(models.NguoiDung.Email == email).first()
+    if user and user.TrangThai and user.TrangThai.upper() in ("BANNED", "BLOCKED"):
+        return True
+    return False
+
+
+def sync_banned_email(db: Session, email: str, banned: bool) -> None:
+    """Thêm/xoá email khỏi blacklist khi admin đổi TrangThai user."""
+    if not email:
+        return
+    e = email.strip().lower()
+    current = _read_banned_emails(db)
+    changed = False
+    if banned and e not in current:
+        current.add(e); changed = True
+    elif (not banned) and e in current:
+        current.remove(e); changed = True
+    if changed:
+        _write_banned_emails(db, current)
+
 router = APIRouter(prefix="/admin", tags=["Admin"])
 
 
@@ -70,8 +124,35 @@ def get_dashboard_stats(
     pending_reviews = db.query(func.count(models.DanhGia.MaDanhGia)).filter(models.DanhGia.TrangThai == "PENDING").scalar() or 0
     new_users_today = db.query(func.count(models.NguoiDung.MaNguoiDung)).filter(models.NguoiDung.NgayTao >= today_start).scalar() or 0
     activity_count = db.query(func.count(models.NhatKyHoatDong.MaNhatKy)).scalar() or 0
-    online_users = db.query(func.count(func.distinct(models.NhatKyHoatDong.MaNguoiDung))).filter(
-        models.NhatKyHoatDong.NgayTao >= online_window
+    online_users = db.query(func.count(models.NguoiDung.MaNguoiDung)).filter(
+        models.NguoiDung.LastSeenAt >= online_window
+    ).scalar() or 0
+
+    # Subscription tier counts (effective: nếu hết hạn → FREE)
+    def _eff_tier(u):
+        if not u.GoiDangKy or u.GoiDangKy == 'FREE':
+            return 'FREE'
+        if u.GoiHetHan and u.GoiHetHan < now:
+            return 'FREE'
+        return u.GoiDangKy.upper()
+    users_all = db.query(models.NguoiDung).filter(models.NguoiDung.VaiTro == 'USER').all()
+    free_users = pro_users = ultra_users = 0
+    for u in users_all:
+        t = _eff_tier(u)
+        if t == 'PRO': pro_users += 1
+        elif t == 'ULTRA': ultra_users += 1
+        else: free_users += 1
+
+    revenue_total = db.query(func.coalesce(func.sum(models.GiaoDich.SoTien), 0)).filter(
+        models.GiaoDich.TrangThai == 'COMPLETED'
+    ).scalar() or 0
+    month_start = datetime(now.year, now.month, 1)
+    revenue_month = db.query(func.coalesce(func.sum(models.GiaoDich.SoTien), 0)).filter(
+        models.GiaoDich.TrangThai == 'COMPLETED',
+        models.GiaoDich.NgayTao >= month_start,
+    ).scalar() or 0
+    pending_transactions = db.query(func.count(models.GiaoDich.MaGiaoDich)).filter(
+        models.GiaoDich.TrangThai == 'PENDING'
     ).scalar() or 0
 
     return schemas.AdminDashboardStats(
@@ -87,6 +168,12 @@ def get_dashboard_stats(
         new_users_today=new_users_today,
         online_users=online_users,
         activity_count=activity_count,
+        free_users=free_users,
+        pro_users=pro_users,
+        ultra_users=ultra_users,
+        revenue_total=int(revenue_total),
+        revenue_month=int(revenue_month),
+        pending_transactions=pending_transactions,
     )
 
 
@@ -152,6 +239,14 @@ def update_user(
         user.TrangThai = s
     db.commit()
     db.refresh(user)
+
+    # Sync email blacklist theo TrangThai
+    try:
+        if payload.TrangThai:
+            sync_banned_email(db, user.Email, user.TrangThai.upper() in ("BANNED", "BLOCKED"))
+    except Exception:
+        db.rollback()
+
     log_payload = payload.model_dump(exclude_none=True)
     log_payload.pop("MatKhau", None)  # đừng log password
     _log(db, admin, request, "UPDATE_USER", str(user_id), log_payload)
@@ -357,6 +452,48 @@ def list_settings(
     return db.query(models.CauHinhHeThong).order_by(models.CauHinhHeThong.Khoa).all()
 
 
+@router.put("/settings", response_model=List[schemas.CauHinhItem])
+def upsert_settings_bulk(
+    payload: dict,
+    request: Request,
+    db: Session = Depends(database.get_db),
+    admin: models.NguoiDung = Depends(require_admin),
+):
+    """Bulk update nhiều cấu hình.
+    Payload chấp nhận 2 format:
+    - {"key1": "value1", "key2": "value2", ...}
+    - {"settings": {"key1": {"GiaTri": "...", "MoTa": "..."}, ...}}
+    """
+    items = payload.get("settings") if isinstance(payload, dict) and isinstance(payload.get("settings"), dict) else payload
+    if not isinstance(items, dict):
+        raise HTTPException(400, "Payload phải là dict")
+    out = []
+    for key, val in items.items():
+        if not isinstance(key, str) or not key:
+            continue
+        gia_tri, mo_ta = None, None
+        if isinstance(val, dict):
+            gia_tri = val.get("GiaTri")
+            mo_ta = val.get("MoTa")
+        else:
+            gia_tri = "" if val is None else str(val)
+        item = db.query(models.CauHinhHeThong).filter(models.CauHinhHeThong.Khoa == key).first()
+        if not item:
+            item = models.CauHinhHeThong(Khoa=key)
+            db.add(item)
+        if gia_tri is not None:
+            item.GiaTri = gia_tri
+        if mo_ta is not None:
+            item.MoTa = mo_ta
+        db.flush()
+        out.append(item)
+    db.commit()
+    for it in out:
+        db.refresh(it)
+    _log(db, admin, request, "UPDATE_SETTINGS_BULK", None, {"keys": list(items.keys())})
+    return out
+
+
 @router.put("/settings/{khoa}", response_model=schemas.CauHinhItem)
 def upsert_setting(
     khoa: str,
@@ -446,6 +583,113 @@ def delete_system_deck(
     db.commit()
     _log(db, admin, request, "DELETE_SYSTEM_DECK", str(deck_id))
     return {"message": "Đã xoá bộ thẻ hệ thống"}
+
+
+# -------------------- TRANSACTIONS --------------------
+
+@router.get("/transactions")
+def list_transactions(
+    status_filter: Optional[str] = None,
+    limit: int = 200,
+    db: Session = Depends(database.get_db),
+    _: models.NguoiDung = Depends(require_admin),
+):
+    q = db.query(models.GiaoDich, models.NguoiDung.Email, models.NguoiDung.TenNguoiDung).join(
+        models.NguoiDung, models.NguoiDung.MaNguoiDung == models.GiaoDich.MaNguoiDung
+    )
+    if status_filter:
+        q = q.filter(models.GiaoDich.TrangThai == status_filter.upper())
+    rows = q.order_by(desc(models.GiaoDich.NgayTao)).limit(limit).all()
+    return [
+        {
+            "MaGiaoDich": str(g.MaGiaoDich),
+            "MaNguoiDung": str(g.MaNguoiDung),
+            "Email": email, "TenNguoiDung": ten,
+            "Goi": g.Goi, "SoThang": g.SoThang, "SoTien": g.SoTien,
+            "PhuongThuc": g.PhuongThuc, "TrangThai": g.TrangThai,
+            "GhiChu": g.GhiChu,
+            "NgayTao": g.NgayTao.isoformat() if g.NgayTao else None,
+        }
+        for g, email, ten in rows
+    ]
+
+
+@router.patch("/transactions/{txn_id}")
+def confirm_transaction(
+    txn_id: UUID,
+    payload: dict,
+    request: Request,
+    db: Session = Depends(database.get_db),
+    admin: models.NguoiDung = Depends(require_admin),
+):
+    new_status = (payload.get("TrangThai") or "").upper()
+    if new_status not in ("PENDING", "COMPLETED", "FAILED", "CANCELLED"):
+        raise HTTPException(400, "Trạng thái không hợp lệ")
+    txn = db.query(models.GiaoDich).filter(models.GiaoDich.MaGiaoDich == txn_id).first()
+    if not txn:
+        raise HTTPException(404, "Không tìm thấy giao dịch")
+    old = txn.TrangThai
+    txn.TrangThai = new_status
+    # Nếu admin duyệt → upgrade tier
+    if new_status == "COMPLETED" and old != "COMPLETED":
+        from datetime import timedelta
+        user = db.query(models.NguoiDung).filter(models.NguoiDung.MaNguoiDung == txn.MaNguoiDung).first()
+        if user:
+            now = datetime.utcnow()
+            base = user.GoiHetHan if (user.GoiHetHan and user.GoiHetHan > now and user.GoiDangKy == txn.Goi) else now
+            user.GoiDangKy = txn.Goi
+            user.GoiHetHan = base + timedelta(days=30 * (txn.SoThang or 1))
+    db.commit()
+    db.refresh(txn)
+    _log(db, admin, request, "CONFIRM_TRANSACTION", str(txn_id), {"status": new_status})
+    return {"MaGiaoDich": str(txn.MaGiaoDich), "TrangThai": txn.TrangThai}
+
+
+# -------------------- BANNED EMAILS --------------------
+
+@router.get("/banned-emails")
+def list_banned_emails(
+    db: Session = Depends(database.get_db),
+    _: models.NguoiDung = Depends(require_admin),
+):
+    return {"emails": sorted(_read_banned_emails(db))}
+
+
+@router.post("/banned-emails")
+def add_banned_email(
+    payload: dict,
+    request: Request,
+    db: Session = Depends(database.get_db),
+    admin: models.NguoiDung = Depends(require_admin),
+):
+    email = (payload.get("email") or "").strip().lower()
+    if not email or "@" not in email:
+        raise HTTPException(400, "Email không hợp lệ")
+    sync_banned_email(db, email, True)
+    # Đồng thời set TrangThai user (nếu tồn tại)
+    user = db.query(models.NguoiDung).filter(func.lower(models.NguoiDung.Email) == email).first()
+    if user:
+        user.TrangThai = "BLOCKED"
+        db.commit()
+    _log(db, admin, request, "ADD_BANNED_EMAIL", email)
+    return {"emails": sorted(_read_banned_emails(db))}
+
+
+@router.delete("/banned-emails/{email}")
+def remove_banned_email(
+    email: str,
+    request: Request,
+    db: Session = Depends(database.get_db),
+    admin: models.NguoiDung = Depends(require_admin),
+):
+    e = email.strip().lower()
+    sync_banned_email(db, e, False)
+    user = db.query(models.NguoiDung).filter(func.lower(models.NguoiDung.Email) == e).first()
+    if user and user.TrangThai and user.TrangThai.upper() in ("BANNED", "BLOCKED"):
+        user.TrangThai = "ACTIVE"
+        db.commit()
+    _log(db, admin, request, "REMOVE_BANNED_EMAIL", e)
+    return {"emails": sorted(_read_banned_emails(db))}
 
 
 # -------------------- LEARNING MATERIALS (KHO TÀI LIỆU) --------------------

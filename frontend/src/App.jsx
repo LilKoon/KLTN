@@ -25,6 +25,7 @@ import PassFailCheck from './components/views/client/PassFailCheck';
 import ExercisesTests from './components/views/client/ExercisesTests';
 import SectionTest from './components/views/client/SectionTest';
 import AIQuiz from './components/views/client/AIQuiz';
+import Subscription from './components/views/client/Subscription';
 import Flashcard from './components/views/flashcard/Flashcard';
 import FlashcardCreate from './components/views/flashcard/FlashcardCreate';
 import FlashcardDetail from './components/views/flashcard/FlashcardDetail';
@@ -43,6 +44,7 @@ import Notifications from './components/views/admin/Notifications';
 import ManageReviews from './components/views/admin/ManageReviews';
 import SystemFlashcards from './components/views/admin/SystemFlashcards';
 import SystemMaterials from './components/views/admin/SystemMaterials';
+import Transactions from './components/views/admin/Transactions';
 import ExportReports from './components/views/admin/ExportReports';
 
 // === Protected Route Wrappers ===
@@ -89,6 +91,7 @@ const ClientLayout = () => {
                         <Route path="flashcards/:id" element={<FlashcardDetail />} />
                         <Route path="flashcards/:id/play" element={<FlashcardPlay />} />
                         <Route path="profile" element={<ClientProfile />} />
+                        <Route path="subscription" element={<Subscription />} />
                         <Route path="*" element={<Navigate to="dashboard" replace />} />
                     </Routes>
                 </main>
@@ -126,6 +129,7 @@ const AdminLayout = () => {
                         <Route path="manage-reviews" element={<ManageReviews />} />
                         <Route path="system-flashcards" element={<SystemFlashcards />} />
                         <Route path="system-materials" element={<SystemMaterials />} />
+                        <Route path="transactions" element={<Transactions />} />
                         <Route path="export-reports" element={<ExportReports />} />
                         <Route path="profile" element={<Profile />} />
                         <Route path="settings" element={<Settings />} />

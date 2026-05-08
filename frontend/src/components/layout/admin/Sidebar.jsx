@@ -15,6 +15,7 @@ import {
     LogOut,
     ShieldCheck,
     FolderUp,
+    CreditCard,
 } from 'lucide-react';
 
 const SECTIONS = [
@@ -30,6 +31,7 @@ const SECTIONS = [
         items: [
             { id: 'accounts',       label: 'Người dùng',     Icon: Users },
             { id: 'content',        label: 'Bài học',        Icon: BookOpen },
+            { id: 'transactions',   label: 'Giao dịch',      Icon: CreditCard },
             { id: 'manage-reviews', label: 'Đánh giá',       Icon: MessageSquare },
             { id: 'notifications',  label: 'Thông báo',      Icon: Bell },
         ],

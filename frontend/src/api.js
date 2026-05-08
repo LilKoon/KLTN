@@ -17,7 +17,12 @@ export async function apiLogin(email, password) {
 
   const data = await res.json();
   if (!res.ok) {
-    const errMsg = data?.error?.message || data?.detail || "Đăng nhập thất bại";
+    let errMsg = data?.error?.message || data?.detail || "Đăng nhập thất bại";
+    if (data?.detail === "ACCOUNT_BANNED") {
+      errMsg = "Tài khoản đã bị khoá. Vui lòng liên hệ quản trị viên.";
+    } else if (data?.detail === "MAINTENANCE_MODE") {
+      errMsg = "Hệ thống đang bảo trì.";
+    }
     const err = new Error(typeof errMsg === 'string' ? errMsg : JSON.stringify(errMsg));
     err.errorId = data?.error?.id;
     err.detail = data?.error?.detail || data?.detail;
@@ -62,6 +67,18 @@ async function _authedFetch(token, path, options = {}) {
   if (res.status === 204) return null;
   const data = await res.json().catch(() => null);
   if (!res.ok) {
+    // Auto-handle: tài khoản bị khoá → logout client-side
+    if (res.status === 403 && data?.detail === "ACCOUNT_BANNED") {
+      try {
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("user_role");
+        localStorage.removeItem("user_data");
+        if (typeof window !== "undefined") {
+          alert("Tài khoản của bạn đã bị khoá. Vui lòng liên hệ quản trị viên.");
+          window.location.href = "/login";
+        }
+      } catch {}
+    }
     const msg = data?.error?.message || data?.detail || "Đã xảy ra lỗi";
     throw new Error(typeof msg === 'string' ? msg : JSON.stringify(msg));
   }
@@ -446,6 +463,39 @@ export const apiAdminUpdateSystemDeck = (token, deckId, payload) =>
 
 export const apiAdminDeleteSystemDeck = (token, deckId) =>
   _authedFetch(token, `/admin/system-flashcards/${deckId}`, { method: "DELETE" });
+
+// ─── Subscription / Payment ───────────────────────────────────────────
+
+export const apiGetPlans = () =>
+  fetch(`${API_BASE_URL}/subscription/plans`).then(r => r.json());
+
+export const apiGetMySubscription = (token) =>
+  _authedFetch(token, "/subscription/me");
+
+export const apiUpgradePlan = (token, payload) =>
+  _authedFetch(token, "/subscription/upgrade", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+export const apiMyTransactions = (token) =>
+  _authedFetch(token, "/subscription/transactions/me");
+
+export const apiAdminListTransactions = (token, params = {}) => {
+  const qs = new URLSearchParams();
+  if (params.status) qs.append("status_filter", params.status);
+  if (params.limit != null) qs.append("limit", params.limit);
+  const q = qs.toString();
+  return _authedFetch(token, `/admin/transactions${q ? `?${q}` : ""}`);
+};
+
+export const apiAdminConfirmTransaction = (token, txnId, status) =>
+  _authedFetch(token, `/admin/transactions/${txnId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ TrangThai: status }),
+  });
 
 // ─── Kho tài liệu (Learning Materials) ─────────────────────────────────
 

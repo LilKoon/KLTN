@@ -1,10 +1,18 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { startGoogleLogin } from '../../../api.js';
 
+const ERROR_MESSAGES = {
+    account_banned: 'Tài khoản của bạn đã bị khoá. Vui lòng liên hệ quản trị viên.',
+    google_failed: 'Đăng nhập Google thất bại. Vui lòng thử lại.',
+    google_userinfo_failed: 'Không lấy được thông tin từ Google.',
+    no_email: 'Tài khoản Google không có email.',
+};
+
 const Login = () => {
     const navigate = useNavigate();
+    const [searchParams, setSearchParams] = useSearchParams();
     const { loginWithAPI, registerWithAPI } = useAuth();
     const [activeTab, setActiveTab] = useState('login');
     const [loginStyles, setLoginStyles] = useState('relative flex scale-100 opacity-100');
@@ -19,6 +27,17 @@ const Login = () => {
     const [loginPassword, setLoginPassword] = useState('');
     const [loginError, setLoginError] = useState('');
     const [loginLoading, setLoginLoading] = useState(false);
+
+    // Đọc query ?error=... khi BE redirect về (Google OAuth fail / banned ...)
+    useEffect(() => {
+        const err = searchParams.get('error');
+        if (err && ERROR_MESSAGES[err]) {
+            setLoginError(ERROR_MESSAGES[err]);
+            const next = new URLSearchParams(searchParams);
+            next.delete('error');
+            setSearchParams(next, { replace: true });
+        }
+    }, [searchParams, setSearchParams]);
 
     // ─── Register form state ───
     const [regName, setRegName] = useState('');
