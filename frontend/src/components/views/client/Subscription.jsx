@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../../context/AuthContext';
-import { apiGetPlans, apiGetMySubscription, apiUpgradePlan, apiMyTransactions } from '../../../api';
-import { Check, Sparkles, Zap, Crown, X, CreditCard, Building2, Wallet } from 'lucide-react';
+import { apiGetPlans, apiGetMySubscription, apiUpgradePlan } from '../../../api';
+import { Check, Sparkles, Zap, Crown, X, CreditCard, Building2, Wallet, QrCode, Lock, ShieldCheck } from 'lucide-react';
 
 const PLAN_STYLE = {
   FREE:  { Icon: Sparkles, color: 'slate',   accent: 'bg-slate-600',   ring: 'ring-slate-200' },
@@ -9,43 +9,49 @@ const PLAN_STYLE = {
   ULTRA: { Icon: Crown,    color: 'violet',  accent: 'bg-violet-600',  ring: 'ring-violet-300' },
 };
 
+const TIER_RANK = { FREE: 0, PRO: 1, ULTRA: 2 };
+
 const PAYMENT_METHODS = [
-  { value: 'CARD',     label: 'Thẻ tín dụng/ghi nợ', Icon: CreditCard, note: 'Thanh toán ngay (sandbox)' },
-  { value: 'MOMO',     label: 'Ví MoMo',            Icon: Wallet,     note: 'Thanh toán qua MoMo' },
-  { value: 'ZALOPAY',  label: 'ZaloPay',            Icon: Wallet,     note: 'Thanh toán qua ZaloPay' },
-  { value: 'BANK',     label: 'Chuyển khoản',       Icon: Building2,  note: 'Admin xác nhận thủ công' },
+  { value: 'CARD',     label: 'Thẻ tín dụng/ghi nợ', Icon: CreditCard, note: 'Visa, Mastercard, JCB' },
+  { value: 'MOMO',     label: 'Ví MoMo',            Icon: Wallet,     note: 'Quét QR MoMo' },
+  { value: 'ZALOPAY',  label: 'ZaloPay',            Icon: Wallet,     note: 'Quét QR ZaloPay' },
+  { value: 'BANK',     label: 'Chuyển khoản',       Icon: Building2,  note: 'QR Code Banking' },
 ];
 
 const fmtMoney = (n) => (n || 0).toLocaleString('vi-VN') + 'đ';
 const fmtDate = (iso) => { try { return new Date(iso).toLocaleDateString('vi-VN'); } catch { return iso; } };
 
+const formatCardNum = (v) => (v || '').replace(/\D/g, '').slice(0, 16).replace(/(\d{4})(?=\d)/g, '$1 ');
+const formatExpiry = (v) => {
+    const d = (v || '').replace(/\D/g, '').slice(0, 4);
+    return d.length >= 3 ? `${d.slice(0, 2)}/${d.slice(2)}` : d;
+};
+
 export default function Subscription() {
     const { token } = useAuth();
     const [plans, setPlans] = useState({});
     const [my, setMy] = useState(null);
-    const [txns, setTxns] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
-    // Modal upgrade
     const [openPlan, setOpenPlan] = useState(null);
     const [months, setMonths] = useState(1);
     const [method, setMethod] = useState('CARD');
     const [submitting, setSubmitting] = useState(false);
     const [successMsg, setSuccessMsg] = useState('');
 
+    const [card, setCard] = useState({ number: '', name: '', expiry: '', cvv: '' });
+
     const loadAll = useCallback(async () => {
         if (!token) return;
         setLoading(true); setError('');
         try {
-            const [p, m, t] = await Promise.all([
+            const [p, m] = await Promise.all([
                 apiGetPlans(),
                 apiGetMySubscription(token),
-                apiMyTransactions(token),
             ]);
             setPlans(p || {});
             setMy(m);
-            setTxns(Array.isArray(t) ? t : []);
         } catch (err) {
             setError(err?.message || 'Không tải được dữ liệu');
         } finally {
@@ -55,8 +61,29 @@ export default function Subscription() {
 
     useEffect(() => { loadAll(); }, [loadAll]);
 
+    const closeModal = () => {
+        setOpenPlan(null);
+        setMethod('CARD');
+        setMonths(1);
+        setCard({ number: '', name: '', expiry: '', cvv: '' });
+        setError('');
+    };
+
+    const validateBeforeSubmit = () => {
+        if (method === 'CARD') {
+            const num = card.number.replace(/\s/g, '');
+            if (num.length < 13) return 'Số thẻ không hợp lệ';
+            if (!card.name.trim()) return 'Vui lòng nhập tên chủ thẻ';
+            if (!/^\d{2}\/\d{2}$/.test(card.expiry)) return 'Hạn thẻ phải dạng MM/YY';
+            if (!/^\d{3,4}$/.test(card.cvv)) return 'CVV không hợp lệ';
+        }
+        return null;
+    };
+
     const submitUpgrade = async () => {
         if (!openPlan) return;
+        const v = validateBeforeSubmit();
+        if (v) { setError(v); return; }
         setSubmitting(true); setError(''); setSuccessMsg('');
         try {
             const res = await apiUpgradePlan(token, {
@@ -65,11 +92,11 @@ export default function Subscription() {
                 phuong_thuc: method,
             });
             if (res.TrangThai === 'COMPLETED') {
-                setSuccessMsg(`Đã nâng cấp lên ${res.Goi} thành công!`);
+                setSuccessMsg(`Thanh toán thành công! Đã nâng cấp lên gói ${res.Goi}.`);
             } else {
-                setSuccessMsg(`Đã ghi nhận giao dịch (${res.TrangThai}). Vui lòng chờ admin xác nhận.`);
+                setSuccessMsg(`Đã ghi nhận giao dịch (${res.TrangThai}). Vui lòng chờ admin xác nhận sau khi chuyển khoản.`);
             }
-            setOpenPlan(null);
+            closeModal();
             loadAll();
         } catch (err) {
             setError(err?.message || 'Lỗi nâng cấp');
@@ -78,15 +105,12 @@ export default function Subscription() {
         }
     };
 
-    const txnBadge = (s) => {
-        switch (s) {
-            case 'COMPLETED': return 'bg-emerald-100 text-emerald-700';
-            case 'PENDING':   return 'bg-amber-100 text-amber-700';
-            case 'FAILED':
-            case 'CANCELLED': return 'bg-rose-100 text-rose-700';
-            default:          return 'bg-slate-100 text-slate-700';
-        }
-    };
+    const currentTier = my?.plan || 'FREE';
+    const currentRank = TIER_RANK[currentTier] || 0;
+
+    const totalAmount = (plans[openPlan]?.gia_thang || 0) * months;
+    const qrPayload = openPlan ? `EDTECH-${openPlan}-${months}M-${totalAmount}-${(my?.info?.ten_goi || '')}` : '';
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(qrPayload)}`;
 
     return (
         <div className="max-w-[1400px] mx-auto p-6 lg:p-10 space-y-8">
@@ -95,7 +119,7 @@ export default function Subscription() {
                 <p className="text-slate-500 text-sm mt-1">Chọn gói phù hợp để mở rộng giới hạn AI: chatbot, tạo bài test, flashcard, lộ trình</p>
             </div>
 
-            {error && <div className="bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-xl text-sm font-semibold">{error}</div>}
+            {error && !openPlan && <div className="bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-xl text-sm font-semibold">{error}</div>}
             {successMsg && <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-xl text-sm font-semibold">{successMsg}</div>}
 
             {/* Current plan + usage */}
@@ -133,7 +157,9 @@ export default function Subscription() {
                     if (!plan) return null;
                     const meta = PLAN_STYLE[key];
                     const Icon = meta.Icon;
-                    const isCurrent = my?.plan === key;
+                    const isCurrent = currentTier === key;
+                    const planRank = TIER_RANK[key] || 0;
+                    const isLowerThanCurrent = planRank > 0 && planRank < currentRank; // PRO khi user là ULTRA
                     const popular = key === 'PRO';
                     return (
                         <div key={key} className={`relative bg-white rounded-3xl p-7 border-2 transition-all ${isCurrent ? `${meta.ring} ring-4` : 'border-slate-100 hover:border-slate-200'} ${popular ? 'shadow-2xl shadow-teal-200/40 -translate-y-1' : 'shadow-sm'}`}>
@@ -160,17 +186,25 @@ export default function Subscription() {
                                 ))}
                             </ul>
                             <button
-                                onClick={() => key !== 'FREE' && !isCurrent && setOpenPlan(key)}
-                                disabled={key === 'FREE' || isCurrent}
-                                className={`w-full mt-6 py-3 rounded-xl font-bold text-sm transition-all ${
+                                onClick={() => key !== 'FREE' && !isCurrent && !isLowerThanCurrent && setOpenPlan(key)}
+                                disabled={key === 'FREE' || isCurrent || isLowerThanCurrent}
+                                className={`w-full mt-6 py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${
                                     isCurrent
                                         ? 'bg-emerald-100 text-emerald-700 cursor-default'
-                                        : key === 'FREE'
+                                        : isLowerThanCurrent
                                             ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                                            : `${meta.accent} text-white hover:brightness-110 shadow-lg`
+                                            : key === 'FREE'
+                                                ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                                                : `${meta.accent} text-white hover:brightness-110 shadow-lg`
                                 }`}
                             >
-                                {isCurrent ? 'Đang sử dụng' : key === 'FREE' ? 'Gói mặc định' : 'Nâng cấp ngay'}
+                                {isCurrent
+                                    ? '✓ Đang sử dụng'
+                                    : isLowerThanCurrent
+                                        ? <><Lock className="w-4 h-4" /> Đã có gói cao hơn</>
+                                        : key === 'FREE'
+                                            ? 'Gói mặc định'
+                                            : 'Nâng cấp ngay'}
                             </button>
                         </div>
                     );
@@ -178,57 +212,17 @@ export default function Subscription() {
             </div>
 
             {/* Transaction history */}
-            <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-                <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-                    <h3 className="font-bold text-slate-800">Lịch sử giao dịch</h3>
-                </div>
-                {loading ? (
-                    <div className="p-10 text-center text-slate-500 font-medium">Đang tải...</div>
-                ) : txns.length === 0 ? (
-                    <div className="p-10 text-center text-slate-500 font-medium">Chưa có giao dịch</div>
-                ) : (
-                    <table className="w-full text-left">
-                        <thead className="bg-slate-50">
-                            <tr className="text-xs font-bold text-slate-500 uppercase">
-                                <th className="px-6 py-3">Ngày</th>
-                                <th className="px-6 py-3">Gói</th>
-                                <th className="px-6 py-3">Tháng</th>
-                                <th className="px-6 py-3">Số tiền</th>
-                                <th className="px-6 py-3">Phương thức</th>
-                                <th className="px-6 py-3">Trạng thái</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
-                            {txns.map((t) => (
-                                <tr key={t.MaGiaoDich} className="hover:bg-slate-50/80">
-                                    <td className="px-6 py-3 text-sm text-slate-500">{fmtDate(t.NgayTao)}</td>
-                                    <td className="px-6 py-3 font-bold text-slate-800">{t.Goi}</td>
-                                    <td className="px-6 py-3 text-slate-600">{t.SoThang}</td>
-                                    <td className="px-6 py-3 font-bold text-slate-800">{fmtMoney(t.SoTien)}</td>
-                                    <td className="px-6 py-3 text-xs font-bold text-slate-500 uppercase">{t.PhuongThuc}</td>
-                                    <td className="px-6 py-3">
-                                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold ${txnBadge(t.TrangThai)}`}>
-                                            {t.TrangThai}
-                                        </span>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                )}
-            </div>
-
             {/* Upgrade modal */}
             {openPlan && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-                    <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto">
+                    <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden my-8">
                         <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
                             <h2 className="text-lg font-black text-slate-800">Nâng cấp lên {openPlan}</h2>
-                            <button onClick={() => setOpenPlan(null)} className="p-2 hover:bg-slate-100 rounded-full text-slate-400">
+                            <button onClick={closeModal} className="p-2 hover:bg-slate-100 rounded-full text-slate-400">
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
-                        <div className="p-6 space-y-5">
+                        <div className="p-6 space-y-5 max-h-[80vh] overflow-y-auto">
                             <div>
                                 <label className="text-sm font-bold text-slate-700">Số tháng</label>
                                 <div className="mt-2 grid grid-cols-4 gap-2">
@@ -246,7 +240,7 @@ export default function Subscription() {
                                     {PAYMENT_METHODS.map(({ value, label, Icon, note }) => {
                                         const active = method === value;
                                         return (
-                                            <button key={value} type="button" onClick={() => setMethod(value)}
+                                            <button key={value} type="button" onClick={() => { setMethod(value); setError(''); }}
                                                 className={`p-3 rounded-xl border-2 text-left transition-all ${active ? 'border-teal-500 bg-teal-50' : 'border-slate-200 hover:border-slate-300'}`}>
                                                 <div className="flex items-center gap-2">
                                                     <Icon className={`w-5 h-5 ${active ? 'text-teal-700' : 'text-slate-500'}`} />
@@ -258,18 +252,110 @@ export default function Subscription() {
                                     })}
                                 </div>
                             </div>
-                            <div className="bg-slate-50 rounded-xl p-4 flex items-center justify-between">
+
+                            {/* CARD form inline */}
+                            {method === 'CARD' && (
+                                <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
+                                    <div className="flex items-center gap-2 text-slate-700">
+                                        <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                                        <span className="text-xs font-bold">Thông tin thẻ được mã hoá an toàn</span>
+                                    </div>
+                                    <div>
+                                        <label className="text-xs font-bold text-slate-600 block mb-1">Số thẻ</label>
+                                        <input
+                                            type="text" inputMode="numeric"
+                                            placeholder="1234 5678 9012 3456"
+                                            value={card.number}
+                                            onChange={(e) => setCard({ ...card, number: formatCardNum(e.target.value) })}
+                                            className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm font-mono tracking-wider focus:ring-2 focus:ring-teal-500 outline-none"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs font-bold text-slate-600 block mb-1">Tên chủ thẻ</label>
+                                        <input
+                                            type="text"
+                                            placeholder="NGUYEN VAN A"
+                                            value={card.name}
+                                            onChange={(e) => setCard({ ...card, name: e.target.value.toUpperCase() })}
+                                            className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm font-mono uppercase focus:ring-2 focus:ring-teal-500 outline-none"
+                                        />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label className="text-xs font-bold text-slate-600 block mb-1">Hạn thẻ</label>
+                                            <input
+                                                type="text" inputMode="numeric"
+                                                placeholder="MM/YY"
+                                                value={card.expiry}
+                                                onChange={(e) => setCard({ ...card, expiry: formatExpiry(e.target.value) })}
+                                                className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm font-mono focus:ring-2 focus:ring-teal-500 outline-none"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="text-xs font-bold text-slate-600 block mb-1">CVV/CVC</label>
+                                            <input
+                                                type="password" inputMode="numeric" maxLength={4}
+                                                placeholder="123"
+                                                value={card.cvv}
+                                                onChange={(e) => setCard({ ...card, cvv: e.target.value.replace(/\D/g, '').slice(0, 4) })}
+                                                className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm font-mono focus:ring-2 focus:ring-teal-500 outline-none"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* QR for MOMO/ZALOPAY/BANK */}
+                            {method !== 'CARD' && (
+                                <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                                    <div className="flex items-center gap-2 text-slate-700 mb-3">
+                                        <QrCode className="w-4 h-4 text-teal-600" />
+                                        <span className="text-xs font-bold">
+                                            {method === 'BANK' ? 'Quét QR để chuyển khoản' :
+                                             method === 'MOMO' ? 'Mở app MoMo và quét QR' :
+                                             'Mở app ZaloPay và quét QR'}
+                                        </span>
+                                    </div>
+                                    <div className="flex flex-col items-center gap-3">
+                                        <div className="bg-white p-3 rounded-xl border-2 border-slate-200">
+                                            <img src={qrUrl} alt="QR thanh toán" className="w-48 h-48" />
+                                        </div>
+                                        {method === 'BANK' && (
+                                            <div className="text-xs text-slate-600 space-y-0.5 text-center">
+                                                <p><span className="font-bold">Ngân hàng:</span> Vietcombank</p>
+                                                <p><span className="font-bold">Số tài khoản:</span> 0123 456 789</p>
+                                                <p><span className="font-bold">Chủ TK:</span> EDTECH AI VN</p>
+                                                <p className="text-amber-700"><span className="font-bold">Nội dung:</span> {qrPayload}</p>
+                                            </div>
+                                        )}
+                                        {method !== 'BANK' && (
+                                            <p className="text-xs text-slate-500">
+                                                Sau khi thanh toán, nhấn nút "Tôi đã thanh toán" để xác nhận
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="bg-teal-50 rounded-xl p-4 flex items-center justify-between border border-teal-100">
                                 <span className="text-sm font-bold text-slate-600">Tổng cộng</span>
-                                <span className="text-xl font-black text-slate-900">
-                                    {fmtMoney((plans[openPlan]?.gia_thang || 0) * months)}
+                                <span className="text-xl font-black text-teal-700">
+                                    {fmtMoney(totalAmount)}
                                 </span>
                             </div>
+
+                            {error && <div className="bg-rose-50 border border-rose-200 text-rose-700 px-3 py-2 rounded-lg text-sm font-semibold">{error}</div>}
+
                             <button
                                 onClick={submitUpgrade}
                                 disabled={submitting}
-                                className="w-full py-3.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-bold shadow-lg shadow-teal-600/30 disabled:opacity-50"
+                                className="w-full py-3.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-bold shadow-lg shadow-teal-600/30 disabled:opacity-50 flex items-center justify-center gap-2"
                             >
-                                {submitting ? 'Đang xử lý...' : 'Xác nhận thanh toán'}
+                                {submitting
+                                    ? 'Đang xử lý...'
+                                    : method === 'CARD'
+                                        ? <><Lock className="w-4 h-4" /> Xác nhận thanh toán {fmtMoney(totalAmount)}</>
+                                        : 'Tôi đã thanh toán'}
                             </button>
                         </div>
                     </div>

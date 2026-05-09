@@ -1,11 +1,13 @@
 """Admin API: quản lý người dùng, đánh giá, thông báo, hoạt động, cấu hình."""
 from fastapi import APIRouter, Depends, HTTPException, status, Request, UploadFile, File, Form
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc
 from uuid import UUID, uuid4
 from datetime import datetime, timedelta
 from typing import Optional, List
+import csv
+import io
 import os
 import re
 
@@ -586,6 +588,59 @@ def delete_system_deck(
 
 
 # -------------------- TRANSACTIONS --------------------
+
+@router.get("/export/subscriptions")
+def export_subscription_report(
+    db: Session = Depends(database.get_db),
+    _: models.NguoiDung = Depends(require_admin),
+):
+    now = datetime.utcnow()
+    month_start = datetime(now.year, now.month, 1)
+    users = db.query(models.NguoiDung).filter(models.NguoiDung.VaiTro == "USER").all()
+    tier_counts = {"FREE": 0, "PRO": 0, "ULTRA": 0}
+    for user in users:
+        tier = (user.GoiDangKy or "FREE").upper()
+        if tier not in ("PRO", "ULTRA") or (user.GoiHetHan and user.GoiHetHan < now):
+            tier = "FREE"
+        tier_counts[tier] += 1
+
+    revenue_total = db.query(func.coalesce(func.sum(models.GiaoDich.SoTien), 0)).filter(
+        models.GiaoDich.TrangThai == "COMPLETED"
+    ).scalar() or 0
+    revenue_month = db.query(func.coalesce(func.sum(models.GiaoDich.SoTien), 0)).filter(
+        models.GiaoDich.TrangThai == "COMPLETED",
+        models.GiaoDich.NgayTao >= month_start,
+    ).scalar() or 0
+
+    completed_by_plan = db.query(
+        models.GiaoDich.Goi,
+        func.count(models.GiaoDich.MaGiaoDich),
+        func.coalesce(func.sum(models.GiaoDich.SoTien), 0),
+    ).filter(models.GiaoDich.TrangThai == "COMPLETED").group_by(models.GiaoDich.Goi).all()
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["Loai bao cao", "Chi so", "Gia tri"])
+    writer.writerow(["Tong quan", "Ngay xuat", now.strftime("%Y-%m-%d %H:%M:%S")])
+    writer.writerow(["Doanh thu", "Tong doanh thu", int(revenue_total)])
+    writer.writerow(["Doanh thu", "Doanh thu thang nay", int(revenue_month)])
+    writer.writerow(["Tai khoan", "FREE", tier_counts["FREE"]])
+    writer.writerow(["Tai khoan", "PRO", tier_counts["PRO"]])
+    writer.writerow(["Tai khoan", "ULTRA", tier_counts["ULTRA"]])
+    writer.writerow([])
+    writer.writerow(["Goi", "So giao dich hoan tat", "Doanh thu"])
+    plan_rows = {plan: (count, amount) for plan, count, amount in completed_by_plan}
+    for plan in ("PRO", "ULTRA"):
+        count, amount = plan_rows.get(plan, (0, 0))
+        writer.writerow([plan, count, int(amount)])
+
+    output.seek(0)
+    return StreamingResponse(
+        iter(["﻿" + output.getvalue()]),
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": "attachment; filename=bao_cao_doanh_thu_goi.csv"},
+    )
+
 
 @router.get("/transactions")
 def list_transactions(

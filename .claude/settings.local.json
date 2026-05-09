@@ -106,7 +106,9 @@
       "Bash(npx --no-install --yes esbuild --bundle=false --loader:.jsx=jsx src/components/views/client/RevisionView.jsx)",
       "Bash(mkdir -p static/materials)",
       "Bash(python -m scripts.backup_db)",
-      "Bash(python -m scripts.seed_train_listening)"
+      "Bash(python -m scripts.seed_train_listening)",
+      "Bash(npm *)",
+      "Bash(python *)"
     ]
   }
 }
