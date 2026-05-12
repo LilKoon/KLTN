@@ -7,8 +7,8 @@ from sqlalchemy import text
 
 def run():
     sqls = [
-        'ALTER TABLE "TrangThaiNode" ADD COLUMN IF NOT EXISTS "DiemOntap" FLOAT',
-        'ALTER TABLE "TrangThaiNode" ADD COLUMN IF NOT EXISTS "SoLanThu" INTEGER DEFAULT 0',
+        'ALTER TABLE "trang_thai_node" ADD COLUMN IF NOT EXISTS "DiemOntap" FLOAT',
+        'ALTER TABLE "trang_thai_node" ADD COLUMN IF NOT EXISTS "SoLanThu" INTEGER DEFAULT 0',
     ]
     with database.engine.connect() as conn:
         for sql in sqls:

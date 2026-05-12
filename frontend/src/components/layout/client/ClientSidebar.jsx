@@ -1,11 +1,20 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
+import { apiGetMySubscription } from '../../../api';
 import { LogOut, Home, Map, BookOpen, Layers, Bot, Settings, Flame, ChevronRight, Zap, MessageSquare } from 'lucide-react';
 
 const ClientSidebar = ({ isSidebarOpen, toggleSidebar }) => {
     const navigate = useNavigate();
-    const { user } = useAuth();
+    const { token, user } = useAuth();
+    const [currentPlan, setCurrentPlan] = useState('FREE');
+
+    useEffect(() => {
+        if (!token) return;
+        apiGetMySubscription(token)
+            .then((data) => setCurrentPlan(data?.plan || 'FREE'))
+            .catch(() => setCurrentPlan('FREE'));
+    }, [token]);
 
     const handleLogout = () => {
         navigate('/login');
@@ -127,17 +136,19 @@ const ClientSidebar = ({ isSidebarOpen, toggleSidebar }) => {
 
                 {/* Bottom: Upgrade Card + Logout */}
                 <div className="mt-auto p-4 border-t border-slate-100">
-                    <div className="bg-gradient-to-br from-teal-50 to-white rounded-xl p-4 border border-teal-100 shadow-sm relative overflow-hidden group hover:border-teal-200 transition-colors mb-4">
-                        <div className="absolute -right-4 -top-4 w-16 h-16 bg-teal-100 rounded-full blur-2xl group-hover:bg-teal-200 transition-colors"></div>
-                        <h4 className="font-bold text-slate-900 text-[13px] mb-1 relative z-10 flex items-center gap-1.5">
-                            <Zap className="w-3.5 h-3.5 text-teal-500" /> Pro Plan
-                        </h4>
-                        <p className="text-[11px] text-slate-500 mb-3 relative z-10 leading-tight">Mở khóa tính năng AI không giới hạn</p>
-                        <button onClick={() => navigate('/client/subscription')}
-                            className="w-full bg-teal-600 hover:bg-teal-700 text-white text-[12px] font-semibold py-2 rounded-lg transition-colors relative z-10 cursor-pointer">
-                            Nâng cấp ngay
-                        </button>
-                    </div>
+                    {currentPlan === 'FREE' && (
+                        <div className="bg-gradient-to-br from-teal-50 to-white rounded-xl p-4 border border-teal-100 shadow-sm relative overflow-hidden group hover:border-teal-200 transition-colors mb-4">
+                            <div className="absolute -right-4 -top-4 w-16 h-16 bg-teal-100 rounded-full blur-2xl group-hover:bg-teal-200 transition-colors"></div>
+                            <h4 className="font-bold text-slate-900 text-[13px] mb-1 relative z-10 flex items-center gap-1.5">
+                                <Zap className="w-3.5 h-3.5 text-teal-500" /> Pro Plan
+                            </h4>
+                            <p className="text-[11px] text-slate-500 mb-3 relative z-10 leading-tight">Mở khóa tính năng AI không giới hạn</p>
+                            <button onClick={() => navigate('/client/subscription')}
+                                className="w-full bg-teal-600 hover:bg-teal-700 text-white text-[12px] font-semibold py-2 rounded-lg transition-colors relative z-10 cursor-pointer">
+                                Nâng cấp ngay
+                            </button>
+                        </div>
+                    )}
                     
                     <button 
                         onClick={handleLogout}

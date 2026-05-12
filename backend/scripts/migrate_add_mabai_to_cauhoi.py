@@ -17,7 +17,7 @@ from sqlalchemy import text
 
 def run():
     sql = """
-    ALTER TABLE "NganHangCauHoi"
+    ALTER TABLE "ngan_hang_cau_hoi"
     ADD COLUMN IF NOT EXISTS "MaBaiHoc" UUID
     REFERENCES "BaiHoc"("MaBaiHoc") ON DELETE SET NULL;
     """

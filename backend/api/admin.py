@@ -1,11 +1,13 @@
 """Admin API: quản lý người dùng, đánh giá, thông báo, hoạt động, cấu hình."""
-from fastapi import APIRouter, Depends, HTTPException, status, Request, UploadFile, File, Form
-from fastapi.responses import FileResponse
+from fastapi import APIRouter, Depends, HTTPException, status, Request, UploadFile, File, Form, Response
+from fastapi.responses import FileResponse, StreamingResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc
 from uuid import UUID, uuid4
 from datetime import datetime, timedelta
 from typing import Optional, List
+import csv
+import io
 import os
 import re
 
@@ -483,8 +485,6 @@ def upsert_settings_bulk(
             db.add(item)
         if gia_tri is not None:
             item.GiaTri = gia_tri
-        if mo_ta is not None:
-            item.MoTa = mo_ta
         db.flush()
         out.append(item)
     db.commit()
@@ -508,8 +508,6 @@ def upsert_setting(
         db.add(item)
     if payload.GiaTri is not None:
         item.GiaTri = payload.GiaTri
-    if payload.MoTa is not None:
-        item.MoTa = payload.MoTa
     db.commit()
     db.refresh(item)
     _log(db, admin, request, "UPDATE_SETTING", khoa, {"value": item.GiaTri})
@@ -518,52 +516,104 @@ def upsert_setting(
 
 # -------------------- SYSTEM FLASHCARDS --------------------
 
-@router.get("/system-flashcards", response_model=List[schemas.DeckResponse])
+def _format_system_deck_response(deck):
+    mapped_cards = []
+    if deck.DuLieuThe:
+        for c in deck.DuLieuThe:
+            mapped_cards.append({
+                "TuVung": c.get("word", ""),
+                "Nghia": c.get("meaning_vi", ""),
+                "PhienAm": c.get("phonetic", ""),
+                "LoaiTu": c.get("pos", ""),
+                "ViDuNguCanh": c.get("example", "")
+            })
+    return schemas.SystemDeckResponse(
+        MaBoDe=deck.MaBoDe,
+        TenBoDe=deck.TenBoDe,
+        MoTa=None,
+        CapDo=deck.CapDo,
+        SoLuongThe=deck.SoLuongThe,
+        DuLieuThe=mapped_cards,
+        LuotTai=deck.LuotTai or 0,
+        NgayTao=deck.NgayTao,
+    )
+
+@router.get("/system-flashcards", response_model=List[schemas.SystemDeckResponse])
 def list_system_decks(
     db: Session = Depends(database.get_db),
     _: models.NguoiDung = Depends(require_admin),
 ):
     decks = db.query(models.BoDTheFlashcard).filter(models.BoDTheFlashcard.LaHeThong == True).order_by(desc(models.BoDTheFlashcard.NgayTao)).all()
-    return [
-        schemas.DeckResponse(
-            id=d.MaBoDe,
-            topic=d.TenBoDe,
-            level=d.CapDo,
-            count=d.SoLuongThe,
-            created_at=d.NgayTao,
-            due_today=0,
-        )
-        for d in decks
-    ]
+    return [_format_system_deck_response(d) for d in decks]
 
 
-@router.post("/system-flashcards", response_model=schemas.DeckResponse)
+@router.post("/system-flashcards", response_model=schemas.SystemDeckResponse)
 def create_system_deck(
     payload: schemas.SystemDeckCreate,
     request: Request,
     db: Session = Depends(database.get_db),
     admin: models.NguoiDung = Depends(require_admin),
 ):
+    mapped_cards = [
+        {
+            "word": c.TuVung,
+            "pos": c.LoaiTu,
+            "phonetic": c.PhienAm,
+            "meaning_vi": c.Nghia,
+            "example": c.ViDuNguCanh
+        }
+        for c in payload.DuLieuThe
+    ]
+
     deck = models.BoDTheFlashcard(
         MaNguoiDung=admin.MaNguoiDung,
         TenBoDe=payload.TenBoDe,
         CapDo=payload.CapDo,
-        SoLuongThe=len(payload.cards),
-        DuLieuThe=[c.model_dump() for c in payload.cards],
+        SoLuongThe=len(mapped_cards),
+        DuLieuThe=mapped_cards,
         LaHeThong=True,
     )
     db.add(deck)
     db.commit()
     db.refresh(deck)
     _log(db, admin, request, "CREATE_SYSTEM_DECK", str(deck.MaBoDe))
-    return schemas.DeckResponse(
-        id=deck.MaBoDe,
-        topic=deck.TenBoDe,
-        level=deck.CapDo,
-        count=deck.SoLuongThe,
-        created_at=deck.NgayTao,
-        due_today=0,
-    )
+    return _format_system_deck_response(deck)
+
+@router.put("/system-flashcards/{deck_id}", response_model=schemas.SystemDeckResponse)
+def update_system_deck(
+    deck_id: UUID,
+    payload: schemas.SystemDeckCreate,
+    request: Request,
+    db: Session = Depends(database.get_db),
+    admin: models.NguoiDung = Depends(require_admin),
+):
+    deck = db.query(models.BoDTheFlashcard).filter(
+        models.BoDTheFlashcard.MaBoDe == deck_id,
+        models.BoDTheFlashcard.LaHeThong == True,
+    ).first()
+    if not deck:
+        raise HTTPException(404, "Không tìm thấy bộ thẻ hệ thống")
+
+    mapped_cards = [
+        {
+            "word": c.TuVung,
+            "pos": c.LoaiTu,
+            "phonetic": c.PhienAm,
+            "meaning_vi": c.Nghia,
+            "example": c.ViDuNguCanh
+        }
+        for c in payload.DuLieuThe
+    ]
+
+    deck.TenBoDe = payload.TenBoDe
+    deck.CapDo = payload.CapDo
+    deck.SoLuongThe = len(mapped_cards)
+    deck.DuLieuThe = mapped_cards
+
+    db.commit()
+    db.refresh(deck)
+    _log(db, admin, request, "UPDATE_SYSTEM_DECK", str(deck.MaBoDe))
+    return _format_system_deck_response(deck)
 
 
 @router.delete("/system-flashcards/{deck_id}")
@@ -585,7 +635,103 @@ def delete_system_deck(
     return {"message": "Đã xoá bộ thẻ hệ thống"}
 
 
+# -------------------- EXPORT REPORTS --------------------
+
+@router.get("/export/users")
+def export_users_report(
+    db: Session = Depends(database.get_db),
+    _: models.NguoiDung = Depends(require_admin),
+):
+    users = db.query(models.NguoiDung).filter(models.NguoiDung.VaiTro == "USER").all()
+    
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow([
+        "Ma Nguoi Dung",
+        "Ten Nguoi Dung", 
+        "Email", 
+        "Trang Thai", 
+        "Diem Nang Luc", 
+        "Goi Dang Ky", 
+        "Truy Cap Lan Cuoi", 
+        "Ngay Tao"
+    ])
+    
+    for u in users:
+        writer.writerow([
+            str(u.MaNguoiDung),
+            u.TenNguoiDung,
+            u.Email,
+            u.TrangThai or "ACTIVE",
+            u.DiemNangLuc,
+            u.GoiDangKy or "FREE",
+            u.LastSeenAt.strftime("%Y-%m-%d %H:%M:%S") if getattr(u, "LastSeenAt", None) else "Chưa đăng nhập",
+            u.NgayTao.strftime("%Y-%m-%d %H:%M:%S") if getattr(u, "NgayTao", None) else ""
+        ])
+        
+    output.seek(0)
+    # prepend BOM for Excel UTF-8
+    content = "\ufeff" + output.getvalue()
+    return Response(
+        content=content,
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=danh_sach_nguoi_dung.csv"}
+    )
+
 # -------------------- TRANSACTIONS --------------------
+
+@router.get("/export/subscriptions")
+def export_subscription_report(
+    db: Session = Depends(database.get_db),
+    _: models.NguoiDung = Depends(require_admin),
+):
+    now = datetime.utcnow()
+    month_start = datetime(now.year, now.month, 1)
+    users = db.query(models.NguoiDung).filter(models.NguoiDung.VaiTro == "USER").all()
+    tier_counts = {"FREE": 0, "PRO": 0, "ULTRA": 0}
+    for user in users:
+        tier = (user.GoiDangKy or "FREE").upper()
+        if tier not in ("PRO", "ULTRA") or (user.GoiHetHan and user.GoiHetHan < now):
+            tier = "FREE"
+        tier_counts[tier] += 1
+
+    revenue_total = db.query(func.coalesce(func.sum(models.GiaoDich.SoTien), 0)).filter(
+        models.GiaoDich.TrangThai == "COMPLETED"
+    ).scalar() or 0
+    revenue_month = db.query(func.coalesce(func.sum(models.GiaoDich.SoTien), 0)).filter(
+        models.GiaoDich.TrangThai == "COMPLETED",
+        models.GiaoDich.NgayTao >= month_start,
+    ).scalar() or 0
+
+    completed_by_plan = db.query(
+        models.GiaoDich.Goi,
+        func.count(models.GiaoDich.MaGiaoDich),
+        func.coalesce(func.sum(models.GiaoDich.SoTien), 0),
+    ).filter(models.GiaoDich.TrangThai == "COMPLETED").group_by(models.GiaoDich.Goi).all()
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["Loai bao cao", "Chi so", "Gia tri"])
+    writer.writerow(["Tong quan", "Ngay xuat", now.strftime("%Y-%m-%d %H:%M:%S")])
+    writer.writerow(["Doanh thu", "Tong doanh thu", int(revenue_total)])
+    writer.writerow(["Doanh thu", "Doanh thu thang nay", int(revenue_month)])
+    writer.writerow(["Tai khoan", "FREE", tier_counts["FREE"]])
+    writer.writerow(["Tai khoan", "PRO", tier_counts["PRO"]])
+    writer.writerow(["Tai khoan", "ULTRA", tier_counts["ULTRA"]])
+    writer.writerow([])
+    writer.writerow(["Goi", "So giao dich hoan tat", "Doanh thu"])
+    plan_rows = {plan: (count, amount) for plan, count, amount in completed_by_plan}
+    for plan in ("PRO", "ULTRA"):
+        count, amount = plan_rows.get(plan, (0, 0))
+        writer.writerow([plan, count, int(amount)])
+
+    output.seek(0)
+    return StreamingResponse(
+        iter(["﻿" + output.getvalue()]),
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": "attachment; filename=bao_cao_doanh_thu_goi.csv"},
+    )
+
 
 @router.get("/transactions")
 def list_transactions(

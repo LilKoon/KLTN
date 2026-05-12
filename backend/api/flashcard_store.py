@@ -311,6 +311,10 @@ def clone_deck(
     db.flush()
     for i in range(source.SoLuongThe):
         db.add(models.TrangThaiSR(MaBoDe=deck.MaBoDe, IndexThe=i))
+    
+    # Increment download count
+    source.LuotTai = (source.LuotTai or 0) + 1
+
     db.commit()
     db.refresh(deck)
     return _to_list_item(deck)

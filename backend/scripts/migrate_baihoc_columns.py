@@ -8,9 +8,9 @@ from sqlalchemy import text
 db = database.SessionLocal()
 try:
     stmts = [
-        'ALTER TABLE "BaiHoc" ADD COLUMN IF NOT EXISTS "KyNang" VARCHAR(50)',
-        'ALTER TABLE "BaiHoc" ADD COLUMN IF NOT EXISTS "ChuDe" VARCHAR(255)',
-        'ALTER TABLE "BaiHoc" ADD COLUMN IF NOT EXISTS "FileAudio" VARCHAR(255)',
+        'ALTER TABLE "bai_hoc" ADD COLUMN IF NOT EXISTS "KyNang" VARCHAR(50)',
+        'ALTER TABLE "bai_hoc" ADD COLUMN IF NOT EXISTS "ChuDe" VARCHAR(255)',
+        'ALTER TABLE "bai_hoc" ADD COLUMN IF NOT EXISTS "FileAudio" VARCHAR(255)',
     ]
     for stmt in stmts:
         db.execute(text(stmt))

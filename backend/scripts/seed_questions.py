@@ -114,7 +114,7 @@ def seed_10_questions(db: Session):
         db.add(new_q)
     
     db.commit()
-    print("Successfully seeded 10 questions into NganHangCauHoi table!")
+    print("Successfully seeded 10 questions into ngan_hang_cau_hoi table!")
 
 if __name__ == "__main__":
     db = database.SessionLocal()

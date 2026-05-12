@@ -37,7 +37,7 @@ def main():
         # NganHangCauHoi: model có TrangThai + DoKho nhưng DB cũ thiếu (path_engine truy vấn)
         if not column_exists(conn, "NganHangCauHoi", "TrangThai"):
             conn.execute(text(
-                'ALTER TABLE "NganHangCauHoi" ADD COLUMN "TrangThai" VARCHAR(50) DEFAULT \'ACTIVE\''
+                'ALTER TABLE "ngan_hang_cau_hoi" ADD COLUMN "TrangThai" VARCHAR(50) DEFAULT \'ACTIVE\''
             ))
             print('[admin-migrate] ADDED column NganHangCauHoi."TrangThai"')
         else:
@@ -45,7 +45,7 @@ def main():
 
         if not column_exists(conn, "NganHangCauHoi", "DoKho"):
             conn.execute(text(
-                'ALTER TABLE "NganHangCauHoi" ADD COLUMN "DoKho" DOUBLE PRECISION DEFAULT 0.5'
+                'ALTER TABLE "ngan_hang_cau_hoi" ADD COLUMN "DoKho" DOUBLE PRECISION DEFAULT 0.5'
             ))
             print('[admin-migrate] ADDED column NganHangCauHoi."DoKho"')
         else:
@@ -59,11 +59,11 @@ def main():
         ]
         for k, v, m in defaults:
             row = conn.execute(
-                text('SELECT 1 FROM "CauHinhHeThong" WHERE "Khoa" = :k'), {"k": k}
+                text('SELECT 1 FROM "cau_hinh_he_thong" WHERE "Khoa" = :k'), {"k": k}
             ).first()
             if not row:
                 conn.execute(text(
-                    'INSERT INTO "CauHinhHeThong" ("Khoa","GiaTri","MoTa") VALUES (:k,:v,:m)'
+                    'INSERT INTO "cau_hinh_he_thong" ("Khoa","GiaTri","MoTa") VALUES (:k,:v,:m)'
                 ), {"k": k, "v": v, "m": m})
                 print(f"[admin-migrate] SEED setting {k}={v}")
 

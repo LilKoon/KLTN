@@ -6,7 +6,7 @@ from sqlalchemy.orm import relationship
 from database import Base
 
 class NguoiDung(Base):
-    __tablename__ = "NguoiDung"
+    __tablename__ = "nguoi_dung"
 
     MaNguoiDung = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     TenNguoiDung = Column(String(255), nullable=False)
@@ -31,7 +31,7 @@ class NguoiDung(Base):
     bo_the_flashcard = relationship("BoDTheFlashcard", back_populates="nguoi_dung", cascade="all, delete-orphan")
 
 class KhoaHoc(Base):
-    __tablename__ = "KhoaHoc"
+    __tablename__ = "khoa_hoc"
 
     MaKhoaHoc = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     TenKhoaHoc = Column(String(255), nullable=False)
@@ -44,10 +44,10 @@ class KhoaHoc(Base):
     cau_hois = relationship("NganHangCauHoi", back_populates="khoa_hoc")
 
 class BaiHoc(Base):
-    __tablename__ = "BaiHoc"
+    __tablename__ = "bai_hoc"
 
     MaBaiHoc = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    MaKhoaHoc = Column(UUID(as_uuid=True), ForeignKey("KhoaHoc.MaKhoaHoc", ondelete="CASCADE"))
+    MaKhoaHoc = Column(UUID(as_uuid=True), ForeignKey("khoa_hoc.MaKhoaHoc", ondelete="CASCADE"))
     TenBaiHoc = Column(String(255), nullable=False)
     ThuTu = Column(Integer, nullable=False)
     NoiDungLyThuyet = Column(JSONB, nullable=True)
@@ -60,11 +60,11 @@ class BaiHoc(Base):
     khoa_hoc = relationship("KhoaHoc", back_populates="bai_hocs")
 
 class NganHangCauHoi(Base):
-    __tablename__ = "NganHangCauHoi"
+    __tablename__ = "ngan_hang_cau_hoi"
 
     MaCauHoi = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    MaKhoaHoc = Column(UUID(as_uuid=True), ForeignKey("KhoaHoc.MaKhoaHoc", ondelete="SET NULL"))
-    MaBaiHoc = Column(UUID(as_uuid=True), ForeignKey("BaiHoc.MaBaiHoc", ondelete="SET NULL"), nullable=True)
+    MaKhoaHoc = Column(UUID(as_uuid=True), ForeignKey("khoa_hoc.MaKhoaHoc", ondelete="SET NULL"))
+    MaBaiHoc = Column(UUID(as_uuid=True), ForeignKey("bai_hoc.MaBaiHoc", ondelete="SET NULL"), nullable=True)
     KyNang = Column(String(50), nullable=False)
     MucDo = Column(String(50), default='MEDIUM')
     NoiDung = Column(Text, nullable=False)
@@ -82,10 +82,10 @@ class NganHangCauHoi(Base):
 
 
 class LoTrinhCaNhan(Base):
-    __tablename__ = "LoTrinhCaNhan"
+    __tablename__ = "lo_trinh_ca_nhan"
 
     MaLoTrinh = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    MaNguoiDung = Column(UUID(as_uuid=True), ForeignKey("NguoiDung.MaNguoiDung", ondelete="CASCADE"), unique=True)
+    MaNguoiDung = Column(UUID(as_uuid=True), ForeignKey("nguoi_dung.MaNguoiDung", ondelete="CASCADE"), unique=True)
     TrangThai = Column(String(50), default='ACTIVE') # ACTIVE / RESET
     NgayTao = Column(DateTime, default=datetime.utcnow)
     
@@ -93,13 +93,13 @@ class LoTrinhCaNhan(Base):
     cac_node = relationship("TrangThaiNode", back_populates="lo_trinh", cascade="all, delete-orphan", order_by="TrangThaiNode.ThuTu")
 
 class TrangThaiNode(Base):
-    __tablename__ = "TrangThaiNode"
+    __tablename__ = "trang_thai_node"
 
     MaNode = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    MaLoTrinh = Column(UUID(as_uuid=True), ForeignKey("LoTrinhCaNhan.MaLoTrinh", ondelete="CASCADE"))
+    MaLoTrinh = Column(UUID(as_uuid=True), ForeignKey("lo_trinh_ca_nhan.MaLoTrinh", ondelete="CASCADE"))
     
     # Node có thể link tới Bài Học gốc (Core), hoặc null nếu bài tập AI tự sinh
-    MaBaiHoc = Column(UUID(as_uuid=True), ForeignKey("BaiHoc.MaBaiHoc", ondelete="SET NULL"), nullable=True)
+    MaBaiHoc = Column(UUID(as_uuid=True), ForeignKey("bai_hoc.MaBaiHoc", ondelete="SET NULL"), nullable=True)
     
     TieuDe = Column(String(255), nullable=False)
     MoTa = Column(Text, nullable=True)
@@ -127,11 +127,12 @@ class BoDTheFlashcard(Base):
     __tablename__ = "bo_the_flashcard"
 
     MaBoDe = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    MaNguoiDung = Column(UUID(as_uuid=True), ForeignKey("NguoiDung.MaNguoiDung", ondelete="CASCADE"), nullable=False)
+    MaNguoiDung = Column(UUID(as_uuid=True), ForeignKey("nguoi_dung.MaNguoiDung", ondelete="CASCADE"), nullable=False)
     TenBoDe = Column(String(200), nullable=False)
     CapDo = Column(String(10), nullable=False)
     SoLuongThe = Column(Integer, nullable=False)
     DuLieuThe = Column(JSON, nullable=False)
+    LuotTai = Column(Integer, default=0)
     LaHeThong = Column(Boolean, default=False)  # True: bộ thẻ admin tạo, dùng chung
     NgayTao = Column(DateTime, default=datetime.utcnow)
 
@@ -155,11 +156,11 @@ class TrangThaiSR(Base):
 
 class CauHoiSR(Base):
     """SM-2 spaced repetition state per (user, question)."""
-    __tablename__ = "CauHoiSR"
+    __tablename__ = "cau_hoi_sr"
 
     MaSR = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    MaNguoiDung = Column(UUID(as_uuid=True), ForeignKey("NguoiDung.MaNguoiDung", ondelete="CASCADE"), nullable=False)
-    MaCauHoi = Column(UUID(as_uuid=True), ForeignKey("NganHangCauHoi.MaCauHoi", ondelete="CASCADE"), nullable=False)
+    MaNguoiDung = Column(UUID(as_uuid=True), ForeignKey("nguoi_dung.MaNguoiDung", ondelete="CASCADE"), nullable=False)
+    MaCauHoi = Column(UUID(as_uuid=True), ForeignKey("ngan_hang_cau_hoi.MaCauHoi", ondelete="CASCADE"), nullable=False)
     EasinessFactor = Column(Float, default=2.5)
     Interval = Column(Integer, default=0)
     Repetitions = Column(Integer, default=0)
@@ -171,7 +172,7 @@ class TaiLieuRAG(Base):
     __tablename__ = "tai_lieu_rag"
 
     MaTaiLieu = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    MaNguoiDung = Column(UUID(as_uuid=True), ForeignKey("NguoiDung.MaNguoiDung", ondelete="CASCADE"))
+    MaNguoiDung = Column(UUID(as_uuid=True), ForeignKey("nguoi_dung.MaNguoiDung", ondelete="CASCADE"))
     TenHienThi = Column(String(200), nullable=False)
     TenFile = Column(String(200), nullable=False)
     Namespace = Column(String(100), nullable=False)
@@ -184,7 +185,7 @@ class PhienChat(Base):
     __tablename__ = "phien_chat"
 
     MaPhien = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    MaNguoiDung = Column(UUID(as_uuid=True), ForeignKey("NguoiDung.MaNguoiDung", ondelete="CASCADE"), nullable=False)
+    MaNguoiDung = Column(UUID(as_uuid=True), ForeignKey("nguoi_dung.MaNguoiDung", ondelete="CASCADE"), nullable=False)
     TieuDe = Column(String(200), nullable=False, default="Cuộc trò chuyện mới")
     NgayTao = Column(DateTime, default=datetime.utcnow)
     NgayCapNhat = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -222,10 +223,10 @@ class TaiLieuChat(Base):
     phien = relationship("PhienChat", back_populates="tai_lieus")
 
 class BaiKiemTra(Base):
-    __tablename__ = "BaiKiemTra"
+    __tablename__ = "bai_kiem_tra"
 
     MaBaiKiemTra = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    MaNguoiDung = Column(UUID(as_uuid=True), ForeignKey("NguoiDung.MaNguoiDung", ondelete="CASCADE"), nullable=False)
+    MaNguoiDung = Column(UUID(as_uuid=True), ForeignKey("nguoi_dung.MaNguoiDung", ondelete="CASCADE"), nullable=False)
     MaKhoaHoc = Column(UUID(as_uuid=True), nullable=True)
     LoaiBaiKiemTra = Column(String(50), nullable=False)
     TrangThai = Column(String(50), default='PENDING')
@@ -236,21 +237,21 @@ class BaiKiemTra(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 class PhanKiemTra(Base):
-    __tablename__ = "PhanKiemTra"
+    __tablename__ = "phan_kiem_tra"
 
     MaPKT = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    MaBaiKiemTra = Column(UUID(as_uuid=True), ForeignKey("BaiKiemTra.MaBaiKiemTra", ondelete="CASCADE"), nullable=False)
+    MaBaiKiemTra = Column(UUID(as_uuid=True), ForeignKey("bai_kiem_tra.MaBaiKiemTra", ondelete="CASCADE"), nullable=False)
     KyNang = Column(String(50), nullable=False)
     PhanTramDiem = Column(Float, nullable=True)
     KetQuaLevel = Column(Integer, nullable=True)
     is_the_weak_grade = Column(Boolean, default=False)
 
 class ChiTietLamBai(Base):
-    __tablename__ = "ChiTietLamBai"
+    __tablename__ = "chi_tiet_lam_bai"
 
     MaChiTiet = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    MaBaiKiemTra = Column(UUID(as_uuid=True), ForeignKey("BaiKiemTra.MaBaiKiemTra", ondelete="CASCADE"), nullable=False)
-    MaCauHoi = Column(UUID(as_uuid=True), ForeignKey("NganHangCauHoi.MaCauHoi", ondelete="CASCADE"), nullable=False)
+    MaBaiKiemTra = Column(UUID(as_uuid=True), ForeignKey("bai_kiem_tra.MaBaiKiemTra", ondelete="CASCADE"), nullable=False)
+    MaCauHoi = Column(UUID(as_uuid=True), ForeignKey("ngan_hang_cau_hoi.MaCauHoi", ondelete="CASCADE"), nullable=False)
     LuaChon = Column(Text, nullable=True)
     LaCauDung = Column(Boolean, nullable=False)
     ThoiGianLamCauHoi = Column(Integer, nullable=True)
@@ -258,10 +259,10 @@ class ChiTietLamBai(Base):
 
 
 class BaiTestAI(Base):
-    __tablename__ = "BaiTestAI"
+    __tablename__ = "bai_test_ai"
 
     MaBaiTestAI = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    MaNguoiDung = Column(UUID(as_uuid=True), ForeignKey("NguoiDung.MaNguoiDung", ondelete="CASCADE"), nullable=False)
+    MaNguoiDung = Column(UUID(as_uuid=True), ForeignKey("nguoi_dung.MaNguoiDung", ondelete="CASCADE"), nullable=False)
     TenBaiTest = Column(String(255), nullable=False)
     ChuDe = Column(String(255), nullable=True)
     CapDo = Column(String(10), nullable=True)
@@ -276,10 +277,10 @@ class BaiTestAI(Base):
 
 class DanhGia(Base):
     """Đánh giá / phản hồi của người dùng - admin duyệt qua trang ManageReviews."""
-    __tablename__ = "DanhGia"
+    __tablename__ = "danh_gia"
 
     MaDanhGia = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    MaNguoiDung = Column(UUID(as_uuid=True), ForeignKey("NguoiDung.MaNguoiDung", ondelete="CASCADE"), nullable=False)
+    MaNguoiDung = Column(UUID(as_uuid=True), ForeignKey("nguoi_dung.MaNguoiDung", ondelete="CASCADE"), nullable=False)
     LoaiDoiTuong = Column(String(50), nullable=True)   # COURSE | LESSON | SYSTEM
     MaDoiTuong = Column(UUID(as_uuid=True), nullable=True)
     DiemDanhGia = Column(Integer, nullable=True)        # 1-5
@@ -287,28 +288,28 @@ class DanhGia(Base):
     TrangThai = Column(String(20), default='PENDING')   # PENDING | APPROVED | REJECTED
     NgayTao = Column(DateTime, default=datetime.utcnow)
     NgayDuyet = Column(DateTime, nullable=True)
-    MaAdminDuyet = Column(UUID(as_uuid=True), ForeignKey("NguoiDung.MaNguoiDung", ondelete="SET NULL"), nullable=True)
+    MaAdminDuyet = Column(UUID(as_uuid=True), ForeignKey("nguoi_dung.MaNguoiDung", ondelete="SET NULL"), nullable=True)
 
 
 class ThongBao(Base):
     """Thông báo admin gửi tới nhóm người dùng."""
-    __tablename__ = "ThongBao"
+    __tablename__ = "thong_bao"
 
     MaThongBao = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     TieuDe = Column(String(255), nullable=False)
     NoiDung = Column(Text, nullable=False)
     DoiTuongNhan = Column(String(20), default='ALL')   # ALL | USER | ADMIN
-    MaNguoiTao = Column(UUID(as_uuid=True), ForeignKey("NguoiDung.MaNguoiDung", ondelete="SET NULL"), nullable=True)
+    MaNguoiTao = Column(UUID(as_uuid=True), ForeignKey("nguoi_dung.MaNguoiDung", ondelete="SET NULL"), nullable=True)
     TrangThai = Column(String(20), default='ACTIVE')   # ACTIVE | ARCHIVED
     NgayTao = Column(DateTime, default=datetime.utcnow)
 
 
 class NhatKyHoatDong(Base):
     """Activity log - admin xem ai làm gì."""
-    __tablename__ = "NhatKyHoatDong"
+    __tablename__ = "nhat_ky_hoat_dong"
 
     MaNhatKy = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    MaNguoiDung = Column(UUID(as_uuid=True), ForeignKey("NguoiDung.MaNguoiDung", ondelete="SET NULL"), nullable=True)
+    MaNguoiDung = Column(UUID(as_uuid=True), ForeignKey("nguoi_dung.MaNguoiDung", ondelete="SET NULL"), nullable=True)
     HanhDong = Column(String(100), nullable=False)
     DoiTuong = Column(String(100), nullable=True)
     ChiTiet = Column(JSONB, nullable=True)
@@ -319,7 +320,7 @@ class NhatKyHoatDong(Base):
 
 class CauHinhHeThong(Base):
     """Key-value cấu hình hệ thống admin chỉnh được."""
-    __tablename__ = "CauHinhHeThong"
+    __tablename__ = "cau_hinh_he_thong"
 
     Khoa = Column(String(100), primary_key=True)
     GiaTri = Column(Text, nullable=True)
@@ -329,10 +330,10 @@ class CauHinhHeThong(Base):
 
 class GiaoDich(Base):
     """Giao dịch nâng cấp gói: thẻ, chuyển khoản, momo... admin duyệt manual nếu cần."""
-    __tablename__ = "GiaoDich"
+    __tablename__ = "giao_dich"
 
     MaGiaoDich = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    MaNguoiDung = Column(UUID(as_uuid=True), ForeignKey("NguoiDung.MaNguoiDung", ondelete="CASCADE"), nullable=False)
+    MaNguoiDung = Column(UUID(as_uuid=True), ForeignKey("nguoi_dung.MaNguoiDung", ondelete="CASCADE"), nullable=False)
     Goi = Column(String(20), nullable=False)            # PRO | ULTRA
     SoThang = Column(Integer, default=1)                  # số tháng
     SoTien = Column(Integer, nullable=False)              # VNĐ
@@ -346,10 +347,10 @@ class GiaoDich(Base):
 
 class RateLimitCounter(Base):
     """Đếm request AI mỗi user mỗi ngày, theo từng tính năng."""
-    __tablename__ = "RateLimitCounter"
+    __tablename__ = "rate_limit_counter"
 
     MaCounter = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    MaNguoiDung = Column(UUID(as_uuid=True), ForeignKey("NguoiDung.MaNguoiDung", ondelete="CASCADE"), nullable=False)
+    MaNguoiDung = Column(UUID(as_uuid=True), ForeignKey("nguoi_dung.MaNguoiDung", ondelete="CASCADE"), nullable=False)
     TinhNang = Column(String(50), nullable=False)        # chatbot | ai_test | ai_flashcard | learning_path
     Ngay = Column(String(10), nullable=False)              # YYYY-MM-DD
     SoLuong = Column(Integer, default=0)
@@ -357,7 +358,7 @@ class RateLimitCounter(Base):
 
 class TaiLieuHocTap(Base):
     """Kho tài liệu học tập admin upload, user xem/tải."""
-    __tablename__ = "TaiLieuHocTap"
+    __tablename__ = "tai_lieu_hoc_tap"
 
     MaTaiLieu = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     TenTaiLieu = Column(String(255), nullable=False)
@@ -366,6 +367,6 @@ class TaiLieuHocTap(Base):
     LoaiFile = Column(String(20), nullable=True)                         # pdf | docx | xlsx | ...
     DungLuong = Column(Integer, default=0)                                # bytes
     DuongDan = Column(String(500), nullable=False)                        # /static/materials/<file>
-    MaNguoiTaiLen = Column(UUID(as_uuid=True), ForeignKey("NguoiDung.MaNguoiDung", ondelete="SET NULL"), nullable=True)
+    MaNguoiTaiLen = Column(UUID(as_uuid=True), ForeignKey("nguoi_dung.MaNguoiDung", ondelete="SET NULL"), nullable=True)
     TrangThai = Column(String(20), default='ACTIVE')                      # ACTIVE | ARCHIVED
     NgayTao = Column(DateTime, default=datetime.utcnow)

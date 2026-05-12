@@ -233,6 +233,15 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
             detail="ACCOUNT_BANNED",
         )
 
+    # Kiểm tra bảo trì (chỉ admin mới được login vào)
+    setting = db.query(models.CauHinhHeThong).filter(models.CauHinhHeThong.Khoa == "maintenance_mode").first()
+    is_maintenance = bool(setting and (setting.GiaTri or "").strip().lower() in ("true", "1", "yes", "on"))
+    if is_maintenance and user.VaiTro != "ADMIN":
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Hệ thống đang bảo trì, vui lòng quay lại sau."
+        )
+
     # Cập nhật LastSeenAt khi đăng nhập
     try:
         from datetime import datetime as _dt

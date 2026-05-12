@@ -1,3 +1,4 @@
+# pyrefly: ignore [missing-import]
 from pydantic import BaseModel, EmailStr
 from typing import Optional, List, Dict, Any
 from uuid import UUID
@@ -390,10 +391,31 @@ class CauHinhUpdate(BaseModel):
     MoTa: Optional[str] = None
 
 
+class SystemFlashcardItem(BaseModel):
+    TuVung: str
+    Nghia: str
+    PhienAm: str
+    LoaiTu: str
+    ViDuNguCanh: str
+
 class SystemDeckCreate(BaseModel):
     TenBoDe: str
+    MoTa: Optional[str] = None
     CapDo: str
-    cards: List[FlashcardItem]
+    DuLieuThe: List[SystemFlashcardItem]
+
+class SystemDeckResponse(BaseModel):
+    MaBoDe: UUID
+    TenBoDe: str
+    MoTa: Optional[str] = None
+    CapDo: str
+    SoLuongThe: int
+    DuLieuThe: List[Any] = []
+    LuotTai: int = 0
+    NgayTao: datetime
+
+    class Config:
+        from_attributes = True
 
 
 class TaiLieuResponse(BaseModel):

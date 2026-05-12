@@ -554,7 +554,7 @@ def main():
             ).delete(synchronize_session=False)
             for level in ("A", "B", "C"):
                 for prefix in ("Ngu phap", "Luyen nghe", "Tu vung"):
-                    pass  # handled by cascade from BaiHoc delete
+                    pass  # handled by cascade from bai_hoc delete
             # Delete courses
             for level in ("A", "B", "C"):
                 for name in [f"Ngu phap - Cap {level}", f"Luyen nghe - Cap {level}", f"Tu vung - Cap {level}",

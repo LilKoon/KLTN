@@ -8,10 +8,10 @@ export default function Settings() {
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [settings, setSettings] = useState({
-        MoDangKyMoi: true,
-        CheDoBaoTri: false,
-        EmailTuDong: true,
-        BackupTuDong: true
+        allow_signup: true,
+        maintenance_mode: false,
+        auto_email: true,
+        auto_backup: true
     });
 
     useEffect(() => {
@@ -22,7 +22,13 @@ export default function Settings() {
                 });
                 if (res.ok) {
                     const data = await res.json();
-                    setSettings(data);
+                    const newSettings = {};
+                    if (Array.isArray(data)) {
+                        data.forEach(item => {
+                            newSettings[item.Khoa] = item.GiaTri === 'true' || item.GiaTri === 'True' || item.GiaTri === '1';
+                        });
+                    }
+                    setSettings(prev => ({ ...prev, ...newSettings }));
                 }
             } catch (err) {
                 console.error("Lỗi khi tải cài đặt:", err);
@@ -43,7 +49,11 @@ export default function Settings() {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(settings)
+                body: JSON.stringify({
+                    settings: Object.fromEntries(
+                        Object.entries(settings).map(([k, v]) => [k, v ? 'true' : 'false'])
+                    )
+                })
             });
             if (res.ok) {
                 alert("Đã lưu cài đặt hệ thống!");
@@ -83,10 +93,10 @@ export default function Settings() {
                         <p className="text-sm font-medium text-slate-500 mt-1">Cho phép khách truy cập tạo tài khoản tự do (client portal).</p>
                     </div>
                     <button 
-                        onClick={() => toggleSetting('MoDangKyMoi')}
-                        className={`w-12 h-6 rounded-full transition-colors relative focus:outline-none ${settings.MoDangKyMoi ? 'bg-teal-500' : 'bg-slate-300'}`}
+                        onClick={() => toggleSetting('allow_signup')}
+                        className={`w-12 h-6 rounded-full transition-colors relative focus:outline-none ${settings.allow_signup ? 'bg-teal-500' : 'bg-slate-300'}`}
                     >
-                        <span className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${settings.MoDangKyMoi ? 'left-7' : 'left-1'}`}></span>
+                        <span className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${settings.allow_signup ? 'left-7' : 'left-1'}`}></span>
                     </button>
                 </div>
 
@@ -97,10 +107,10 @@ export default function Settings() {
                         <p className="text-sm font-medium text-slate-500 mt-1">Khóa truy cập toàn bộ hệ thống (trừ Admin). Dùng khi cập nhật lớn.</p>
                     </div>
                     <button 
-                        onClick={() => toggleSetting('CheDoBaoTri')}
-                        className={`w-12 h-6 rounded-full transition-colors relative focus:outline-none ${settings.CheDoBaoTri ? 'bg-rose-500' : 'bg-slate-300'}`}
+                        onClick={() => toggleSetting('maintenance_mode')}
+                        className={`w-12 h-6 rounded-full transition-colors relative focus:outline-none ${settings.maintenance_mode ? 'bg-rose-500' : 'bg-slate-300'}`}
                     >
-                        <span className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${settings.CheDoBaoTri ? 'left-7' : 'left-1'}`}></span>
+                        <span className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${settings.maintenance_mode ? 'left-7' : 'left-1'}`}></span>
                     </button>
                 </div>
 
@@ -111,10 +121,10 @@ export default function Settings() {
                         <p className="text-sm font-medium text-slate-500 mt-1">Gửi email chào mừng, nhắc nhở học tập và báo cáo hàng tuần.</p>
                     </div>
                     <button 
-                        onClick={() => toggleSetting('EmailTuDong')}
-                        className={`w-12 h-6 rounded-full transition-colors relative focus:outline-none ${settings.EmailTuDong ? 'bg-teal-500' : 'bg-slate-300'}`}
+                        onClick={() => toggleSetting('auto_email')}
+                        className={`w-12 h-6 rounded-full transition-colors relative focus:outline-none ${settings.auto_email ? 'bg-teal-500' : 'bg-slate-300'}`}
                     >
-                        <span className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${settings.EmailTuDong ? 'left-7' : 'left-1'}`}></span>
+                        <span className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${settings.auto_email ? 'left-7' : 'left-1'}`}></span>
                     </button>
                 </div>
 
@@ -125,10 +135,10 @@ export default function Settings() {
                         <p className="text-sm font-medium text-slate-500 mt-1">Sao lưu CSDL tự động vào 02:00 AM mỗi ngày lên Cloud.</p>
                     </div>
                     <button 
-                        onClick={() => toggleSetting('BackupTuDong')}
-                        className={`w-12 h-6 rounded-full transition-colors relative focus:outline-none ${settings.BackupTuDong ? 'bg-teal-500' : 'bg-slate-300'}`}
+                        onClick={() => toggleSetting('auto_backup')}
+                        className={`w-12 h-6 rounded-full transition-colors relative focus:outline-none ${settings.auto_backup ? 'bg-teal-500' : 'bg-slate-300'}`}
                     >
-                        <span className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${settings.BackupTuDong ? 'left-7' : 'left-1'}`}></span>
+                        <span className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${settings.auto_backup ? 'left-7' : 'left-1'}`}></span>
                     </button>
                 </div>
             </div>

@@ -83,11 +83,11 @@ def refresh_question_difficulty(db: Session, ma_cau_hois: list) -> None:
     db.execute(text("""
         WITH stats AS (
             SELECT ct."MaCauHoi" AS mch, AVG(CASE WHEN ct."LaCauDung" THEN 1.0 ELSE 0.0 END) AS p_correct
-            FROM "ChiTietLamBai" ct
+            FROM "chi_tiet_lam_bai" ct
             WHERE ct."MaCauHoi" = ANY(CAST(:ids AS uuid[]))
             GROUP BY ct."MaCauHoi"
         )
-        UPDATE "NganHangCauHoi" nh
+        UPDATE "ngan_hang_cau_hoi" nh
         SET "DoKho" = GREATEST(0.05, LEAST(0.95, 1.0 - s.p_correct))
         FROM stats s
         WHERE nh."MaCauHoi" = s.mch

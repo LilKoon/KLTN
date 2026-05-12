@@ -8,8 +8,8 @@ from sqlalchemy import text
 db = database.SessionLocal()
 try:
     stmts = [
-        'ALTER TABLE "BaiKiemTra" ADD COLUMN IF NOT EXISTS "KetQuaLevel" INT',
-        'ALTER TABLE "PhanKiemTra" ADD COLUMN IF NOT EXISTS "KetQuaLevel" INT',
+        'ALTER TABLE "bai_kiem_tra" ADD COLUMN IF NOT EXISTS "KetQuaLevel" INT',
+        'ALTER TABLE "phan_kiem_tra" ADD COLUMN IF NOT EXISTS "KetQuaLevel" INT',
     ]
     for stmt in stmts:
         db.execute(text(stmt))

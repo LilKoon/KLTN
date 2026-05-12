@@ -102,10 +102,10 @@ def compute_weak_topics(db: Session, user_id, threshold: float = 0.6, min_attemp
         SELECT bh."KyNang" AS kn, bh."ChuDe" AS chude,
                AVG(CASE WHEN ct."LaCauDung" THEN 1.0 ELSE 0.0 END) AS acc,
                COUNT(*) AS n
-        FROM "ChiTietLamBai" ct
-        JOIN "NganHangCauHoi" nh ON nh."MaCauHoi" = ct."MaCauHoi"
-        JOIN "BaiHoc" bh ON bh."MaBaiHoc" = nh."MaBaiHoc"
-        JOIN "BaiKiemTra" bkt ON bkt."MaBaiKiemTra" = ct."MaBaiKiemTra"
+        FROM "chi_tiet_lam_bai" ct
+        JOIN "ngan_hang_cau_hoi" nh ON nh."MaCauHoi" = ct."MaCauHoi"
+        JOIN "bai_hoc" bh ON bh."MaBaiHoc" = nh."MaBaiHoc"
+        JOIN "bai_kiem_tra" bkt ON bkt."MaBaiKiemTra" = ct."MaBaiKiemTra"
         WHERE bkt."MaNguoiDung" = :uid AND bh."ChuDe" IS NOT NULL
         GROUP BY bh."KyNang", bh."ChuDe"
         HAVING COUNT(*) >= :min_n

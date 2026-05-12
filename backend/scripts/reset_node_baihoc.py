@@ -6,7 +6,7 @@ import database
 from sqlalchemy import text
 
 with database.engine.connect() as conn:
-    r = conn.execute(text('UPDATE "TrangThaiNode" SET "MaBaiHoc" = NULL WHERE "MaBaiHoc" IS NOT NULL'))
+    r = conn.execute(text('UPDATE "trang_thai_node" SET "MaBaiHoc" = NULL WHERE "MaBaiHoc" IS NOT NULL'))
     conn.commit()
     print(f"Reset {r.rowcount} nodes -> MaBaiHoc = NULL")
     print("Nodes se duoc auto-resolve voi topic khac nhau khi user click vao.")
